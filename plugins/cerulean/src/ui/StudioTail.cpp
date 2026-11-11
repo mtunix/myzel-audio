@@ -70,7 +70,6 @@ namespace
 
     juce::Colour bandColour (tail::Band b)
     {
-        const auto& p = Theme::studio();
         const auto& sx = Theme::studioExtras();
         return b == tail::Band::low ? sx.bandLow : b == tail::Band::high ? sx.bandHigh : sx.bandMid;
     }
@@ -590,7 +589,6 @@ void StudioTail::renderStatic (juce::Graphics& g, juce::Rectangle<float> area) c
 
 void StudioTail::drawLive (juce::Graphics& g) const
 {
-    const auto& p = Theme::studio();
     const auto& sx = Theme::studioExtras();
     const auto plot = plotArea();
     const auto columns = juce::jmax (1, (int) std::round (plot.getWidth()));

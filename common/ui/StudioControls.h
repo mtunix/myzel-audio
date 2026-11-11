@@ -153,6 +153,7 @@ public:
 
     void setLabel (const juce::String& newLabel);
     void setDimmed (bool shouldBeDimmed);
+    bool isDimmed() const noexcept { return dimmed; }
 
     void setMomentary (bool shouldBeMomentary);
     bool isMomentary() const noexcept { return momentary; }

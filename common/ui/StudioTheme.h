@@ -50,6 +50,12 @@ namespace studio
     inline constexpr float labelSize = 10.5f, labelTracking = 0.10f;
     inline constexpr float valueSize = 12.5f;
     inline constexpr float smallSize = 10.0f;
+
+    // A slider row: label and value on top, the bar below.
+    inline constexpr float rowHeight = 44.0f, rowPitch = 58.0f;
+
+    /** A card: a rounded surface with a hairline edge and an optional title at its top left. */
+    void drawCard (juce::Graphics& g, juce::Rectangle<float> area, const juce::String& title, const Fonts& fonts);
 }
 
 } // namespace myzel::ui

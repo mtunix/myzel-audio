@@ -38,8 +38,6 @@ namespace studio
     inline constexpr float paramCardWidth = 151.0f;
     inline R paramCard (int index) { return { 208.0f + (float) index * (paramCardWidth + gutter), 302.0f, paramCardWidth, 266.0f }; }
 
-    // A slider row: label and value on top, the bar below.
-    inline constexpr float rowHeight = 44.0f, rowPitch = 58.0f;
     inline R paramRow (int card, int row)
     {
         const auto c = paramCard (card);

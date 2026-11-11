@@ -83,6 +83,22 @@ keeps the proportions).
 **Lock Mix** keeps the Mix knob where it is while you load presets or switch A/B, so browsing
 sounds never changes your wet/dry balance. It is saved with the session.
 
+## Studio view
+
+**STUDIO** in the header shows the same controls on one flat screen: exact values on every
+control, typed entry, and meters. **PANEL** brings the hardware face back. Your session remembers
+its view, and new instances open in the view you chose last.
+
+- **Circuit** (left): click a circuit, or use the arrow keys. The Drive card says in a sentence
+  what the selected circuit is.
+- **Drive** is the large value at the top; drag it or click it to type a value. **Slam** is next to it.
+- **Weight** is the small key at the end of the Low Cut bar.
+- The meters show the input, the level hitting the circuit (after Drive and Slam) and the output.
+  The bar is the average level, the line the recent peak, the number above the peak (red after a
+  clip). Click the meters to reset the peaks.
+- Every control: drag left/right or up/down (Shift for fine), double-click to reset, mouse wheel
+  or arrow keys to step, and click the value to type one (e.g. "120 Hz", "+3", "Mid").
+
 ## What Bias does on each circuit
 
 Measured with a 1 kHz tone at 0 dBFS, Drive at 0 dB. H2 is the second harmonic (even, "warm");

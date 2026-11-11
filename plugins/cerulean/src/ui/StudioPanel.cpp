@@ -496,21 +496,7 @@ void StudioPanel::renderBackground (juce::Graphics& g, juce::Rectangle<float> ar
     g.setColour (juce::Colours::black);
     g.drawHorizontalLine ((int) metrics::headerHeight, 0.0f, area.getRight());
 
-    auto card = [&] (juce::Rectangle<float> r, const juce::String& title)
-    {
-        g.setColour (p.card);
-        g.fillRoundedRectangle (r, cardCorner);
-        g.setColour (p.cardEdge);
-        g.drawRoundedRectangle (r.reduced (0.5f), cardCorner, 1.0f);
-
-        if (title.isNotEmpty())
-        {
-            g.setFont (drawing::tracked (fonts->legend (titleSize), titleTracking));
-            g.setColour (p.title);
-            g.drawText (title, juce::Rectangle<float> (r.getX() + cardPad, r.getY(), r.getWidth() - 2.0f * cardPad, cardTitleHeight),
-                        juce::Justification::centredLeft, false);
-        }
-    };
+    auto card = [&] (juce::Rectangle<float> r, const juce::String& title) { drawCard (g, r, title, *fonts); };
 
     card (algorithmCard(), "ALGORITHM");
     card (behaviourCard(), "BEHAVIOUR");

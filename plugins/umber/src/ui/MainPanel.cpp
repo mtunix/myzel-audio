@@ -1,6 +1,7 @@
 #include "ui/MainPanel.h"
 
 #include "plugin/PluginProcessor.h"
+#include "ui/Texts.h"
 #include "ui/UiState.h"
 
 namespace umber::ui
@@ -11,14 +12,6 @@ namespace
     // Meter calibration: the level that reads 0 VU in each mode.
     constexpr float outputReferenceDb = -18.0f;
     constexpr float driveReferenceDb = -12.0f;
-
-    const char* const modelTips[] = {
-        "Reel: tube record amp into magnetic tape. Soft compression, head bump, rounded top.",
-        "Desk: console line amp with transformers. Weighty low end that saturates first.",
-        "Class A: single-ended discrete transistor stage. Forward, bright, rich in even harmonics.",
-        "Valve: triode preamp stage. Warm and dynamic, with a grid-conduction bias shift.",
-        "Fuzz: overdriven pentode / two-stage clipper. Dense, aggressive, hard-edged.",
-    };
 
     juce::RangedAudioParameter& parameter (UmberProcessor& p, const char* id)
     {
@@ -41,11 +34,10 @@ namespace
     }
 }
 
-MainPanel::MainPanel (UmberProcessor& p)
-    : processor (p),
-      presets (p, presetFormat()),
-      ab (p, presets),
-      header (p, presets, ab, dialog, headerConfig (p)),
+MainPanel::MainPanel (EditorController& c, UmberProcessor& p)
+    : controller (c),
+      processor (p),
+      header (p, c.getPresets(), c.getAb(), dialog, headerConfig (p)),
       vblank (this, [this] (double t) { animateFrame (t); })
 {
     setOpaque (true);
@@ -58,19 +50,30 @@ MainPanel::MainPanel (UmberProcessor& p)
     addChildComponent (bubble);
     addChildComponent (dialog);
 
-    header.getScale = [this] { return getScale != nullptr ? getScale() : 1.0f; };
-    header.onScaleChosen = [this] (float s)
+    wireHeader (header);
+
+    // Mix lock: a padlock after the MIX legend while it is on.
+    if (auto* mix = findKnob (params::mix))
     {
-        if (onScaleChosen != nullptr)
-            onScaleChosen (s);
-    };
+        const auto legendFont = drawing::tracked (fonts->legend (metrics::legendSize), metrics::legendTracking);
+        const auto anchor = mix->getLegendAnchor();
+        const auto x = anchor.x + juce::GlyphArrangement::getStringWidth (legendFont, "MIX") * 0.5f + 8.0f;
+        mixLockBadge.setBounds (juce::Rectangle<int> (LockBadge::width, LockBadge::height)
+                                    .withCentre ({ juce::roundToInt (x), juce::roundToInt (anchor.y) - 1 }));
+    }
+    addChildComponent (mixLockBadge);
 
     meter.onModeChanged = [this] (NeedleMeter::Mode m)
     {
         processor.getUiState().setProperty (uistate::meterMode, (int) m, nullptr);
     };
 
-    presets.onChange = [this] { header.refresh(); };
+    controller.getPresets().onChange = [this]
+    {
+        header.refresh();
+        mixLockBadge.setVisible (controller.getPresets().isMixLocked());
+    };
+    mixLockBadge.setVisible (controller.getPresets().isMixLocked());
 
     processor.getState().state.addListener (this);
     applyUiState();
@@ -88,6 +91,7 @@ MainPanel::MainPanel (UmberProcessor& p)
 
 MainPanel::~MainPanel()
 {
+    controller.getPresets().onChange = nullptr;
     processor.getState().state.removeListener (this);
 }
 
@@ -112,7 +116,7 @@ void MainPanel::buildControls()
         juce::RangedAudioParameter* param;
         juce::Point<float> centre;
         KnobStyle style;
-        const char* tip;
+        juce::String tip;
     };
 
     std::vector<Def> defs;
@@ -129,7 +133,7 @@ void MainPanel::buildControls()
             s.marks.push_back ({ norm (driveP, (float) i), juce::String (i), true });
 
         defs.push_back ({ &driveP, layout::driveCentre(), s,
-                          "Drive: how hard the circuit is pushed (-6 dB to +36 dB). Drag, Shift-drag for fine, double-click to reset." });
+                          tips::drive });
     }
     {
         KnobStyle s;
@@ -137,35 +141,35 @@ void MainPanel::buildControls()
         s.diameter = layout::smallKnobDiameter;
         s.centreDetent = true;
         s.marks = { { 0.0f, "DARK", true }, { 0.5f, "FLAT", false }, { 1.0f, "BRIGHT", true } };
-        defs.push_back ({ &toneP, layout::toneCentre(), s, "Tone: tilt EQ around 800 Hz, darker or brighter. Sticks at Flat." });
+        defs.push_back ({ &toneP, layout::toneCentre(), s, tips::tone });
     }
     {
         KnobStyle s;
         s.title = "LOW CUT";
         s.diameter = layout::smallKnobDiameter;
         s.marks = { { 0.0f, "OFF", true }, { norm (lowCutP, 100.0f), "100", false }, { 1.0f, "500", true } };
-        defs.push_back ({ &lowCutP, layout::lowCutCentre(), s, "Low Cut: 12 dB/oct high-pass before the circuit." });
+        defs.push_back ({ &lowCutP, layout::lowCutCentre(), s, tips::lowCut });
     }
     {
         KnobStyle s;
         s.title = "HIGH CUT";
         s.diameter = layout::smallKnobDiameter;
         s.marks = { { 0.0f, "2k", true }, { norm (highCutP, 6000.0f), "6k", false }, { 1.0f, "OFF", true } };
-        defs.push_back ({ &highCutP, layout::highCutCentre(), s, "High Cut: 12 dB/oct low-pass after the circuit." });
+        defs.push_back ({ &highCutP, layout::highCutCentre(), s, tips::highCut });
     }
     {
         KnobStyle s;
         s.title = "MIX";
         s.diameter = layout::smallKnobDiameter;
         s.marks = { { 0.0f, "DRY", true }, { 0.5f, "50", false }, { 1.0f, "WET", true } };
-        defs.push_back ({ &mixP, layout::mixCentre(), s, "Mix: blend of the dry (latency-aligned) and saturated signal." });
+        defs.push_back ({ &mixP, layout::mixCentre(), s, tips::mix });
     }
     {
         KnobStyle s;
         s.title = "OUTPUT";
         s.diameter = layout::smallKnobDiameter;
         s.marks = { { 0.0f, minus + "24", true }, { 0.5f, "0", false }, { 1.0f, "+24", true } };
-        defs.push_back ({ &outputP, layout::outputCentre(), s, "Output: level trim after the circuit." });
+        defs.push_back ({ &outputP, layout::outputCentre(), s, tips::output });
     }
     {
         KnobStyle s;
@@ -176,7 +180,7 @@ void MainPanel::buildControls()
         s.dragPixelsForFullRange = 120.0f;
         s.marks = { { 0.0f, "L/R", true }, { 0.5f, "MID", true }, { 1.0f, "SIDE", true } };
         defs.push_back ({ &stereoP, layout::stereoCentre(), s,
-                          "Stereo: L/R saturates left and right. Mid saturates only the centre, Side only the sides; the other half stays clean." });
+                          tips::stereo });
     }
     {
         KnobStyle s;
@@ -185,8 +189,7 @@ void MainPanel::buildControls()
         s.centreDetent = true;
         s.marks = { { 0.0f, "LOWS", true }, { 0.5f, "FLAT", false }, { 1.0f, "HIGHS", true } };
         defs.push_back ({ &emphP, layout::emphasisCentre(), s,
-                          "Emphasis: tilts the signal into the circuit and back out again (up to 6 dB per side around 1 kHz). "
-                          "The tone stays the same; it only changes which frequencies saturate first." });
+                          tips::emphasis });
     }
     {
         KnobStyle s;
@@ -195,8 +198,7 @@ void MainPanel::buildControls()
         s.centreDetent = true;
         s.marks = { { 0.0f, "COLD", true }, { 0.5f, "0", false }, { 1.0f, "HOT", true } };
         defs.push_back ({ &biasP, layout::biasCentre(), s,
-                          "Bias: moves the circuit's operating point, like turning its bias trim. Each circuit answers in its own way: "
-                          "the balance of even and odd harmonics changes, and so does how early and how hard it clips." });
+                          tips::bias });
     }
 
     artwork.knobs.clear();
@@ -222,7 +224,7 @@ void MainPanel::buildControls()
     {
         auto key = std::make_unique<LampButton> (names[i].toUpperCase(), LampButton::Shape::square);
         key->setKeyBounds (layout::modelKey (i));
-        key->setTooltip (modelTips[i]);
+        key->setTooltip (circuitDescription (i));
         key->setTitle (names[i] + " model");
         key->setRadioGroupId (1, juce::dontSendNotification);
         key->setClickingTogglesState (false);
@@ -241,7 +243,7 @@ void MainPanel::buildControls()
     modelAttachment->sendInitialUpdate();
 
     // Toggles.
-    auto bindToggle = [this, um] (LampButton& b, const char* id, juce::Rectangle<float> key, const char* tip)
+    auto bindToggle = [this, um] (LampButton& b, const char* id, juce::Rectangle<float> key, const juce::String& tip)
     {
         b.setKeyBounds (key);
         b.setClickingTogglesState (true);
@@ -250,10 +252,10 @@ void MainPanel::buildControls()
         buttonAttachments.push_back (std::make_unique<juce::ButtonParameterAttachment> (parameter (processor, id), b, um));
     };
 
-    bindToggle (slamKey, params::slam, layout::slam(), "Slam: +20 dB extra drive into the circuit.");
-    bindToggle (weightKey, params::weight, layout::weightKey(), "Weight: resonant bump at the Low Cut frequency (needs Low Cut on).");
-    bindToggle (autoKey, params::autoGain, layout::autoKey(), "Auto: output compensation that keeps the loudness steady as you drive.");
-    bindToggle (deltaKey, params::delta, layout::deltaKey(), "Delta: listen to only what the circuit adds (the processed signal minus the dry).");
+    bindToggle (slamKey, params::slam, layout::slam(), tips::slam);
+    bindToggle (weightKey, params::weight, layout::weightKey(), tips::weight);
+    bindToggle (autoKey, params::autoGain, layout::autoKey(), tips::autoGain);
+    bindToggle (deltaKey, params::delta, layout::deltaKey(), tips::delta);
 
     meter.setBounds (snapped (layout::meter()));
 

@@ -50,6 +50,7 @@ myzel::ui::HeaderConfig headerConfig (UmberProcessor& processor)
     c.activeText = "Saturation on";
     c.settingsTooltip = "Settings: oversampling, mix lock, window size";
     c.mixLockLabel = "Lock Mix";
+    c.hasViews = true;
 
     c.addSettings = [&processor] (juce::PopupMenu& menu)
     {

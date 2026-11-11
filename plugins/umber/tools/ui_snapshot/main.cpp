@@ -44,7 +44,7 @@ void runFrames (UmberProcessor& p, UmberEditor& editor, Levels levels, int frame
         meters.driveRms.store (levels.driveRms);
         meters.outputRms.store (levels.outputRms);
         meters.outputPeak.store (levels.outputPeak);
-        editor.getMainPanel().animateFrame ((double) i / 60.0);
+        editor.animateFrame ((double) i / 60.0);
     }
 }
 
@@ -126,7 +126,7 @@ void timeRendering (const juce::File&)
         {
             meters.driveRms.store (0.5f + 0.4f * std::sin ((float) i * 0.1f));
             meters.outputRms.store (0.1f);
-            editor->getMainPanel().animateFrame ((double) i / 60.0);
+            editor->animateFrame ((double) i / 60.0);
         }
 
         std::printf ("animateFrame: %.4f ms per frame\n", (juce::Time::getMillisecondCounterHiRes() - start) / 600.0);
@@ -137,6 +137,11 @@ void timeRendering (const juce::File&)
 int main (int argc, char* argv[])
 {
     juce::ScopedJuceInitialiser_GUI gui;
+
+    // Never touch the user's real default-view setting.
+    const auto settings = juce::File::getSpecialLocation (juce::File::tempDirectory).getChildFile ("umber-ui-snapshot.settings");
+    settings.deleteFile();
+    myzel::ui::viewPreference::setSettingsFileOverride (settings);
 
     juce::File outDir = juce::File::getCurrentWorkingDirectory().getChildFile ("ui-snapshots");
     bool leakCheck = false;
@@ -252,6 +257,35 @@ int main (int argc, char* argv[])
 
         { "10-bypass", [] (UmberProcessor& p) { setParam (p, params::bypass, 1.0f); },
           { 0.06f, 0.09f, 0.0f }, 1.0f, nullptr },
+
+        // The studio view.
+        { "11-studio", [] (UmberProcessor& p) { p.getUiState().setProperty ("view", "studio", nullptr); },
+          { 0.0f, 0.0f, 0.0f }, 1.0f, [] (UmberEditor& e) { e.getStudioPanel().getMeters().setLevelsForSnapshot ({ -16.0f, -11.0f, -13.0f }); }, true },
+
+        { "12-studio-fuzz-weight", [] (UmberProcessor& p)
+          {
+              p.getUiState().setProperty ("view", "studio", nullptr);
+              setParam (p, params::model, 4.0f);
+              setParam (p, params::drive, 7.5f);
+              setParam (p, params::slam, 1.0f);
+              setParam (p, params::lowCut, 120.0f);
+              setParam (p, params::weight, 1.0f);
+              setParam (p, params::bias, 3.0f);
+              setParam (p, params::emphasis, -2.5f);
+              setParam (p, params::stereoMode, 1.0f);
+              setParam (p, params::highCut, 9000.0f);
+              setParam (p, params::tone, 2.0f);
+              setParam (p, params::mix, 80.0f);
+          },
+          { 0.0f, 0.0f, 0.0f }, 1.0f, [] (UmberEditor& e) { e.getStudioPanel().getMeters().setLevelsForSnapshot ({ -14.0f, 1.5f, -4.0f }); } },
+
+        { "13-studio-bypass-mixlock", [] (UmberProcessor& p)
+          {
+              p.getUiState().setProperty ("view", "studio", nullptr);
+              p.getUiState().setProperty ("mixLock", true, nullptr);
+              setParam (p, params::bypass, 1.0f);
+          },
+          { 0.0f, 0.0f, 0.0f }, 1.0f, [] (UmberEditor& e) { e.getStudioPanel().getMeters().setLevelsForSnapshot ({ -16.0f, -11.0f, -13.0f }); } },
 
     };
 

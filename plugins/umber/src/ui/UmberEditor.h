@@ -1,10 +1,9 @@
 #pragma once
 
+#include "common/ui/PluginEditor.h"
 #include "ui/MainPanel.h"
-#include "common/ui/KitLookAndFeel.h"
+#include "ui/StudioPanel.h"
 #include "ui/Theme.h"
-
-#include <juce_audio_processors/juce_audio_processors.h>
 
 namespace umber
 {
@@ -12,29 +11,23 @@ namespace umber
 class UmberProcessor;
 
 /**
-    Umber's editor: hosts the procedurally drawn panel and scales it (75-200 %, fixed
-    aspect ratio). The scale is stored in the processor's UI state, so it survives sessions.
+    Umber's editor: hosts one of the two views (the procedurally drawn panel, or the flat studio
+    view) and scales it (75-200 %, fixed aspect ratio). Both views share one base size, so
+    switching does not resize the host window.
+
+    The view and the scale are stored in the processor's UI state, so they survive sessions; a
+    session with no stored view opens in the user's default view (the one chosen last).
 */
-class UmberEditor final : public juce::AudioProcessorEditor
+class UmberEditor final : public myzel::ui::PluginEditor
 {
 public:
     explicit UmberEditor (UmberProcessor& p);
-    ~UmberEditor() override;
 
-    void setScale (float newScale);
-    float getScale() const noexcept { return scale; }
+    /** The panel view; only valid while it is shown. */
+    ui::MainPanel& getMainPanel() noexcept;
 
-    ui::MainPanel& getMainPanel() noexcept { return *panel; }
-
-    void paint (juce::Graphics& g) override;
-    void resized() override;
-
-private:
-    UmberProcessor& processor;
-    ui::KitLookAndFeel lookAndFeel;      // declared first: outlives every child
-    std::unique_ptr<ui::MainPanel> panel;
-    std::unique_ptr<juce::TooltipWindow> tooltips;
-    float scale = 1.0f;
+    /** The studio view; only valid while it is shown. */
+    ui::StudioPanel& getStudioPanel() noexcept;
 
     JUCE_DECLARE_NON_COPYABLE_WITH_LEAK_DETECTOR (UmberEditor)
 };

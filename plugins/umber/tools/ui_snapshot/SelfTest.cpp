@@ -49,10 +49,30 @@ void flushUndo (UmberProcessor& p)
     // copyState() forces that flush.
     juce::ignoreUnused (p.getState().copyState());
 }
+
+void dragSlider (myzel::ui::StudioSlider& s, juce::Point<float> delta)
+{
+    const auto c = s.barArea().getCentre();
+    s.mouseDown (makeEvent (s, c, {}));
+    s.mouseDrag (makeEvent (s, c + delta, {}, 1, true));
+    s.mouseUp (makeEvent (s, c + delta, {}, 1, true));
+}
+
+void frames (UmberEditor& editor, int count)
+{
+    for (int i = 0; i < count; ++i)
+        editor.animateFrame ((double) i / 60.0);
+}
 }
 
 int runUiSelfTest()
 {
+    // Never touch the user's real default-view setting; start in the panel view.
+    const auto scratch = juce::File::getSpecialLocation (juce::File::tempDirectory).getChildFile ("umber-ui-selftest");
+    scratch.deleteRecursively();
+    scratch.createDirectory();
+    myzel::ui::viewPreference::setSettingsFileOverride (scratch.getChildFile ("Umber.settings"));
+
     failures = 0;
     UmberProcessor processor;
     auto editor = std::make_unique<UmberEditor> (processor);
@@ -239,8 +259,72 @@ int runUiSelfTest()
         check ((int) processor.getUiState().getProperty (ui::uistate::meterMode) == 1, "meter mode persisted");
     }
 
+    std::printf ("Studio view\n");
+    {
+        const auto sizeBefore = editor->getWidth();
+        const auto bypassBounds = editor->getMainPanel().getHeader().getBypassButton().getBounds();
+        const auto settingsBounds = editor->getMainPanel().getHeader().getSettingsButton().getBounds();
+        check (editor->getMainPanel().getHeader().getViewButton (ui::ViewMode::panel).isLit(), "PANEL is lit in the panel view");
+
+        editor->setView (ui::ViewMode::studio);
+        check (editor->getViewMode() == ui::ViewMode::studio, "switches to the studio view");
+        check (processor.getUiState().getProperty (ui::uistate::view).toString() == "studio", "view stored in the session");
+        check (myzel::ui::viewPreference::getDefault ("Umber") == ui::ViewMode::studio, "the chosen view becomes the default for new instances");
+        check (editor->getWidth() == sizeBefore, "switching does not resize the window");
+
+        auto& studio = editor->getStudioPanel();
+        check (studio.getHeader().getBypassButton().getBounds() == bypassBounds
+               && studio.getHeader().getSettingsButton().getBounds() == settingsBounds, "the header keys keep their places in both views");
+        check (studio.getHeader().getViewButton (ui::ViewMode::studio).isLit(), "STUDIO is lit");
+        frames (*editor, 2);
+
+        // Every sound parameter (plus the listening switches) has a control.
+        bool all = true;
+
+        for (const auto* id : { params::drive, params::bias, params::emphasis, params::stereoMode, params::lowCut,
+                                params::highCut, params::tone, params::mix, params::output })
+            all = all && studio.findSlider (id) != nullptr;
+
+        for (const auto* id : { params::slam, params::weight, params::autoGain, params::delta })
+            all = all && studio.findToggle (id) != nullptr;
+
+        check (all, "every parameter has a control");
+
+        auto& toneSlider = *studio.findSlider (params::tone);
+        toneSlider.setNormalisedValueAsGesture (0.2f);
+        {
+            GestureRecorder r;
+            processor.getState().getParameter (params::tone)->addListener (&r);
+            dragSlider (toneSlider, { 60.0f, 0.0f });
+            processor.getState().getParameter (params::tone)->removeListener (&r);
+            check (std::abs (toneSlider.getNormalisedValue() - 0.4f) < 0.01f, "60 px right moves a slider by 0.2 (300 px = full range)");
+            check (r.begins == 1 && r.ends == 1, "one host gesture for the drag");
+        }
+
+        studio.getCircuitRow (4).onClick();
+        check (juce::roundToInt (valueOf (processor, params::model)) == 4, "a circuit row selects the circuit");
+        check (studio.getCircuitRow (4).getToggleState() && ! studio.getCircuitRow (0).getToggleState(), "only the selected row is lit");
+
+        auto* lowCut = processor.getState().getParameter (params::lowCut);
+        lowCut->setValueNotifyingHost (lowCut->convertTo0to1 (20.0f));
+        frames (*editor, 7);
+        check (studio.findToggle (params::weight)->isDimmed(), "Weight is greyed out while Low Cut is off");
+        lowCut->setValueNotifyingHost (lowCut->convertTo0to1 (120.0f));
+        frames (*editor, 7);
+        check (! studio.findToggle (params::weight)->isDimmed(), "and lit normally with Low Cut on");
+
+        studio.getMeters().setLevelsForSnapshot ({ -12.0f, -6.0f, -9.0f });
+        check (studio.getMeters().getReadoutText().startsWith ("In -7.5 dB, Drive -1.5 dB, Out -4.5 dB"), "the meters read out In, Drive and Out");
+
+        editor->setView (ui::ViewMode::panel);
+        check (editor->getViewMode() == ui::ViewMode::panel, "and back to the panel");
+        check (myzel::ui::viewPreference::getDefault ("Umber") == ui::ViewMode::panel, "and the panel is the default again");
+    }
+
     processor.getState().getParameter (params::drive)->removeListener (&rec);
     editor.reset();
+    myzel::ui::viewPreference::setSettingsFileOverride ({});
+    scratch.deleteRecursively();
 
     std::printf ("%s: %d failure(s)\n", failures == 0 ? "PASSED" : "FAILED", failures);
     return failures;

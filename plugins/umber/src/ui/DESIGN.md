@@ -159,6 +159,38 @@ window is resizable with a fixed aspect ratio, from 75 % to 200 %. The ⚙ setti
 UI state keys (`UiState.h`, never rename): `scale`, `meterMode`, `presetName`, `presetIsUser`,
 `abActive`, and the `SlotA` / `SlotB` children.
 
+## Two views
+
+The editor has two faces with the same parameters, presets, A/B and header: the **panel**
+(everything above) and the **studio** view. PANEL | STUDIO in the header switches between them;
+the session remembers its view, and a new instance opens in the view chosen last
+(`Umber.settings`). Both views have the same base size, so switching never resizes the window,
+and the header keys keep their places.
+
+The studio view is a flat workstation screen in Umber's colours (`Theme::studio()`: near-black
+umber cards, cream text, the amber accent; Bypass in signal red). Every control shows its exact
+value and accepts typed values; nothing is hidden.
+
+```
+ 50 ├──────────────┬───────────────────────────────────────────┬───────────────┤
+    │ CIRCUIT      │ DRIVE 7.5                        [ SLAM ]  │ OUTPUT        │
+    │ 1 REEL  Tape │ BIAS ────────●───   EMPHASIS ──●──────     │  IN DRIVE OUT │
+    │ …            │ FUZZ: a sentence on the selected circuit   │  ▌▌  ▌▌  ▌▌   │
+    ├──────────────┼─────────────────────┬─────────────────────┤               │
+    │ LISTEN       │ INPUT               │ TONE                │ MIX ───────●  │
+    │ AUTO   (on)  │ STEREO  L/R·Mid·Side│ HIGH CUT            │ OUTPUT ──●──  │
+    │ DELTA  (off) │ LOW CUT ──● [WEIGHT]│ TONE                │               │
+580 └──────────────┴─────────────────────┴─────────────────────┴───────────────┘
+```
+
+- The circuit list replaces the five keys: a row per circuit with a word on its character; the
+  Drive card says what the selected circuit is in a sentence.
+- Drive is the Drive card's headline value (drag it, or click to type). Slam sits next to it.
+- Weight is a small key at the end of the Low Cut bar, greyed out while Low Cut is off.
+- The meters show the input, the level hitting the circuit (after Drive and Slam) and the
+  output: RMS bar, peak-hold line, peak read-out (click to reset).
+- The padlock after MIX shows the mix lock, as on the panel.
+
 ## Files
 
 | File | Role |
@@ -167,21 +199,24 @@ UI state keys (`UiState.h`, never rename): `scale`, `meterMode`, `presetName`, `
 | `NeedleMeter`, `VuBallistics` | VU meter |
 | `Header` | Umber's header: name, texts and its settings entries (quality); the rail itself is the shared `HeaderBar` |
 | `FactoryPresets` | the factory presets and Umber's preset format (`presetFormat()`); the preset and A/B logic is shared (`common/plugin/`: `PresetManager`, `AbCompare`) |
-| `InlineDialog` | in-editor save/rename/delete prompts |
-| `MainPanel` | composition, frame clock |
-| `UmberEditor` | scaling host |
+| `Texts` | circuit descriptions and taglines, tooltips (the same in both views) |
+| `MainPanel` | the panel view: composition, frame clock |
+| `StudioLayout` | the studio view's layout grid |
+| `StudioPanel` | the studio view: composition, frame clock |
+| `UmberEditor` | the `PluginEditor` with Umber's two views |
 
 From the shared kit (`common/ui/`): `Drawing` (cached layers, legends, screws, recesses, shadows,
 grain, glow), `PanelArtwork` (the static front panel), `Knob`, `LampButton`, `ValueBubble`,
 `HeaderButton`, `PresetDisplay`, `InlineDialog`, `HeaderBar`, `KitLookAndFeel` (popup menus, tooltips,
-text fields).
+text fields), `ViewMode`, and for the two views `PluginEditor`, `EditorController`, `EditorView`,
+`StudioTheme`, `StudioControls`, `StudioMeters`, `LockBadge`.
 
 ## Snapshot tool
 
 ```
 cmake --build build-ui --target UmberUiSnapshot
 xvfb-run -a -s "-screen 0 3000x2000x24" build-ui/plugins/umber/tools/UmberUiSnapshot_artefacts/Release/UmberUiSnapshot plugins/umber/docs/screenshots
-… UmberUiSnapshot --selftest              # drag/fine/reset/wheel/detent/a11y/undo/presets/A-B/scale checks
+… UmberUiSnapshot --selftest              # drag/fine/reset/wheel/detent/a11y/undo/presets/A-B/scale/studio view checks
 … UmberUiSnapshot --leakcheck             # open/close the editor 8× (use a Debug build for the leak detector)
 ```
 

@@ -782,4 +782,22 @@ void SelectorRow::paintButton (juce::Graphics& g, bool highlighted, bool down)
     }
 }
 
+//==============================================================================
+void studio::drawCard (juce::Graphics& g, juce::Rectangle<float> r, const juce::String& title, const Fonts& fonts)
+{
+    const auto& p = Theme::studio();
+    g.setColour (p.card);
+    g.fillRoundedRectangle (r, cardCorner);
+    g.setColour (p.cardEdge);
+    g.drawRoundedRectangle (r.reduced (0.5f), cardCorner, 1.0f);
+
+    if (title.isNotEmpty())
+    {
+        g.setFont (drawing::tracked (fonts.legend (titleSize), titleTracking));
+        g.setColour (p.title);
+        g.drawText (title, juce::Rectangle<float> (r.getX() + cardPad, r.getY(), r.getWidth() - 2.0f * cardPad, cardTitleHeight),
+                    juce::Justification::centredLeft, false);
+    }
+}
+
 } // namespace myzel::ui

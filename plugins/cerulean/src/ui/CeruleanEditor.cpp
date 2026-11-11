@@ -9,12 +9,12 @@ CeruleanEditor::CeruleanEditor (CeruleanProcessor& p)
     : PluginEditor (p, std::make_unique<ui::PanelController> (p), ui::metrics::baseWidth,
                     [] (ui::ViewMode mode, myzel::ui::EditorController& c) -> std::unique_ptr<myzel::ui::EditorView>
                     {
-                        auto& controller = static_cast<ui::PanelController&> (c);
+                        auto& panelController = static_cast<ui::PanelController&> (c);
 
                         if (mode == ui::ViewMode::studio)
-                            return std::make_unique<ui::StudioPanel> (controller);
+                            return std::make_unique<ui::StudioPanel> (panelController);
 
-                        return std::make_unique<ui::MainPanel> (controller);
+                        return std::make_unique<ui::MainPanel> (panelController);
                     })
 {
 }

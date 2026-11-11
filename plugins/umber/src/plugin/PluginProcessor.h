@@ -75,6 +75,9 @@ public:
 
     juce::AudioProcessorValueTreeState& getState() noexcept override { return apvts; }
     MeterValues& getMeters() noexcept { return meters; }
+
+    /** Factory and user presets (owned here, so both editor views and the host share them). */
+    myzel::plugin::PresetManager& getPresets() noexcept { return *presets; }
     /** Undo history of user edits only (see ParameterUndoRecorder). Message thread only. */
     juce::UndoManager& getUndoManager() noexcept override { return undoManager; }
 
@@ -94,6 +97,7 @@ private:
     myzel::plugin::ParameterUndoRecorder undoRecorder { *this, undoManager, { params::bypass, params::delta } };
     dsp::SaturatorChain chain;
     MeterValues meters;
+    std::unique_ptr<myzel::plugin::PresetManager> presets;
 
     JUCE_DECLARE_NON_COPYABLE_WITH_LEAK_DETECTOR (UmberProcessor)
 };

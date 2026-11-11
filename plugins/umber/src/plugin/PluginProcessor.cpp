@@ -1,5 +1,6 @@
 #include "plugin/PluginProcessor.h"
 
+#include "ui/FactoryPresets.h"
 #include "ui/UmberEditor.h"
 
 namespace umber
@@ -24,7 +25,8 @@ UmberProcessor::UmberProcessor()
                           .withInput ("Input", juce::AudioChannelSet::stereo(), true)
                           .withOutput ("Output", juce::AudioChannelSet::stereo(), true)),
       apvts (*this, nullptr, stateTreeType, params::createLayout()), // undo: see ParameterUndoRecorder
-      params (apvts)
+      params (apvts),
+      presets (std::make_unique<myzel::plugin::PresetManager> (*this, ui::presetFormat()))
 {
 }
 

@@ -958,6 +958,22 @@ private:
         return ok;
     }
 
+    /** Jacobian sparsity of the device (dI_k / dV_c), if it declares one; dense otherwise. */
+    static constexpr Pattern jacobianPattern() noexcept
+    {
+        if constexpr (requires { Device::jacobianPattern; })
+        {
+            return Device::jacobianPattern;
+        }
+        else
+        {
+            Pattern m {};
+            for (auto& row : m)
+                row.fill (true);
+            return m;
+        }
+    }
+
     /** Structural pattern of the Newton matrix F dI/dV - I. */
     static constexpr tubes::Pattern<NP, NP> newtonPattern() noexcept
     {
@@ -990,17 +1006,17 @@ private:
     static constexpr InversePlan inversePlan() noexcept
     {
         constexpr auto m = newtonPattern();
-        InversePlan plan;
+        InversePlan result;
         std::array<bool, (std::size_t) NP> in {};
         int k = 0;
         for (int r = 0; r < NP; ++r)
         {
             bool free = true;
             for (int j = 0; j < k; ++j)
-                free = free && ! m[(size_t) r][(size_t) plan.e[(size_t) j]] && ! m[(size_t) plan.e[(size_t) j]][(size_t) r];
+                free = free && ! m[(size_t) r][(size_t) result.e[(size_t) j]] && ! m[(size_t) result.e[(size_t) j]][(size_t) r];
             if (free)
             {
-                plan.e[(size_t) k++] = r;
+                result.e[(size_t) k++] = r;
                 in[(size_t) r] = true;
             }
         }
@@ -1008,10 +1024,10 @@ private:
         int q = 0;
         for (int r = 0; r < NP; ++r)
             if (! in[(size_t) r])
-                plan.d[(size_t) q++] = r;
+                result.d[(size_t) q++] = r;
 
-        plan.decoupled = (k >= 2 && q >= 1 && q <= 3) ? k : 0;
-        return plan;
+        result.decoupled = (k >= 2 && q >= 1 && q <= 3) ? k : 0;
+        return result;
     }
 
     static constexpr InversePlan plan = inversePlan();
@@ -1113,22 +1129,6 @@ private:
             });
         });
         return out;
-    }
-
-    /** Jacobian sparsity of the device (dI_k / dV_c), if it declares one; dense otherwise. */
-    static constexpr Pattern jacobianPattern() noexcept
-    {
-        if constexpr (requires { Device::jacobianPattern; })
-        {
-            return Device::jacobianPattern;
-        }
-        else
-        {
-            Pattern m {};
-            for (auto& row : m)
-                row.fill (true);
-            return m;
-        }
     }
 
     template <typename Fn, size_t... I>

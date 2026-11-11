@@ -50,11 +50,19 @@ namespace
                 x.push_back ((float) (std::exp (-t * 18.0) * std::sin (twoPi * 60.0 * t)));
             }
 
-        // 0.5 s of white noise at -18 dBFS RMS
+        // 0.5 s of white noise at -18 dBFS RMS. Box-Muller on raw mt19937 output: unlike
+        // std::normal_distribution, it gives the same samples with every standard library.
         std::mt19937 rng (7);
-        std::normal_distribution<float> noise (0.0f, 0.126f);
-        for (int i = 0; i < (int) (0.5 * sampleRate); ++i)
-            x.push_back (noise (rng));
+        const auto uniform = [&rng] { return ((double) rng() + 0.5) / 4294967296.0; };
+        const int noiseLength = (int) (0.5 * sampleRate);
+        for (int i = 0; i < noiseLength; i += 2)
+        {
+            const auto radius = 0.126 * std::sqrt (-2.0 * std::log (uniform()));
+            const auto angle = twoPi * uniform();
+            x.push_back ((float) (radius * std::cos (angle)));
+            if (i + 1 < noiseLength)
+                x.push_back ((float) (radius * std::sin (angle)));
+        }
 
         return x;
     }

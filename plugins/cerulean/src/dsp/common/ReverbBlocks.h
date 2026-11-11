@@ -2,6 +2,7 @@
 
 #include <algorithm>
 #include <array>
+#include <bit>
 #include <cmath>
 #include <cstdint>
 #include <numbers>
@@ -453,7 +454,7 @@ inline void householderInPlace (float* x) noexcept
 /** +-1 sign of Hadamard row r, column c (Sylvester construction): orthogonal tap patterns. */
 inline float hadamardSign (int r, int c) noexcept
 {
-    return (__builtin_popcount ((unsigned) (r & c)) & 1) ? -1.0f : 1.0f;
+    return (std::popcount ((unsigned) (r & c)) & 1) ? -1.0f : 1.0f;
 }
 
 //==============================================================================

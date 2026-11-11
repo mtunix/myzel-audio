@@ -5,6 +5,7 @@
 //     CERULEAN_UPDATE_GOLDEN=1 build/plugins/cerulean/tests/CeruleanTests "[golden]"
 
 #include "analysis/ReverbAnalysis.h"
+#include "dsp/AlgorithmInfo.h"
 #include "dsp/chain/EngineFactory.h"
 
 #include <catch2/catch_test_macros.hpp>
@@ -17,9 +18,6 @@ using namespace cerulean;
 #if ! CERULEAN_ONLY_HALL
 namespace
 {
-    const char* goldenNames[numAlgorithms] = { "room", "hall", "plate", "spring", "nimbus",
-                                               "halo", "rise", "billow", "choir", "echo" };
-
     /** A characteristic, non-default setting per algorithm: exercises Mod, Size, A and B. */
     dsp::EngineParams goldenParams (Algorithm a)
     {
@@ -39,7 +37,7 @@ namespace
 
     std::string goldenPath (int a)
     {
-        return std::string (CERULEAN_TEST_DATA_DIR) + "/golden/" + goldenNames[a] + ".f32";
+        return std::string (CERULEAN_TEST_DATA_DIR) + "/golden/" + algorithmInfos[(size_t) a].key + ".f32";
     }
 
     analysis::Stereo render (int a)
@@ -68,7 +66,7 @@ TEST_CASE ("Golden: every algorithm matches its recorded response", "[golden]")
 
     for (int a = 0; a < numAlgorithms; ++a)
     {
-        INFO (goldenNames[a]);
+        INFO (algorithmInfos[(size_t) a].key);
         const auto out = render (a);
         REQUIRE (analysis::allFinite (out));
 
@@ -89,7 +87,7 @@ TEST_CASE ("Golden: every algorithm matches its recorded response", "[golden]")
         std::ifstream file (goldenPath (a), std::ios::binary);
         if (! file)
         {
-            WARN ("no golden file for " << goldenNames[a] << ": record with CERULEAN_UPDATE_GOLDEN=1");
+            WARN ("no golden file for " << algorithmInfos[(size_t) a].key << ": record with CERULEAN_UPDATE_GOLDEN=1");
             continue;
         }
 

@@ -1,5 +1,6 @@
 #include "ui/FactoryPresets.h"
 
+#include "dsp/Algorithms.h"
 #include "plugin/Parameters.h"
 
 namespace cerulean::ui
@@ -7,8 +8,11 @@ namespace cerulean::ui
 
 namespace
 {
-    // Algorithms (plugin order, see dsp/Algorithms.h).
-    constexpr int room = 0, hall = 1, plate = 2, spring = 3, nimbus = 4, halo = 5, rise = 6, billow = 7, choir = 8, echo = 9;
+    // The preset field stores the Algorithm as an int.
+    constexpr int room = (int) Algorithm::room, hall = (int) Algorithm::hall, plate = (int) Algorithm::plate,
+                  spring = (int) Algorithm::spring, nimbus = (int) Algorithm::nimbus, halo = (int) Algorithm::halo,
+                  rise = (int) Algorithm::rise, billow = (int) Algorithm::billow, choir = (int) Algorithm::choir,
+                  echo = (int) Algorithm::echo;
 
     // Note values (see NoteValue in plugin/Parameters.h).
     constexpr int n1_16 = 2, n1_8 = 5, n1_8D = 6, n1_4 = 8, n1_4D = 9;

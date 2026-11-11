@@ -2,6 +2,7 @@
 
 #include "common/plugin/SessionState.h"
 
+#include "dsp/AlgorithmInfo.h"
 #include "dsp/Mappings.h"
 #include "ui/FactoryPresets.h"
 
@@ -137,11 +138,8 @@ double CeruleanProcessor::getTailLengthSeconds() const
         return std::numeric_limits<double>::infinity();
 
     const auto algorithm = static_cast<Algorithm> (juce::jlimit (0, numAlgorithms - 1, choice (params.algorithm)));
-    auto tail = 1.5 * (double) params.decay->load() + 2.0;   // RT60 is -60 dB; go a little further
-
-    if (algorithm == Algorithm::echo || algorithm == Algorithm::billow)
-        tail += 6.0;
-    return tail;
+    return 1.5 * (double) params.decay->load() + 2.0   // RT60 is -60 dB; go a little further
+           + (double) info (algorithm).extraTailSeconds;
 }
 
 void CeruleanProcessor::processBlock (juce::AudioBuffer<float>& buffer, juce::MidiBuffer&)

@@ -1,4 +1,5 @@
 #include "analysis/ReverbAnalysis.h"
+#include "dsp/AlgorithmInfo.h"
 #include "dsp/chain/ReverbChain.h"
 
 #include <catch2/catch_test_macros.hpp>
@@ -352,8 +353,13 @@ TEST_CASE ("Chain: sample rates 44.1 to 192 kHz", "[chain]")
 
 TEST_CASE ("Chain: Size changes the space, not the level", "[chain]")
 {
-    for (const auto algorithm : { Algorithm::hall, Algorithm::plate, Algorithm::nimbus, Algorithm::billow, Algorithm::room })
+    for (const auto& entry : algorithmInfos)
     {
+        const auto algorithm = entry.algorithm;
+#if CERULEAN_ONLY_HALL
+        if (algorithm != Algorithm::hall)
+            continue;   // every slot runs Hall, but keeps its own algorithm's Size exponent
+#endif
         double lowest = 1.0e9, highest = -1.0e9;
         for (const auto scale : { 0.3f, 0.55f, 1.0f, 1.41f, 2.0f })
         {
@@ -370,7 +376,7 @@ TEST_CASE ("Chain: Size changes the space, not the level", "[chain]")
             lowest = std::min (lowest, level);
             highest = std::max (highest, level);
         }
-        INFO ("algorithm " << (int) algorithm << ": wet level spans " << highest - lowest << " dB over Size 0.3x-2x");
+        INFO (entry.name << ": wet level spans " << highest - lowest << " dB over Size 0.3x-2x");
         CHECK (highest - lowest < 2.5);
     }
 }

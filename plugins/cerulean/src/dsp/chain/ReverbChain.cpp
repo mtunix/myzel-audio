@@ -1,5 +1,6 @@
 #include "dsp/chain/ReverbChain.h"
 
+#include "dsp/AlgorithmInfo.h"
 #include "dsp/Mappings.h"
 #include "dsp/chain/EngineFactory.h"
 
@@ -30,31 +31,6 @@ namespace
     float smoothTowards (float current, float target, float k) noexcept
     {
         return current + (target - current) * k;
-    }
-
-    /**
-        Wet-level compensation for Size: gain = sizeScale^k. A feedback network's steady-state
-        energy goes as 1 / loop length at a fixed RT60, so without this Size would also be a
-        volume knob (Hall -6 dB from 0.3x to 2x, Billow -19 dB). k is fitted per algorithm from
-        steady pink noise at Decay 2 s (CeruleanMeasure / the "Size keeps the level" chain test);
-        Room and Spring already compensate inside their engines.
-    */
-    float sizeLevelExponent (Algorithm a) noexcept
-    {
-        switch (a)
-        {
-            case Algorithm::room:   return 0.12f;
-            case Algorithm::hall:   return 0.50f;
-            case Algorithm::plate:  return 0.49f;
-            case Algorithm::spring: return -0.12f;
-            case Algorithm::nimbus: return 0.76f;
-            case Algorithm::halo:   return 0.57f;
-            case Algorithm::rise:   return 0.61f;
-            case Algorithm::billow: return 1.16f;
-            case Algorithm::choir:  return 0.59f;
-            case Algorithm::echo:   return 0.44f;
-        }
-        return 0.5f;
     }
 
     float lowCutOffHz (double fs) { return std::min (5.0f, (float) fs * 0.4f); }
@@ -558,7 +534,8 @@ void ReverbChain::runEngines (int n, bool) noexcept
         slot.engine->setDetectorInput (isActive ? detectorL.data() : zeros.data(), isActive ? detectorR.data() : zeros.data());
         slot.engine->process (inL, inR, engineOutL.data(), engineOutR.data(), n, slot.params);
 
-        slot.sizeGain.set (std::pow (std::max (slot.params.sizeScale, 0.1f), sizeLevelExponent (slot.algorithm)), n);
+        // Size changes the space, not the level (see AlgorithmInfo::sizeLevelExponent).
+        slot.sizeGain.set (std::pow (std::max (slot.params.sizeScale, 0.1f), info (slot.algorithm).sizeLevelExponent), n);
 
         float peak = 0.0f;
         double squares = 0.0;

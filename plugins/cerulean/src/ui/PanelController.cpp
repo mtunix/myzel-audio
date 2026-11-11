@@ -1,5 +1,6 @@
 #include "ui/PanelController.h"
 
+#include "dsp/AlgorithmInfo.h"
 #include "plugin/PluginProcessor.h"
 #include "ui/UiState.h"
 
@@ -41,27 +42,7 @@ juce::String PanelController::characterLegend (Algorithm a, bool isParamB)
 
 int PanelController::characterSteps (Algorithm a, bool isParamB) noexcept
 {
-    if (! isParamB)
-    {
-        switch (a)
-        {
-            case Algorithm::spring: return 3;
-            case Algorithm::halo:   return 5;
-            case Algorithm::choir:  return 5;
-            case Algorithm::room:
-            case Algorithm::hall:
-            case Algorithm::plate:
-            case Algorithm::nimbus:
-            case Algorithm::rise:
-            case Algorithm::billow:
-            case Algorithm::echo:
-                break;
-        }
-
-        return 0;
-    }
-
-    return a == Algorithm::choir ? 4 : 0;
+    return isParamB ? info (a).paramBSteps : info (a).paramASteps;
 }
 
 juce::String PanelController::preDelayText (const Meanings& m, float value01) const

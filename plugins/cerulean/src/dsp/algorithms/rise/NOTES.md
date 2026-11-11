@@ -129,11 +129,10 @@ Swell (held pink noise, Decay 2 s):
 
 ## Notes for the chain
 
-- The engine detects onsets on its own input, which is **after the pre-delay**, while the chain
-  applies `getDryGain()` to the undelayed dry. With pre-delay > 0 and Blend up, the dry swell
-  starts late by the pre-delay (the dry stays closed until then, so the attack is still hidden).
-  A sidechain copy of the undelayed, unfrozen input for engines would fix this and let the dry
-  swell work while frozen too (see the report).
+- The wet swell's detector listens to the engine input (after pre-delay); the dry swell's detector
+  listens to the player's undelayed signal, which the chain passes in through
+  `Engine::setDetectorInput()`, so the dry swell starts with the pick whatever the pre-delay.
+  Driven directly (tests, `CeruleanMeasure`), both detectors hear the engine input.
 
 ## References
 

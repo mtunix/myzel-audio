@@ -1,5 +1,7 @@
 #pragma once
 
+#include "dsp/AlgorithmInfo.h"
+
 #include <algorithm>
 #include <array>
 #include <cmath>
@@ -76,27 +78,37 @@ inline int haloIntervalIndex (float a01) noexcept
     return std::clamp ((int) std::lround (clamp01 (a01) * (numHaloIntervals - 1)), 0, numHaloIntervals - 1);
 }
 
+static_assert (info (Algorithm::halo).paramASteps == numHaloIntervals);
+
 // Spring: number of springs in the tank.
+inline constexpr int maxSprings = 3;
+static_assert (info (Algorithm::spring).paramASteps == maxSprings);
+
 inline int springCount (float a01) noexcept
 {
-    return 1 + std::clamp ((int) std::lround (clamp01 (a01) * 2.0f), 0, 2);
+    return 1 + std::clamp ((int) std::lround (clamp01 (a01) * (float) (maxSprings - 1)), 0, maxSprings - 1);
 }
 
 // Rise: swell (fade-in) time, 50 ms .. 4 s, exponential.
-inline float riseTimeMs (float a01) noexcept { return 50.0f * std::pow (80.0f, clamp01 (a01)); }
+inline float riseTimeMs (float a01) noexcept { return info (Algorithm::rise).paramATime->forward (a01); }
 
 // Billow: bloom length (time for the bloom to peak), 150 ms .. 4 s, exponential.
-inline float bloomLengthMs (float a01) noexcept { return 150.0f * std::pow (4000.0f / 150.0f, clamp01 (a01)); }
+inline float bloomLengthMs (float a01) noexcept { return info (Algorithm::billow).paramATime->forward (a01); }
 
 // Choir: vowel position 0..4 (A, E, I, O, U), continuous so it morphs.
 inline constexpr std::array<const char*, 5> vowelNames { "A", "E", "I", "O", "U" };
+static_assert (info (Algorithm::choir).paramASteps == (int) vowelNames.size());
+
 inline float vowelPosition (float a01) noexcept { return clamp01 (a01) * 4.0f; }
 
 // Choir: number of voices, 1..4, continuous (fractional voices fade in).
-inline float voiceCount (float b01) noexcept { return 1.0f + clamp01 (b01) * 3.0f; }
+inline constexpr int maxVoices = 4;
+static_assert (info (Algorithm::choir).paramBSteps == maxVoices);
+
+inline float voiceCount (float b01) noexcept { return 1.0f + clamp01 (b01) * (float) (maxVoices - 1); }
 
 // Echo: free echo time, 20 ms .. 1.5 s, exponential. (When synced, a note value replaces it.)
 inline constexpr float echoMaxMs = 2500.0f;   // buffer limit for synced times at slow tempi
-inline float echoTimeMs (float a01) noexcept { return 20.0f * std::pow (75.0f, clamp01 (a01)); }
+inline float echoTimeMs (float a01) noexcept { return info (Algorithm::echo).paramATime->forward (a01); }
 
 } // namespace cerulean::dsp::maps

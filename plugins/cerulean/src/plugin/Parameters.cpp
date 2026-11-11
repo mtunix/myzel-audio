@@ -1,5 +1,6 @@
 #include "plugin/Parameters.h"
 
+#include "dsp/AlgorithmInfo.h"
 #include "dsp/Mappings.h"
 
 namespace cerulean
@@ -99,7 +100,10 @@ namespace
 
 juce::StringArray algorithmNames()
 {
-    return { "Room", "Hall", "Plate", "Spring", "Nimbus", "Halo", "Rise", "Billow", "Choir", "Echo" };
+    juce::StringArray names;
+    for (const auto& a : algorithmInfos)
+        names.add (a.name);
+    return names;
 }
 
 juce::StringArray noteValueNames()
@@ -239,7 +243,7 @@ float characterPercentFromText (Algorithm a, bool isParamB, const juce::String& 
     const auto number = lower.retainCharacters ("0123456789.+-").getFloatValue();
 
     // 2. Times, for the time-valued controls (no unit = ms).
-    if (! isParamB && (a == Algorithm::rise || a == Algorithm::billow || a == Algorithm::echo))
+    if (const auto& time = info (a).paramATime; ! isParamB && time.has_value())
     {
         if (lower.endsWith ("%"))
             return jlimit (0.0f, 100.0f, number);
@@ -249,11 +253,7 @@ float characterPercentFromText (Algorithm a, bool isParamB, const juce::String& 
         if (ms <= 0.0f)
             return 0.0f;
 
-        // Inverses of dsp::maps::riseTimeMs / bloomLengthMs / echoTimeMs.
-        const auto lo = a == Algorithm::rise ? 50.0f : a == Algorithm::billow ? 150.0f : 20.0f;
-        const auto ratio = a == Algorithm::rise ? 80.0f : a == Algorithm::billow ? 4000.0f / 150.0f : 75.0f;
-
-        return 100.0f * jlimit (0.0f, 1.0f, std::log (ms / lo) / std::log (ratio));
+        return 100.0f * time->inverse (ms);
     }
 
     // 3. A counted or stepped value by its number ("2" -> "2 springs", "12" -> "+12", "3" -> "3.0 voices").

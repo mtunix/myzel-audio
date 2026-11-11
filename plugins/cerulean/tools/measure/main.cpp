@@ -7,7 +7,7 @@
 //   CeruleanMeasure --decay 4       IR measurements at this Decay (default 3 s)
 
 #include "analysis/ReverbAnalysis.h"
-#include "dsp/Algorithms.h"
+#include "dsp/AlgorithmInfo.h"
 #include "dsp/chain/EngineFactory.h"
 
 #include <chrono>
@@ -20,9 +20,6 @@ using namespace cerulean;
 
 namespace
 {
-    const char* names[numAlgorithms] = { "room", "hall", "plate", "spring", "nimbus",
-                                         "halo", "rise", "billow", "choir", "echo" };
-
     void writeWav (const std::string& path, const analysis::Stereo& s)
     {
         std::ofstream f (path, std::ios::binary);
@@ -56,7 +53,7 @@ int main (int argc, char** argv)
             decay = std::stof (argv[++i]);
         else
             for (int a = 0; a < numAlgorithms; ++a)
-                if (std::strcmp (argv[i], names[a]) == 0)
+                if (std::strcmp (argv[i], algorithmInfos[(size_t) a].key) == 0)
                     selected.push_back (a);
     }
 
@@ -81,7 +78,7 @@ int main (int argc, char** argv)
         const auto ir = analysis::impulseResponse (*engine, p, fs, decay * 1.4 + 1.0);
 
         if (! wavDir.empty())
-            writeWav (wavDir + "/" + names[a] + ".wav", ir);
+            writeWav (wavDir + "/" + algorithmInfos[(size_t) a].key + ".wav", ir);
 
         // Wet level: steady pink noise at Decay 2 s.
         auto levelParams = p;
@@ -109,7 +106,7 @@ int main (int argc, char** argv)
                           - analysis::toDb (std::sqrt (0.5 * (std::pow (analysis::rms (ir.left, tailStart, tailEnd), 2.0)
                                                              + std::pow (analysis::rms (ir.right, tailStart, tailEnd), 2.0))));
 
-        std::printf ("%-8s %8.2f %8.2f %8.2f %8.2f %8.2f %8.1f | %8.1f %8.2f %8.1f %8.2f\n", names[a],
+        std::printf ("%-8s %8.2f %8.2f %8.2f %8.2f %8.2f %8.1f | %8.1f %8.2f %8.1f %8.2f\n", algorithmInfos[(size_t) a].key,
                      analysis::bandRt60 (ir, 125.0), analysis::bandRt60 (ir, 250.0), analysis::midBandRt60 (ir),
                      analysis::bandRt60 (ir, 4000.0), analysis::bandRt60 (ir, 8000.0),
                      1000.0 * analysis::echoDensityTime (ir.left, fs), wetDb, rho, monoDb, cpu);

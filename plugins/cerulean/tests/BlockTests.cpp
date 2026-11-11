@@ -8,6 +8,7 @@
 #include <catch2/catch_test_macros.hpp>
 
 #include <complex>
+#include <set>
 
 using namespace cerulean::dsp;
 
@@ -232,4 +233,39 @@ TEST_CASE ("Blocks: mappings", "[blocks]")
     CHECK (flat.ratio < bright.ratio);
     CHECK (bright.ratio <= 1.0f);
     CHECK (dark.crossoverHz < flat.crossoverHz);
+}
+
+TEST_CASE ("Blocks: algorithm descriptors", "[blocks]")
+{
+    using cerulean::Algorithm;
+    using cerulean::info;
+
+    for (const auto& a : cerulean::algorithmInfos)
+    {
+        if (! a.paramATime.has_value())
+            continue;
+
+        INFO (a.name);
+        for (int i = 0; i <= 100; ++i)
+        {
+            const auto x = (float) i / 100.0f;
+            CHECK (std::abs (a.paramATime->inverse (a.paramATime->forward (x)) - x) < 1.0e-5f);
+        }
+    }
+
+    // Each stepped control has as many positions as its mapping has distinct values.
+    auto distinct = [] (auto&& map)
+    {
+        std::set<float> values;
+        for (int i = 0; i <= 1000; ++i)
+            values.insert ((float) map ((float) i / 1000.0f));
+        return (int) values.size();
+    };
+
+    CHECK (info (Algorithm::spring).paramASteps == distinct (maps::springCount));
+    CHECK (info (Algorithm::halo).paramASteps == distinct (maps::haloIntervalIndex));
+    CHECK (info (Algorithm::choir).paramASteps == (int) maps::vowelNames.size());
+    CHECK (std::abs (maps::vowelPosition (1.0f) - (float) (info (Algorithm::choir).paramASteps - 1)) < 1.0e-6f);
+    CHECK (std::abs (maps::voiceCount (0.0f) - 1.0f) < 1.0e-6f);
+    CHECK (std::abs (maps::voiceCount (1.0f) - (float) info (Algorithm::choir).paramBSteps) < 1.0e-6f);
 }

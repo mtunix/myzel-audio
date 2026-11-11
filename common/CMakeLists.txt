@@ -33,6 +33,7 @@ add_library(MyzelUi INTERFACE)
 target_sources(MyzelUi INTERFACE ${MYZEL_UI_SOURCES})
 target_link_libraries(MyzelUi INTERFACE
     MyzelCommon
+    MyzelPlugin
     MyzelUiAssets
     juce::juce_gui_extra
     melatonin_blur)

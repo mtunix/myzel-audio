@@ -71,7 +71,8 @@ namespace
     juce::Colour bandColour (tail::Band b)
     {
         const auto& p = Theme::studio();
-        return b == tail::Band::low ? p.bandLow : b == tail::Band::high ? p.bandHigh : p.bandMid;
+        const auto& sx = Theme::studioExtras();
+        return b == tail::Band::low ? sx.bandLow : b == tail::Band::high ? sx.bandHigh : sx.bandMid;
     }
 }
 
@@ -400,6 +401,7 @@ void StudioTail::drawHandles (juce::Graphics& g) const
 void StudioTail::renderStatic (juce::Graphics& g, juce::Rectangle<float> area) const
 {
     const auto& p = Theme::studio();
+    const auto& sx = Theme::studioExtras();
     const auto plot = plotArea();
 
     // Read-outs, in the head of the card between the Decay value and Freeze.
@@ -460,9 +462,9 @@ void StudioTail::renderStatic (juce::Graphics& g, juce::Rectangle<float> area) c
         }
         else
         {
-            item ("HIGH", formatRt (tail::bandRt60 (shape, tail::Band::high)), tail::Band::high, p.bandHigh);
-            item ("MID", formatRt (tail::bandRt60 (shape, tail::Band::mid)), tail::Band::mid, p.bandMid);
-            item ("LOW", formatRt (tail::bandRt60 (shape, tail::Band::low)), tail::Band::low, p.bandLow);
+            item ("HIGH", formatRt (tail::bandRt60 (shape, tail::Band::high)), tail::Band::high, sx.bandHigh);
+            item ("MID", formatRt (tail::bandRt60 (shape, tail::Band::mid)), tail::Band::mid, sx.bandMid);
+            item ("LOW", formatRt (tail::bandRt60 (shape, tail::Band::low)), tail::Band::low, sx.bandLow);
         }
 
         if (x - headLeft > 90.0f)
@@ -522,7 +524,7 @@ void StudioTail::renderStatic (juce::Graphics& g, juce::Rectangle<float> area) c
     {
         std::array<tail::Spike, 12> spikes {};
         const auto n = tail::spikes (shape, spikes);
-        g.setColour (p.early);
+        g.setColour (sx.early);
 
         for (int i = 0; i < n; ++i)
         {
@@ -570,8 +572,8 @@ void StudioTail::renderStatic (juce::Graphics& g, juce::Rectangle<float> area) c
             auto fill = path;
             fill.lineTo (fill.getCurrentPosition().x, plot.getBottom());
             fill.closeSubPath();
-            g.setGradientFill (juce::ColourGradient (p.bandMid.withAlpha (0.16f), 0.0f, plot.getY(),
-                                                     p.bandMid.withAlpha (0.0f), 0.0f, plot.getBottom(), false));
+            g.setGradientFill (juce::ColourGradient (sx.bandMid.withAlpha (0.16f), 0.0f, plot.getY(),
+                                                     sx.bandMid.withAlpha (0.0f), 0.0f, plot.getBottom(), false));
             g.fillPath (fill);
         }
 
@@ -589,6 +591,7 @@ void StudioTail::renderStatic (juce::Graphics& g, juce::Rectangle<float> area) c
 void StudioTail::drawLive (juce::Graphics& g) const
 {
     const auto& p = Theme::studio();
+    const auto& sx = Theme::studioExtras();
     const auto plot = plotArea();
     const auto columns = juce::jmax (1, (int) std::round (plot.getWidth()));
     const auto entriesPerColumn = (double) span * historyRate / (double) columns;
@@ -623,9 +626,9 @@ void StudioTail::drawLive (juce::Graphics& g) const
 
     juce::Graphics::ScopedSaveState save (g);
     g.reduceClipRegion (plot.toNearestInt());
-    g.setGradientFill (juce::ColourGradient (p.liveFill, 0.0f, plot.getY(), p.liveFill.withMultipliedAlpha (0.1f), 0.0f, floorY, false));
+    g.setGradientFill (juce::ColourGradient (sx.liveFill, 0.0f, plot.getY(), sx.liveFill.withMultipliedAlpha (0.1f), 0.0f, floorY, false));
     g.fillPath (area);
-    g.setColour (p.liveLine);
+    g.setColour (sx.liveLine);
     g.strokePath (line, juce::PathStrokeType (1.0f, juce::PathStrokeType::curved, juce::PathStrokeType::rounded));
 }
 

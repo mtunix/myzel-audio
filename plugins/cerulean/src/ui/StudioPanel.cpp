@@ -40,7 +40,15 @@ StudioPanel::StudioPanel (PanelController& c)
     : controller (c),
       processor (c.getProcessor()),
       header (processor, c.getPresets(), c.getAb(), dialog, headerConfig (processor)),
-      meters (processor.getMeters()),
+      meters ({ { "IN",  [&m = processor.getMeters()] { return m.inputRms.load (std::memory_order_relaxed); },
+                         [&m = processor.getMeters()] { return m.inputPeak.exchange (0.0f, std::memory_order_relaxed); } },
+                { "WET", [&m = processor.getMeters()] { return m.wetRms.load (std::memory_order_relaxed); },
+                         [&m = processor.getMeters()] { return m.wetPeak.exchange (0.0f, std::memory_order_relaxed); } },
+                { "OUT", [&m = processor.getMeters()] { return m.outputRms.load (std::memory_order_relaxed); },
+                         [&m = processor.getMeters()] { return m.outputPeak.exchange (0.0f, std::memory_order_relaxed); } } },
+              StudioMeters::Reduction { "DUCK", [&m = processor.getMeters()] { return m.duckGain.load (std::memory_order_relaxed); } },
+              "Input, wet and output level (bar: RMS, line: peak hold, number: peak) and the ducker's gain reduction. "
+              "Click to reset the peaks."),
       vblank (this, [this] (double t) { animateFrame (t); })
 {
     setOpaque (true);
@@ -117,7 +125,7 @@ void StudioPanel::buildControls()
     for (int i = 0; i < numAlgorithms; ++i)
     {
         const auto a = static_cast<Algorithm> (i);
-        auto row = std::make_unique<AlgorithmRow> (i, names[i], PanelController::algorithmTagline (a));
+        auto row = std::make_unique<SelectorRow> (i, names[i], PanelController::algorithmTagline (a));
         row->setBounds (algorithmRow (i).toNearestInt());
         row->setTooltip (PanelController::algorithmDescription (a));
         row->setRadioGroupId (algorithmRadioGroup, juce::dontSendNotification);
@@ -414,7 +422,7 @@ void StudioPanel::updateTempo()
             if (auto* s = findSlider (id))
                 s->setDimmed (! duck);
 
-        meters.setDuckEnabled (duck);
+        meters.setReductionEnabled (duck);
     }
 
     // Synced pre-delay / echo values show their length at the current tempo.
@@ -439,7 +447,7 @@ void StudioPanel::animateFrame (double timeSeconds)
     updateMeanings();
     tail.setShape (controller.currentTailShape());
     tail.tick (dt, processor.getMeters().wetRms.load (std::memory_order_relaxed));
-    meters.setWetMuted (tail.getShape().bypassed);
+    meters.setChannelMuted (1, tail.getShape().bypassed);
     meters.tick (dt);
 
     if (++framesSinceRefresh >= 6)

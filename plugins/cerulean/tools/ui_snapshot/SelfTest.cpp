@@ -480,13 +480,13 @@ int runUiSelfTest()
         check (std::abs (valueOf (processor, params::size) - sizeValue) < 0.05f, "undo restores the value");
 
         // Algorithm list and the character controls.
-        studio.getAlgorithmRow (5).onClick();
+        studio.getSelectorRow (5).onClick();
         frames (*editor, 1);
         check (juce::roundToInt (valueOf (processor, params::algorithm)) == 5, "clicking HALO selects Halo");
-        check (studio.getAlgorithmRow (5).getToggleState() && ! studio.getAlgorithmRow (1).getToggleState(), "only the selected row is lit");
-        studio.getAlgorithmRow (5).keyPressed (juce::KeyPress (juce::KeyPress::downKey));
+        check (studio.getSelectorRow (5).getToggleState() && ! studio.getSelectorRow (1).getToggleState(), "only the selected row is lit");
+        studio.getSelectorRow (5).keyPressed (juce::KeyPress (juce::KeyPress::downKey));
         check (juce::roundToInt (valueOf (processor, params::algorithm)) == 6, "Down arrow selects the next algorithm");
-        studio.getAlgorithmRow (6).keyPressed (juce::KeyPress (juce::KeyPress::upKey));
+        studio.getSelectorRow (6).keyPressed (juce::KeyPress (juce::KeyPress::upKey));
         frames (*editor, 1);
         auto* a = studio.findSlider (params::paramA);
         check (a != nullptr && a->getLabel().contains ("INTERVAL"), "Param A relabels to INTERVAL");

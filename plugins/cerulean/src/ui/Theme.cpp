@@ -155,12 +155,6 @@ namespace
         // Graph: three bands with distinct hue *and* line style; ice is the mid band (the Decay setting).
         p.grid            = C (0x1fa9c8e6);
         p.gridText        = C (0xff7b8c9f);
-        p.bandLow         = C (0xffe2a65c);
-        p.bandMid         = C (0xff8fd6ff);
-        p.bandHigh        = C (0xffc3a6ff);
-        p.early           = C (0x99b9cfe2);
-        p.liveFill        = C (0x553f9be6);
-        p.liveLine        = C (0xcc9fd8ff);
 
         p.meterBack       = C (0xff08101a);
         p.meterFill       = C (0xff5fb6ea);
@@ -172,11 +166,24 @@ namespace
         p.cautionDeep     = C (0xff4a3a26);
         return p;
     }
+
+    StudioExtras makeStudioExtras()
+    {
+        StudioExtras p;
+
+        p.bandLow         = C (0xffe2a65c);
+        p.bandMid         = C (0xff8fd6ff);
+        p.bandHigh        = C (0xffc3a6ff);
+        p.early           = C (0x99b9cfe2);
+        p.liveFill        = C (0x553f9be6);
+        p.liveLine        = C (0xcc9fd8ff);
+        return p;
+    }
 }
 
-const StudioPalette& Theme::studio() noexcept
+const StudioExtras& Theme::studioExtras() noexcept
 {
-    static const StudioPalette s = makeStudio();
+    static const StudioExtras s = makeStudioExtras();
     return s;
 }
 
@@ -193,4 +200,10 @@ const myzel::ui::PanelLook& myzel::ui::Theme::look() noexcept
 {
     static const PanelLook look = cerulean::ui::makeLook();
     return look;
+}
+
+const myzel::ui::StudioPalette& myzel::ui::Theme::studio() noexcept
+{
+    static const StudioPalette s = cerulean::ui::makeStudio();
+    return s;
 }

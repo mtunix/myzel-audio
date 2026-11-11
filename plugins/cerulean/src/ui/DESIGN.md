@@ -274,24 +274,24 @@ UI state keys (`UiState.h`, never rename): `scale`, `advancedOpen`, `presetName`
 | `KnobScale` | crossfading legend for knobs whose meaning changes (Pre-delay, Param A/B) |
 | `TailModel`, `TailDisplay` | the decay picture and the live wet level |
 | `AdvancedDrawer`, `AdvancedTab` | the Advanced deck below the panel, and ADVANCED on the bottom edge |
-| `LockBadge` | the padlock after MIX while the mix lock is on (both views) |
 | `Header` | Cerulean's header: name and texts; the rail itself is the shared `HeaderBar` |
 | `FactoryPresets` | the factory presets and Cerulean's preset format (`presetFormat()`); the preset and A/B logic is shared (`common/plugin/`: `PresetManager`, `AbCompare`) |
-| `PanelController` | the editor's model, shared by both views: presets, A/B, parameter meanings (`Meanings`), value texts, tail shape, the stored view |
-| `EditorView` | base of both views: header wiring, frame hook |
+| `PanelController` | Cerulean's editor model (an `EditorController`): parameter meanings (`Meanings`), value texts, tail shape |
 | `MainPanel` | the panel view: composition, frame clock, meaning changes |
-| `StudioTheme` | studio palette tokens (defined in `Theme.cpp`) and the studio layout grid |
-| `StudioControls` | `StudioSlider` (row control with typed entry), `StudioToggle` (chip / block / segment), `AlgorithmRow` |
+| `StudioTheme` | the tail graph's studio colours and the studio layout grid |
 | `StudioTail` | the studio tail graph (per-band curves, RT60 read-outs, live level) |
-| `StudioMeters` | input / wet / output meters and duck gain reduction |
 | `StudioPanel` | the studio view: composition, frame clock, meaning changes |
-| `CeruleanEditor` | scaling host; owns the `PanelController` and swaps the views |
+| `CeruleanEditor` | the `PluginEditor` with Cerulean's controller and its two views |
 
 From the shared kit (`common/ui/`): `Drawing` (cached layers, legends, screws, recesses, grooves,
 shadows, grain, glow), `PanelArtwork` (the static front panel, knob scales and titles), `Knob`
 (re-bindable, custom read-out), `LampButton` (incl. momentary keys), `ValueBubble`, `HeaderButton`,
 `PresetDisplay`, `InlineDialog`, `HeaderBar`, `KitLookAndFeel` (popup menus, tooltips, text fields),
-`ViewMode` (`panel` / `studio`, and the default-view preference in `Cerulean.settings`).
+`ViewMode` (`panel` / `studio`, and the default-view preference in `Cerulean.settings`), and for the
+two views: `PluginEditor` (scaling host, swaps the views), `EditorController` (presets, A/B, the stored
+view), `EditorView`, `StudioTheme` (studio palette), `StudioControls` (`StudioSlider`, `StudioToggle`,
+`SelectorRow` for the algorithm list), `StudioMeters` (input / wet / output and duck gain reduction),
+`LockBadge`.
 
 ## Two views
 
@@ -409,7 +409,7 @@ bar; it takes the same gestures.
   sliding thumb that reads OFF or ON (Duck, Trails), a block with an indicator dot (FREEZE,
   WET ONLY: `accentSoft` with an ice edge when on), or a segmented pair (LATCH | HOLD). Freeze is momentary with Freeze Mode = Momentary and then reads
   "FREEZE (HOLD)", with the same press/release logic as the panel key.
-- **Algorithm list** (`AlgorithmRow`): number, name, a short tagline. The selected row gets
+- **Algorithm list** (`SelectorRow`): number, name, a short tagline. The selected row gets
   `accentSoft` and an ice bar; Up/Down select the neighbour and move focus with it.
 - Focus rings (ice) on every control; sliders are accessible sliders with the same value texts.
 

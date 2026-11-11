@@ -111,6 +111,8 @@ private:
     JUCE_DECLARE_NON_COPYABLE (Fonts)
 };
 
+struct StudioPalette;   // StudioTheme.h
+
 struct Theme
 {
     /** The plugin's kit colours. Each plugin defines this in its ui/Theme.cpp. */
@@ -118,6 +120,9 @@ struct Theme
 
     /** The plugin's panel finish. Each plugin defines this in its ui/Theme.cpp. */
     static const PanelLook& look() noexcept;
+
+    /** The plugin's studio view colours (StudioTheme.h). Each plugin defines this in its ui/Theme.cpp. */
+    static const StudioPalette& studio() noexcept;
 };
 
 } // namespace myzel::ui

@@ -24,13 +24,14 @@ struct Extras
     juce::Colour drawerValue;
 };
 
-struct StudioPalette;
+struct StudioExtras;
 
-/** The palettes: the kit's (Theme::palette()), the panel displays' and the studio view's. */
+/** The palettes: the kit's (Theme::palette()), the panel displays' (extras()) and the studio
+    graph's (studioExtras()); the studio view's kit colours are Theme::studio(). */
 struct Theme : myzel::ui::Theme
 {
     static const Extras& extras() noexcept;
-    static const StudioPalette& studio() noexcept;
+    static const StudioExtras& studioExtras() noexcept;   // StudioTheme.h
 };
 
 /** Dimensions in base (100 %) editor coordinates (the shared ones come from common/ui/Theme.h). */

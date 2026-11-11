@@ -85,7 +85,7 @@ void runScene (const Scene& scene, const juce::File& dir)
         if (scene.livePeakDb > -66.0f)
             studio.getTail().fillHistoryForSnapshot (scene.livePeakDb, 0.4f);
 
-        studio.getMeters().setLevelsForSnapshot (scene.inDb, scene.livePeakDb - 3.0f, scene.outDb, scene.reductionDb);
+        studio.getMeters().setLevelsForSnapshot ({ scene.inDb, scene.livePeakDb - 3.0f, scene.outDb }, scene.reductionDb);
     }
     else if (scene.livePeakDb > -66.0f)
         editor->getMainPanel().getTail().fillHistoryForSnapshot (scene.livePeakDb, 0.4f);

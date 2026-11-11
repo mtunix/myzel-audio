@@ -1,8 +1,8 @@
-#include "ui/StudioMeters.h"
+#include "common/ui/StudioMeters.h"
 
-#include "plugin/PluginProcessor.h"
+#include <juce_audio_basics/juce_audio_basics.h>
 
-namespace cerulean::ui
+namespace myzel::ui
 {
 
 namespace
@@ -10,8 +10,6 @@ namespace
     constexpr float readoutHeight = 16.0f, labelHeight = 16.0f;
     constexpr float scaleWidth = 28.0f, barWidth = 26.0f, barGap = 10.0f, reductionGap = 22.0f;
     constexpr float releaseSeconds = 0.3f, peakHoldSeconds = 1.5f, peakFallDbPerSecond = 15.0f;
-
-    const char* const names[] = { "IN", "WET", "OUT", "DUCK" };
 
     juce::String dbText (float db)
     {
@@ -22,29 +20,31 @@ namespace
     }
 }
 
-StudioMeters::StudioMeters (MeterValues& m)
-    : meters (m)
+StudioMeters::StudioMeters (std::vector<Channel> channels, std::optional<Reduction> r, const juce::String& tooltip)
+    : reduction (std::move (r))
 {
+    for (auto& c : channels)
+        levels.push_back ({ std::move (c) });
+
     setTitle ("Meters");
-    setTooltip ("Input, wet and output level (bar: RMS, line: peak hold, number: peak) and the ducker's gain reduction. "
-                "Click to reset the peaks.");
+    setTooltip (tooltip);
 }
 
-void StudioMeters::setDuckEnabled (bool enabled)
+void StudioMeters::setReductionEnabled (bool enabled)
 {
-    if (duckEnabled != enabled)
+    if (reductionEnabled != enabled)
     {
-        duckEnabled = enabled;
+        reductionEnabled = enabled;
         scaleLayer.invalidate();
         repaint();
     }
 }
 
-void StudioMeters::setWetMuted (bool muted)
+void StudioMeters::setChannelMuted (int index, bool muted)
 {
-    if (wetMuted != muted)
+    if (juce::isPositiveAndBelow (index, numBars()) && levels[(size_t) index].muted != muted)
     {
-        wetMuted = muted;
+        levels[(size_t) index].muted = muted;
         repaint();
     }
 }
@@ -53,12 +53,14 @@ juce::Rectangle<float> StudioMeters::barArea (int index) const
 {
     const auto top = readoutHeight + 4.0f;
     const auto height = (float) getHeight() - top - labelHeight - 2.0f;
-    auto x = scaleWidth + 2.0f + (float) index * (barWidth + barGap);
-
-    if (index == 3)
-        x = scaleWidth + 2.0f + 3.0f * barWidth + 2.0f * barGap + reductionGap;
-
+    const auto x = scaleWidth + 2.0f + (float) index * (barWidth + barGap);
     return { x, top, barWidth, height };
+}
+
+juce::Rectangle<float> StudioMeters::reductionArea() const
+{
+    const auto last = barArea (numBars() - 1);
+    return last.withX (last.getRight() + reductionGap);
 }
 
 float StudioMeters::yForDb (float db, juce::Rectangle<float> bar) const noexcept
@@ -66,7 +68,7 @@ float StudioMeters::yForDb (float db, juce::Rectangle<float> bar) const noexcept
     return juce::jmap (juce::jlimit (floorDb, topDb, db), topDb, floorDb, bar.getY(), bar.getBottom());
 }
 
-void StudioMeters::advance (Channel& c, float rms, float peak, float dt)
+void StudioMeters::advance (Level& c, float rms, float peak, float dt)
 {
     const auto rmsDb = juce::Decibels::gainToDecibels (rms, -120.0f);
     const auto peakDb = juce::Decibels::gainToDecibels (peak, -120.0f);
@@ -88,16 +90,21 @@ void StudioMeters::advance (Channel& c, float rms, float peak, float dt)
 
 void StudioMeters::tick (float dt)
 {
-    advance (channels[0], meters.inputRms.load (std::memory_order_relaxed), meters.inputPeak.exchange (0.0f, std::memory_order_relaxed), dt);
-    advance (channels[1], meters.wetRms.load (std::memory_order_relaxed), meters.wetPeak.exchange (0.0f, std::memory_order_relaxed), dt);
-    advance (channels[2], meters.outputRms.load (std::memory_order_relaxed), meters.outputPeak.exchange (0.0f, std::memory_order_relaxed), dt);
+    for (auto& c : levels)
+    {
+        const auto rms = c.source.rms != nullptr ? c.source.rms() : 0.0f;
+        advance (c, rms, c.source.takePeak != nullptr ? c.source.takePeak() : rms, dt);
+    }
 
-    const auto gain = juce::jlimit (1.0e-6f, 1.0f, meters.duckGain.load (std::memory_order_relaxed));
-    reductionDb = juce::jlimit (0.0f, reductionRangeDb, -juce::Decibels::gainToDecibels (gain));
+    if (reduction.has_value() && reduction->gain != nullptr)
+    {
+        const auto gain = juce::jlimit (1.0e-6f, 1.0f, reduction->gain());
+        reductionDb = juce::jlimit (0.0f, reductionRangeDb, -juce::Decibels::gainToDecibels (gain));
+    }
 
-    auto changed = std::abs (reductionDb - shownReduction) > 0.2f;
+    auto changed = reduction.has_value() && std::abs (reductionDb - shownReduction) > 0.2f;
 
-    for (auto& c : channels)
+    for (auto& c : levels)
     {
         const auto level = juce::jmax (floorDb - 1.0f, c.levelDb), peak = juce::jmax (floorDb - 1.0f, c.peakDb);
         changed = changed || std::abs (level - c.shownLevel) > 0.25f || std::abs (peak - c.shownPeak) > 0.1f || c.clipped != c.shownClipped;
@@ -107,15 +114,13 @@ void StudioMeters::tick (float dt)
         repaint();
 }
 
-void StudioMeters::setLevelsForSnapshot (float inDb, float wetDb, float outDb, float grDb)
+void StudioMeters::setLevelsForSnapshot (const std::vector<float>& levelsDb, float grDb)
 {
-    const float levels[] = { inDb, wetDb, outDb };
-
-    for (size_t i = 0; i < channels.size(); ++i)
+    for (size_t i = 0; i < levels.size() && i < levelsDb.size(); ++i)
     {
-        channels[i].levelDb = levels[i];
-        channels[i].peakDb = levels[i] + 4.5f;
-        channels[i].clipped = channels[i].peakDb > 0.0f;
+        levels[i].levelDb = levelsDb[i];
+        levels[i].peakDb = levelsDb[i] + 4.5f;
+        levels[i].clipped = levels[i].peakDb > 0.0f;
     }
 
     reductionDb = grDb;
@@ -124,13 +129,21 @@ void StudioMeters::setLevelsForSnapshot (float inDb, float wetDb, float outDb, f
 
 juce::String StudioMeters::getReadoutText() const
 {
-    return "In " + dbText (channels[0].peakDb) + " dB, Wet " + dbText (channels[1].peakDb) + " dB, Out " + dbText (channels[2].peakDb)
-         + " dB, Duck " + (duckEnabled ? juce::String (reductionDb, 1) + " dB" : juce::String ("off"));
+    juce::StringArray parts;
+
+    for (const auto& c : levels)
+        parts.add (c.source.name.substring (0, 1) + c.source.name.substring (1).toLowerCase() + " " + dbText (c.peakDb) + " dB");
+
+    if (reduction.has_value())
+        parts.add (reduction->name.substring (0, 1) + reduction->name.substring (1).toLowerCase() + " "
+                   + (reductionEnabled ? juce::String (reductionDb, 1) + " dB" : juce::String ("off")));
+
+    return parts.joinIntoString (", ");
 }
 
 void StudioMeters::resetPeaks()
 {
-    for (auto& c : channels)
+    for (auto& c : levels)
     {
         c.peakDb = c.levelDb;
         c.clipped = false;
@@ -165,31 +178,39 @@ void StudioMeters::renderScale (juce::Graphics& g) const
                     juce::Justification::centredRight, false);
 
         g.setColour (db == 0 ? p.textFaint : p.grid);
-        g.drawHorizontalLine (juce::roundToInt (y), scaleWidth, barArea (2).getRight());
+        g.drawHorizontalLine (juce::roundToInt (y), scaleWidth, barArea (numBars() - 1).getRight());
     }
 
     // Reduction scale (dB of gain reduction), to the right of its bar.
-    const auto gr = barArea (3);
-
-    for (const auto db : { 0, 6, 12, 18, 24 })
+    if (reduction.has_value())
     {
-        const auto y = juce::jmap ((float) db, 0.0f, reductionRangeDb, gr.getY(), gr.getBottom());
-        g.setColour (p.grid);
-        g.drawHorizontalLine (juce::roundToInt (y), gr.getX(), gr.getRight() + 3.0f);
-        g.setColour (p.gridText.withMultipliedAlpha (duckEnabled ? 1.0f : 0.5f));
-        g.drawText (juce::String (db), juce::Rectangle<float> (gr.getRight() + 3.0f, y - 6.0f, 20.0f, 12.0f), juce::Justification::centredLeft, false);
+        const auto gr = reductionArea();
+
+        for (const auto db : { 0, 6, 12, 18, 24 })
+        {
+            const auto y = juce::jmap ((float) db, 0.0f, reductionRangeDb, gr.getY(), gr.getBottom());
+            g.setColour (p.grid);
+            g.drawHorizontalLine (juce::roundToInt (y), gr.getX(), gr.getRight() + 3.0f);
+            g.setColour (p.gridText.withMultipliedAlpha (reductionEnabled ? 1.0f : 0.5f));
+            g.drawText (juce::String (db), juce::Rectangle<float> (gr.getRight() + 3.0f, y - 6.0f, 20.0f, 12.0f), juce::Justification::centredLeft, false);
+        }
     }
 
     // Names under the bars.
     g.setFont (drawing::tracked (fonts->legend (9.5f), 0.12f));
 
-    for (int i = 0; i < 4; ++i)
+    auto name = [&] (const juce::String& text, juce::Rectangle<float> b, float alpha)
     {
-        const auto b = barArea (i);
-        g.setColour (p.textDim.withMultipliedAlpha (i == 3 && ! duckEnabled ? 0.5f : 1.0f));
-        g.drawText (names[i], juce::Rectangle<float> (b.getCentreX() - 22.0f, b.getBottom() + 3.0f, 44.0f, labelHeight - 2.0f),
+        g.setColour (p.textDim.withMultipliedAlpha (alpha));
+        g.drawText (text, juce::Rectangle<float> (b.getCentreX() - 22.0f, b.getBottom() + 3.0f, 44.0f, labelHeight - 2.0f),
                     juce::Justification::centred, false);
-    }
+    };
+
+    for (int i = 0; i < numBars(); ++i)
+        name (levels[(size_t) i].source.name, barArea (i), 1.0f);
+
+    if (reduction.has_value())
+        name (reduction->name, reductionArea(), reductionEnabled ? 1.0f : 0.5f);
 }
 
 void StudioMeters::paint (juce::Graphics& g)
@@ -201,9 +222,9 @@ void StudioMeters::paint (juce::Graphics& g)
     const auto valueFont = fonts->label (10.0f);
     g.setFont (valueFont);
 
-    for (size_t i = 0; i < channels.size(); ++i)
+    for (size_t i = 0; i < levels.size(); ++i)
     {
-        auto& c = channels[i];
+        auto& c = levels[i];
         const auto bar = barArea ((int) i);
 
         g.setColour (p.meterBack);
@@ -213,7 +234,7 @@ void StudioMeters::paint (juce::Graphics& g)
 
         if (c.levelDb > floorDb)
         {
-            // Ice up to -6 dBFS, amber above, red above 0.
+            // The fill colour up to -6 dBFS, hot above, clip red above 0.
             const auto fillArea = juce::Rectangle<float> (bar.getX(), levelY, bar.getWidth(), bar.getBottom() - levelY);
             juce::ColourGradient grad (p.meterClip, 0.0f, yForDb (topDb, bar), p.meterFill, 0.0f, bar.getBottom(), false);
             const auto proportionAt = [&] (float db) { return (yForDb (db, bar) - bar.getY()) / bar.getHeight(); };
@@ -222,7 +243,7 @@ void StudioMeters::paint (juce::Graphics& g)
             grad.addColour (proportionAt (-6.5f), p.meterFill);
             g.setGradientFill (grad);
 
-            if (wetMuted && i == 1)
+            if (c.muted)
                 g.setColour (p.marker);
 
             g.fillRect (fillArea.reduced (1.0f, 0.0f));
@@ -244,13 +265,14 @@ void StudioMeters::paint (juce::Graphics& g)
     }
 
     // Gain reduction grows down from the top.
+    if (reduction.has_value())
     {
-        const auto bar = barArea (3);
-        const auto alpha = duckEnabled ? 1.0f : 0.4f;
+        const auto bar = reductionArea();
+        const auto alpha = reductionEnabled ? 1.0f : 0.4f;
         g.setColour (p.meterBack);
         g.fillRoundedRectangle (bar, 2.0f);
 
-        if (duckEnabled && reductionDb > 0.05f)
+        if (reductionEnabled && reductionDb > 0.05f)
         {
             const auto h = bar.getHeight() * reductionDb / reductionRangeDb;
             g.setColour (p.reduction);
@@ -258,11 +280,11 @@ void StudioMeters::paint (juce::Graphics& g)
         }
 
         g.setColour (p.text.withMultipliedAlpha (alpha));
-        g.drawText (duckEnabled ? (reductionDb > 0.05f ? juce::String::fromUTF8 ("\xe2\x88\x92") + juce::String (reductionDb, 1) : juce::String ("0.0"))
+        g.drawText (reductionEnabled ? (reductionDb > 0.05f ? juce::String::fromUTF8 ("\xe2\x88\x92") + juce::String (reductionDb, 1) : juce::String ("0.0"))
                                 : juce::String ("OFF"),
                     juce::Rectangle<float> (bar.getCentreX() - 22.0f, 0.0f, 44.0f, readoutHeight), juce::Justification::centred, false);
         shownReduction = reductionDb;
     }
 }
 
-} // namespace cerulean::ui
+} // namespace myzel::ui

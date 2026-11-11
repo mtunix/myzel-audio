@@ -1,11 +1,12 @@
 #pragma once
 
 #include "ui/AdvancedDrawer.h"
-#include "ui/EditorView.h"
+#include "common/ui/EditorView.h"
+#include "ui/Header.h"
 #include "common/ui/Knob.h"
 #include "ui/KnobScale.h"
 #include "common/ui/LampButton.h"
-#include "ui/LockBadge.h"
+#include "common/ui/LockBadge.h"
 #include "common/ui/PanelArtwork.h"
 #include "ui/PanelController.h"
 #include "ui/TailDisplay.h"
@@ -81,7 +82,7 @@ private:
     Knob* paramAKnob = nullptr;
     Knob* paramBKnob = nullptr;
     KnobScale preDelayScale, paramAScale, paramBScale;
-    LockBadge mixLockBadge { Theme::palette().legendDim };
+    LockBadge mixLockBadge { Theme::palette().legendDim, "Mix lock is on: presets and A/B keep Mix and Wet as they are. Turn it off in the settings menu." };
 
     std::array<std::unique_ptr<LampButton>, 10> algorithmKeys;
     std::unique_ptr<juce::ParameterAttachment> algorithmAttachment;

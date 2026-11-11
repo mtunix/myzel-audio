@@ -1,18 +1,16 @@
 #pragma once
 
-#include "ui/Header.h"
+#include "common/ui/HeaderBar.h"
 #include "common/ui/InlineDialog.h"
-#include "ui/Theme.h"
 #include "common/ui/ViewMode.h"
 
-namespace cerulean::ui
+namespace myzel::ui
 {
 
 /**
-    One face of the editor (the panel or the studio view), laid out once at base size
-    (metrics::baseWidth x baseHeight) and scaled by the editor. Each view owns its header,
-    dialog and frame clock; the model they share (presets, A/B, meanings) is the
-    PanelController, which outlives them.
+    One face of the editor (the panel or the studio view), laid out once at base size and scaled
+    by the editor (PluginEditor). Each view owns its header, dialog and frame clock; the model
+    they share (presets, A/B, the stored view) is the EditorController, which outlives them.
 */
 class EditorView : public juce::Component
 {
@@ -21,8 +19,8 @@ public:
 
     virtual ViewMode getMode() const noexcept = 0;
 
-    /** Height at 100 % (the panel grows while its Advanced deck is open). */
-    virtual int getBaseHeight() const noexcept { return metrics::baseHeight; }
+    /** Height at 100 % (may change, e.g. a panel that grows while a drawer is open). */
+    virtual int getBaseHeight() const noexcept = 0;
 
     /** Wired by the editor: called when getBaseHeight() changes, so the window follows. */
     std::function<void()> onBaseSizeChanged;
@@ -57,4 +55,4 @@ protected:
     }
 };
 
-} // namespace cerulean::ui
+} // namespace myzel::ui

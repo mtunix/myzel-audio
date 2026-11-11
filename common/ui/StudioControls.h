@@ -1,10 +1,10 @@
 #pragma once
 
-#include "ui/StudioTheme.h"
+#include "common/ui/StudioTheme.h"
 
 #include <juce_audio_processors/juce_audio_processors.h>
 
-namespace cerulean::ui
+namespace myzel::ui
 {
 
 /**
@@ -174,13 +174,13 @@ private:
 
 //==============================================================================
 /**
-    One row of the algorithm list: number, name and a few words on its character. Radio-grouped.
-    Up/Down arrows ask for the previous/next algorithm through onStep.
+    One row of a selector list (an algorithm, a circuit): number, name and a few words on its
+    character. Radio-grouped. Up/Down arrows ask for the previous/next entry through onStep.
 */
-class AlgorithmRow final : public juce::Button
+class SelectorRow final : public juce::Button
 {
 public:
-    AlgorithmRow (int index, const juce::String& name, const juce::String& tagline);
+    SelectorRow (int index, const juce::String& name, const juce::String& tagline);
 
     std::function<void (int delta)> onStep;
 
@@ -192,7 +192,7 @@ private:
     int index;
     juce::String name, tagline;
 
-    JUCE_DECLARE_NON_COPYABLE_WITH_LEAK_DETECTOR (AlgorithmRow)
+    JUCE_DECLARE_NON_COPYABLE_WITH_LEAK_DETECTOR (SelectorRow)
 };
 
-} // namespace cerulean::ui
+} // namespace myzel::ui

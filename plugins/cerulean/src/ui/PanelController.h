@@ -3,7 +3,7 @@
 #include "plugin/Parameters.h"
 #include "ui/FactoryPresets.h"
 #include "ui/TailModel.h"
-#include "common/ui/ViewMode.h"
+#include "common/ui/EditorController.h"
 #include "ui/Theme.h"
 
 namespace cerulean
@@ -36,19 +36,12 @@ struct Meanings
 
     Message thread only.
 */
-class PanelController
+class PanelController : public EditorController
 {
 public:
     explicit PanelController (CeruleanProcessor& processor);
 
     CeruleanProcessor& getProcessor() noexcept { return processor; }
-    PresetManager& getPresets() noexcept     { return presets; }
-    AbCompare& getAb() noexcept              { return ab; }
-    juce::UndoManager& getUndoManager() noexcept;
-
-    juce::RangedAudioParameter& parameter (const char* id) const;
-    bool flag (const char* id) const;
-    int choice (const char* id) const;
 
     //==============================================================================
     Meanings readMeanings() const;
@@ -96,17 +89,8 @@ public:
     /** A few words on an algorithm's character (the studio view's algorithm list). */
     static juce::String algorithmTagline (Algorithm a);
 
-    //==============================================================================
-    /** The view stored in the session, or the user's default view if the session has none. */
-    ViewMode getView() const;
-
-    /** Stores the view in the session and makes it the default for new instances. */
-    void setView (ViewMode mode);
-
 private:
     CeruleanProcessor& processor;
-    PresetManager& presets;   // the processor's (it outlives every editor)
-    AbCompare ab;
 
     JUCE_DECLARE_NON_COPYABLE_WITH_LEAK_DETECTOR (PanelController)
 };

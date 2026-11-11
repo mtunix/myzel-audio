@@ -2,7 +2,7 @@
 
 #include <juce_gui_basics/juce_gui_basics.h>
 
-namespace cerulean::ui
+namespace myzel::ui
 {
 
 /**
@@ -14,10 +14,10 @@ class LockBadge final : public juce::Component,
                         public juce::SettableTooltipClient
 {
 public:
-    explicit LockBadge (juce::Colour inkColour) : ink (inkColour)
+    LockBadge (juce::Colour inkColour, const juce::String& tooltip) : ink (inkColour)
     {
         setInterceptsMouseClicks (true, false);
-        setTooltip ("Mix lock is on: presets and A/B keep Mix and Wet as they are. Turn it off in the settings menu.");
+        setTooltip (tooltip);
         setTitle ("Mix lock on");
     }
 
@@ -43,4 +43,4 @@ private:
     juce::Colour ink;
 };
 
-} // namespace cerulean::ui
+} // namespace myzel::ui

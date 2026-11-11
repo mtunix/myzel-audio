@@ -1,58 +1,25 @@
 #pragma once
 
+#include "common/ui/StudioTheme.h"
 #include "ui/Theme.h"
 
 namespace cerulean::ui
 {
 
 /**
-    Every colour of the studio view, as named tokens (defined in Theme.cpp with the panel's).
-
-    A flat deep-navy workstation surface: cards on a darker ground, light text, hairline edges,
-    no lighting or texture. The ice blue stays the one accent for things that are on (selected
-    algorithm, lit toggles, slider fills, focus). Data colours (the three decay bands, meters)
-    are only used inside the graph and the meters, and never alone: every band is also labelled
-    and drawn with its own line style. See src/ui/DESIGN.md.
+    The tail graph's own colours in the studio view (defined in Theme.cpp). Three bands with
+    distinct hue *and* line style; the kit's studio colours are Theme::studio(). See src/ui/DESIGN.md.
 */
-struct StudioPalette
+struct StudioExtras
 {
-    // Surfaces
-    juce::Colour background, card, cardEdge, inset, insetEdge, hover;
-
-    // Text
-    juce::Colour text, textDim, textFaint, title;
-
-    // Controls
-    juce::Colour track, trackFill, trackFillEdge, marker, chipOff, chipOffText;
-
-    // Accent (ice): on states, selection, focus
-    juce::Colour accent, accentDeep, accentSoft, accentText;
-
-    // Graph
-    juce::Colour grid, gridText, bandLow, bandMid, bandHigh, early, liveFill, liveLine;
-
-    // Meters
-    juce::Colour meterBack, meterFill, meterHot, meterClip, meterPeak, reduction;
-
-    // Caution (amber): Bypass
-    juce::Colour caution, cautionDeep;
+    juce::Colour bandLow, bandMid, bandHigh, early, liveFill, liveLine;
 };
 
-/** Studio view geometry, in base (100 %) editor coordinates. Same base size as the panel. */
+/** Cerulean's studio layout, in base (100 %) editor coordinates. Same base size as the panel. */
 namespace studio
 {
+    using namespace myzel::ui::studio;
     using R = juce::Rectangle<float>;
-
-    inline constexpr float gutter = 12.0f;
-    inline constexpr float cardCorner = 6.0f;
-    inline constexpr float cardTitleHeight = 30.0f;
-    inline constexpr float cardPad = 12.0f;
-
-    // Type
-    inline constexpr float titleSize = 10.5f, titleTracking = 0.16f;
-    inline constexpr float labelSize = 10.5f, labelTracking = 0.10f;
-    inline constexpr float valueSize = 12.5f;
-    inline constexpr float smallSize = 10.0f;
 
     // Columns
     inline R algorithmCard()   { return { 12.0f, 62.0f, 184.0f, 310.0f }; }

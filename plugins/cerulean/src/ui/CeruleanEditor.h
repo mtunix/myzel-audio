@@ -1,13 +1,10 @@
 #pragma once
 
-#include "common/ui/KitLookAndFeel.h"
-#include "ui/Theme.h"
-#include "ui/EditorView.h"
+#include "common/ui/PluginEditor.h"
 #include "ui/MainPanel.h"
 #include "ui/PanelController.h"
 #include "ui/StudioPanel.h"
-
-#include <juce_audio_processors/juce_audio_processors.h>
+#include "ui/Theme.h"
 
 namespace cerulean
 {
@@ -24,46 +21,18 @@ class CeruleanProcessor;
     the scale are stored in the processor's UI state, so they survive sessions; a session with no
     stored view opens in the user's default view (the one chosen last).
 */
-class CeruleanEditor final : public juce::AudioProcessorEditor,
-                           private juce::ValueTree::Listener
+class CeruleanEditor final : public myzel::ui::PluginEditor
 {
 public:
     explicit CeruleanEditor (CeruleanProcessor& p);
-    ~CeruleanEditor() override;
 
-    void setScale (float newScale);
-    float getScale() const noexcept { return scale; }
-
-    /** Switches to a view now (stored in the session and as the default for new instances). */
-    void setView (ui::ViewMode mode);
-    ui::ViewMode getViewMode() const noexcept { return view->getMode(); }
-
-    ui::EditorView& getView() noexcept { return *view; }
-    ui::PanelController& getController() noexcept { return controller; }
+    ui::PanelController& getController() noexcept { return static_cast<ui::PanelController&> (PluginEditor::getController()); }
 
     /** The panel view; only valid while it is shown. */
     ui::MainPanel& getMainPanel() noexcept;
 
     /** The studio view; only valid while it is shown. */
     ui::StudioPanel& getStudioPanel() noexcept;
-
-    /** One animation frame of the current view (the snapshot tool drives frames directly). */
-    void animateFrame (double timeSeconds) { view->animateFrame (timeSeconds); }
-
-    void paint (juce::Graphics& g) override;
-    void resized() override;
-
-private:
-    void showView (ui::ViewMode mode);
-    void applyBaseSize (float newScale);
-    void valueTreeRedirected (juce::ValueTree&) override;
-
-    CeruleanProcessor& processor;
-    ui::KitLookAndFeel lookAndFeel;        // declared first: outlives every child
-    ui::PanelController controller;        // outlives the views
-    std::unique_ptr<ui::EditorView> view;
-    std::unique_ptr<juce::TooltipWindow> tooltips;
-    float scale = 1.0f;
 
     JUCE_DECLARE_NON_COPYABLE_WITH_LEAK_DETECTOR (CeruleanEditor)
 };

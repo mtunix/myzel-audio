@@ -1,5 +1,7 @@
 #include "ui/Theme.h"
 
+#include "common/ui/StudioTheme.h"
+
 namespace umber::ui
 {
 
@@ -89,6 +91,51 @@ namespace
         return p;
     }
 
+    StudioPalette makeStudio()
+    {
+        StudioPalette p;
+
+        // Flat near-black umber: cards a step lighter than the ground, hairline edges.
+        p.background    = C (0xff16110d);
+        p.card          = C (0xff1e1712);
+        p.cardEdge      = C (0xff32271e);
+        p.inset         = C (0xff120e0b);
+        p.insetEdge     = C (0xff2c2219);
+        p.hover         = C (0xff281f18);
+
+        // Text on a card: text 14:1, textDim 7.2:1, title 6.1:1, textFaint 5.2:1 (all >= WCAG AA).
+        p.text          = C (0xffeee3d3);
+        p.textDim       = C (0xffb5a28d);
+        p.textFaint     = C (0xff9c8873);
+        p.title         = C (0xffa8947f);
+
+        p.track         = C (0xff30251c);
+        p.trackFill     = C (0xffc8601c);
+        p.trackFillEdge = C (0xffffa040);
+        p.marker        = C (0xff6b5747);
+        p.chipOff       = C (0xff2b2119);
+        p.chipOffText   = C (0xffb5a28d);
+
+        // The accent: the panel's amber.
+        p.accent        = C (0xffffa040);
+        p.accentDeep    = C (0xffa14f15);   // lit chips: white text 5.8:1
+        p.accentSoft    = C (0x33c8601c);
+        p.accentText    = C (0xff1a0f08);
+
+        p.grid          = C (0x1fe6c9a6);
+        p.gridText      = C (0xff98846f);
+
+        p.meterBack     = C (0xff100c09);
+        p.meterFill     = C (0xffc98545);
+        p.meterHot      = C (0xffeccb6e);
+        p.meterClip     = C (0xffff6a52);
+        p.meterPeak     = C (0xfff6e6cf);
+        p.reduction     = C (0xffd9a35c);
+        p.caution       = C (0xffe8603f);   // Bypass, as on the panel
+        p.cautionDeep   = C (0xff4c2117);
+        return p;
+    }
+
     PanelLook makeLook()
     {
         PanelLook l;
@@ -127,4 +174,10 @@ const myzel::ui::PanelLook& myzel::ui::Theme::look() noexcept
 {
     static const PanelLook look = umber::ui::makeLook();
     return look;
+}
+
+const myzel::ui::StudioPalette& myzel::ui::Theme::studio() noexcept
+{
+    static const StudioPalette s = umber::ui::makeStudio();
+    return s;
 }

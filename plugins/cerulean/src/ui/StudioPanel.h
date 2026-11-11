@@ -1,10 +1,11 @@
 #pragma once
 
-#include "ui/EditorView.h"
-#include "ui/LockBadge.h"
+#include "common/ui/EditorView.h"
+#include "ui/Header.h"
+#include "common/ui/LockBadge.h"
 #include "ui/PanelController.h"
-#include "ui/StudioControls.h"
-#include "ui/StudioMeters.h"
+#include "common/ui/StudioControls.h"
+#include "common/ui/StudioMeters.h"
 #include "ui/StudioTail.h"
 
 #include <array>
@@ -40,6 +41,7 @@ public:
     ~StudioPanel() override;
 
     ViewMode getMode() const noexcept override { return ViewMode::studio; }
+    int getBaseHeight() const noexcept override { return metrics::baseHeight; }
     void animateFrame (double timeSeconds) override;
     HeaderBar& getHeader() noexcept override { return header; }
     InlineDialog& getDialog() noexcept override { return dialog; }
@@ -47,7 +49,7 @@ public:
     // Test hooks.
     /** The slider that currently edits a parameter (follows rebinding: Pre-delay note, Echo note). */
     StudioSlider* findSlider (const juce::String& parameterId) const;
-    AlgorithmRow& getAlgorithmRow (int index) noexcept { return *algorithmRows[(size_t) index]; }
+    SelectorRow& getSelectorRow (int index) noexcept { return *algorithmRows[(size_t) index]; }
     StudioToggle& getFreezeKey() noexcept { return freezeKey; }
     StudioToggle* findToggle (const juce::String& parameterId) noexcept;
     StudioToggle& getFreezeModeKey (FreezeMode mode) noexcept { return mode == FreezeMode::momentary ? momentaryKey : latchKey; }
@@ -73,10 +75,10 @@ private:
     InlineDialog dialog;
     HeaderBar header;
     StudioTail tail;
-    LockBadge mixLockBadge { Theme::studio().textDim };
+    LockBadge mixLockBadge { Theme::studio().textDim, "Mix lock is on: presets and A/B keep Mix and Wet as they are. Turn it off in the settings menu." };
     StudioMeters meters;
 
-    std::array<std::unique_ptr<AlgorithmRow>, numAlgorithms> algorithmRows;
+    std::array<std::unique_ptr<SelectorRow>, numAlgorithms> algorithmRows;
     std::unique_ptr<juce::ParameterAttachment> algorithmAttachment;
 
     std::vector<std::unique_ptr<StudioSlider>> sliders;

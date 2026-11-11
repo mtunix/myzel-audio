@@ -1,9 +1,8 @@
-#include "ui/StudioControls.h"
+#include "common/ui/StudioControls.h"
 
 #include "common/ui/Drawing.h"
-#include "ui/Theme.h"
 
-namespace cerulean::ui
+namespace myzel::ui
 {
 
 namespace
@@ -720,7 +719,7 @@ void StudioToggle::paintButton (juce::Graphics& g, bool highlighted, bool down)
 }
 
 //==============================================================================
-AlgorithmRow::AlgorithmRow (int i, const juce::String& n, const juce::String& t)
+SelectorRow::SelectorRow (int i, const juce::String& n, const juce::String& t)
     : juce::Button (n),
       index (i),
       name (n),
@@ -731,7 +730,7 @@ AlgorithmRow::AlgorithmRow (int i, const juce::String& n, const juce::String& t)
     setMouseCursor (juce::MouseCursor::PointingHandCursor);
 }
 
-bool AlgorithmRow::keyPressed (const juce::KeyPress& key)
+bool SelectorRow::keyPressed (const juce::KeyPress& key)
 {
     const auto code = key.getKeyCode();
 
@@ -744,7 +743,7 @@ bool AlgorithmRow::keyPressed (const juce::KeyPress& key)
     return juce::Button::keyPressed (key);
 }
 
-void AlgorithmRow::paintButton (juce::Graphics& g, bool highlighted, bool down)
+void SelectorRow::paintButton (juce::Graphics& g, bool highlighted, bool down)
 {
     const auto& p = pal();
     const auto on = getToggleState();
@@ -783,4 +782,4 @@ void AlgorithmRow::paintButton (juce::Graphics& g, bool highlighted, bool down)
     }
 }
 
-} // namespace cerulean::ui
+} // namespace myzel::ui

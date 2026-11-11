@@ -7,32 +7,9 @@ namespace cerulean::ui
 {
 
 PanelController::PanelController (CeruleanProcessor& p)
-    : processor (p),
-      presets (p.getPresets()),
-      ab (p, presets)
+    : EditorController (p, p.getPresets()),
+      processor (p)
 {
-}
-
-juce::UndoManager& PanelController::getUndoManager() noexcept
-{
-    return processor.getUndoManager();
-}
-
-juce::RangedAudioParameter& PanelController::parameter (const char* id) const
-{
-    auto* param = processor.getState().getParameter (id);
-    jassert (param != nullptr);
-    return *param;
-}
-
-bool PanelController::flag (const char* id) const
-{
-    return processor.getState().getRawParameterValue (id)->load (std::memory_order_relaxed) >= 0.5f;
-}
-
-int PanelController::choice (const char* id) const
-{
-    return juce::roundToInt (processor.getState().getRawParameterValue (id)->load (std::memory_order_relaxed));
 }
 
 //==============================================================================
@@ -206,19 +183,6 @@ juce::String PanelController::algorithmTagline (Algorithm a)
     }
 
     return {};
-}
-
-//==============================================================================
-ViewMode PanelController::getView() const
-{
-    const auto stored = processor.getUiState().getProperty (uistate::view).toString();
-    return viewModeFromString (stored, viewPreference::getDefault (presets.getPluginName()));
-}
-
-void PanelController::setView (ViewMode mode)
-{
-    processor.getUiState().setProperty (uistate::view, toString (mode), nullptr);
-    viewPreference::setDefault (presets.getPluginName(), mode);
 }
 
 } // namespace cerulean::ui

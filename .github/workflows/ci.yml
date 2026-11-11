@@ -1,0 +1,112 @@
+name: CI
+
+on:
+  push:
+  pull_request:
+
+# One job per plugin and platform: each builds only its plugin (-DMYZEL_PLUGINS), so the
+# artefacts and failures stay separate. Changes under common/ or the root build affect all.
+jobs:
+  linux:
+    runs-on: ubuntu-24.04
+    strategy:
+      fail-fast: false
+      matrix:
+        plugin: [cerulean, umber]
+    env:
+      CPM_SOURCE_CACHE: ${{ github.workspace }}/.cache/CPM
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Install dependencies
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y ninja-build libasound2-dev libjack-jackd2-dev \
+            libfreetype-dev libfontconfig1-dev libx11-dev libxcomposite-dev libxcursor-dev \
+            libxext-dev libxi-dev libxinerama-dev libxrandr-dev libxrender-dev xvfb
+
+      - name: Cache CPM downloads
+        uses: actions/cache@v4
+        with:
+          path: .cache/CPM
+          key: cpm-${{ hashFiles('CMakeLists.txt') }}
+
+      - name: Configure
+        run: cmake -S . -B build -G Ninja -DCMAKE_BUILD_TYPE=Release -DMYZEL_ENABLE_LTO=OFF -DMYZEL_PLUGINS=${{ matrix.plugin }}
+
+      - name: Build
+        run: cmake --build build
+
+      - name: Tests
+        run: ctest --test-dir build --output-on-failure -j 4
+
+      - name: pluginval (strictness 10)
+        run: xvfb-run -a tools/pluginval.sh ${{ matrix.plugin }} build 10
+
+      - name: Package
+        run: tools/package.sh ${{ matrix.plugin }} build
+
+      - name: Upload package
+        uses: actions/upload-artifact@v4
+        with:
+          name: ${{ matrix.plugin }}-linux-x86_64
+          path: dist/*.tar.gz
+
+  # Unsigned builds: no code signing or notarisation (out of scope for now). Not verified yet.
+  windows:
+    runs-on: windows-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        plugin: [cerulean, umber]
+    env:
+      CPM_SOURCE_CACHE: ${{ github.workspace }}/.cache/CPM
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/cache@v4
+        with:
+          path: .cache/CPM
+          key: cpm-win-${{ hashFiles('CMakeLists.txt') }}
+      - name: Configure
+        run: cmake -S . -B build -DMYZEL_ENABLE_LTO=OFF -DMYZEL_PLUGINS=${{ matrix.plugin }}
+      - name: Build
+        run: cmake --build build --config Release --parallel
+      - name: Tests
+        run: ctest --test-dir build -C Release --output-on-failure -j 4
+      - name: Upload plugins
+        uses: actions/upload-artifact@v4
+        with:
+          name: ${{ matrix.plugin }}-windows-x64-unsigned
+          path: |
+            build/plugins/${{ matrix.plugin }}/*_artefacts/Release/VST3
+            build/plugins/${{ matrix.plugin }}/*_artefacts/Release/CLAP
+            build/plugins/${{ matrix.plugin }}/*_artefacts/Release/Standalone
+
+  macos:
+    runs-on: macos-14
+    strategy:
+      fail-fast: false
+      matrix:
+        plugin: [cerulean, umber]
+    env:
+      CPM_SOURCE_CACHE: ${{ github.workspace }}/.cache/CPM
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/cache@v4
+        with:
+          path: .cache/CPM
+          key: cpm-mac-${{ hashFiles('CMakeLists.txt') }}
+      - name: Configure
+        run: cmake -S . -B build -G Xcode -DMYZEL_ENABLE_LTO=OFF -DMYZEL_PLUGINS=${{ matrix.plugin }} -DCMAKE_OSX_ARCHITECTURES="arm64;x86_64"
+      - name: Build
+        run: cmake --build build --config Release --parallel
+      - name: Tests
+        run: ctest --test-dir build -C Release --output-on-failure -j 4
+      - name: Upload plugins
+        uses: actions/upload-artifact@v4
+        with:
+          name: ${{ matrix.plugin }}-macos-universal-unsigned
+          path: |
+            build/plugins/${{ matrix.plugin }}/*_artefacts/Release/VST3
+            build/plugins/${{ matrix.plugin }}/*_artefacts/Release/CLAP
+            build/plugins/${{ matrix.plugin }}/*_artefacts/Release/Standalone

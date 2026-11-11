@@ -1,0 +1,13 @@
+/build*/
+/cmake-build-*/
+/dist/
+/tools/.bin/
+/.cache/
+compile_commands.json
+.vscode/
+.idea/
+*.swp
+
+# Local only
+/CLAUDE.md
+/plugins/*/PLAN.md

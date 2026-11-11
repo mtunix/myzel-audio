@@ -1,0 +1,25 @@
+# Approximates the JUCE coding style used throughout this repository.
+BasedOnStyle: LLVM
+Language: Cpp
+Standard: c++20
+ColumnLimit: 0
+IndentWidth: 4
+TabWidth: 4
+UseTab: Never
+BreakBeforeBraces: Allman
+SpaceBeforeParens: NonEmptyParentheses
+SpaceAfterCStyleCast: true
+SpaceAfterLogicalNot: true
+PointerAlignment: Left
+AccessModifierOffset: -4
+AllowShortFunctionsOnASingleLine: Inline
+AllowShortIfStatementsOnASingleLine: Never
+AllowShortLambdasOnASingleLine: All
+NamespaceIndentation: None
+FixNamespaceComments: true
+IndentCaseLabels: true
+SortIncludes: CaseSensitive
+IncludeBlocks: Preserve
+AlignAfterOpenBracket: Align
+BreakConstructorInitializers: BeforeComma
+ConstructorInitializerIndentWidth: 4

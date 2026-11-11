@@ -1,5 +1,7 @@
 #include "plugin/PluginProcessor.h"
 
+#include "common/plugin/SessionState.h"
+
 #include "dsp/Mappings.h"
 #include "ui/FactoryPresets.h"
 
@@ -14,7 +16,6 @@ namespace cerulean
 namespace
 {
     const juce::Identifier stateTreeType { "CeruleanState" };
-    const juce::Identifier stateVersionId { "stateVersion" };
 
     int choice (const std::atomic<float>* p) { return juce::roundToInt (p->load()); }
     bool flag (const std::atomic<float>* p) { return p->load() >= 0.5f; }
@@ -276,23 +277,17 @@ juce::AudioProcessorEditor* CeruleanProcessor::createEditor()
 
 void CeruleanProcessor::getStateInformation (juce::MemoryBlock& destData)
 {
-    auto state = apvts.copyState();
-    state.setProperty (stateVersionId, stateVersion, nullptr);
-
-    if (const auto xml = state.createXml())
-        copyXmlToBinary (*xml, destData);
+    myzel::plugin::sessionState::write (apvts, stateVersion, destData);
 }
 
 void CeruleanProcessor::setStateInformation (const void* data, int sizeInBytes)
 {
-    const auto xml = getXmlFromBinary (data, sizeInBytes);
+    const auto state = myzel::plugin::sessionState::read (apvts, data, sizeInBytes);
 
-    if (xml == nullptr || ! xml->hasTagName (apvts.state.getType()))
+    if (! state.isValid())
         return;
 
-    auto state = juce::ValueTree::fromXml (*xml);
-
-    // Future: migrate older state versions here, based on state[stateVersionId].
+    // Future: migrate older state versions here, based on state[sessionState::versionId].
 
     // The restored session wins over a program change the browser has not shown yet, and the
     // host program follows its preset (read from the new tree: the live UI state belongs to
@@ -303,17 +298,7 @@ void CeruleanProcessor::setStateInformation (const void* data, int sizeInBytes)
     currentProgram.store (programFor (ui.getProperty ("presetName").toString(), (bool) ui.getProperty ("presetIsUser", false)),
                           std::memory_order_relaxed);
 
-    apvts.replaceState (state);
-
-    // replaceState() skips a parameter whose restored value equals its cached *snapped* value,
-    // so a bool a host set to a raw 0.76 would stay 0.76 when the session says 1. Write any
-    // parameter whose raw value is not what the session says.
-    for (auto* p : getParameters())
-        if (auto* ranged = dynamic_cast<juce::RangedAudioParameter*> (p))
-            if (const auto child = state.getChildWithProperty ("id", ranged->getParameterID()); child.isValid())
-                if (const auto target = ranged->convertTo0to1 ((float) child.getProperty ("value"));
-                    std::abs (ranged->getValue() - target) > 1.0e-6f)
-                    ranged->setValueNotifyingHost (target);
+    myzel::plugin::sessionState::restore (apvts, state);
 
     // A restored session starts with a fresh history. Hosts may call this off the message
     // thread, and UndoManager is message-thread only.

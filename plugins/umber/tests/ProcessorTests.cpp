@@ -130,6 +130,28 @@ TEST_CASE ("State round-trips through get/setStateInformation", "[processor][sta
     CHECK_THAT (value (params::mix), WithinAbs (42.0, 0.1));
 }
 
+TEST_CASE ("Restoring a state undoes raw host values on switches", "[processor][state]")
+{
+    // Hosts (and pluginval) may set a bool to any value, e.g. 0.76. The session says 1, so
+    // restoring it must give exactly 1, although 0.76 already "means" on.
+    const juce::ScopedJuceInitialiser_GUI juce;
+    UmberProcessor p;
+    p.getState().getParameter (params::slam)->setValueNotifyingHost (1.0f);
+    juce::MemoryBlock state;
+    p.getStateInformation (state);
+
+    for (const auto* id : { params::slam, params::weight, params::autoGain })
+    {
+        auto* param = p.getState().getParameter (id);
+        const auto saved = param->getValue();
+        param->setValueNotifyingHost (saved > 0.5f ? 0.76f : 0.24f);
+
+        p.setStateInformation (state.getData(), (int) state.getSize());
+        INFO (id);
+        CHECK (param->getValue() == saved);
+    }
+}
+
 TEST_CASE ("Garbage state is ignored", "[processor][state]")
 {
     juce::ScopedJuceInitialiser_GUI juce;

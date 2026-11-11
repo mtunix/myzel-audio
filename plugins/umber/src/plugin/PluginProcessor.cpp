@@ -1,5 +1,7 @@
 #include "plugin/PluginProcessor.h"
 
+#include "common/plugin/SessionState.h"
+
 #include "ui/FactoryPresets.h"
 #include "ui/UmberEditor.h"
 
@@ -9,7 +11,6 @@ namespace umber
 namespace
 {
     const juce::Identifier stateTreeType { "UmberState" };
-    const juce::Identifier stateVersionId { "stateVersion" };
 
     constexpr int realtimeFactors[] = { 2, 4, 8 };   // Quality: Eco, Standard, High
     constexpr int renderFactors[]   = { 0, 8, 16 };  // Render: same, High, Ultra
@@ -104,24 +105,18 @@ juce::AudioProcessorEditor* UmberProcessor::createEditor()
 
 void UmberProcessor::getStateInformation (juce::MemoryBlock& destData)
 {
-    auto state = apvts.copyState();
-    state.setProperty (stateVersionId, stateVersion, nullptr);
-
-    if (const auto xml = state.createXml())
-        copyXmlToBinary (*xml, destData);
+    myzel::plugin::sessionState::write (apvts, stateVersion, destData);
 }
 
 void UmberProcessor::setStateInformation (const void* data, int sizeInBytes)
 {
-    const auto xml = getXmlFromBinary (data, sizeInBytes);
+    const auto state = myzel::plugin::sessionState::read (apvts, data, sizeInBytes);
 
-    if (xml == nullptr || ! xml->hasTagName (apvts.state.getType()))
+    if (! state.isValid())
         return;
 
-    auto state = juce::ValueTree::fromXml (*xml);
-
-    // Future: migrate older state versions here, based on state[stateVersionId].
-    apvts.replaceState (state);
+    // Future: migrate older state versions here, based on state[sessionState::versionId].
+    myzel::plugin::sessionState::restore (apvts, state);
 
     // A restored session starts with a fresh history. Hosts may call this off the message
     // thread, and UndoManager is message-thread only.

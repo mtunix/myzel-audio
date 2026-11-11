@@ -107,6 +107,7 @@ endif()
 
 # Shared code -----------------------------------------------------------------
 add_subdirectory(common)
+include(cmake/MyzelPlugin.cmake)
 
 # Plugins ---------------------------------------------------------------------
 foreach(plugin IN LISTS MYZEL_PLUGINS)

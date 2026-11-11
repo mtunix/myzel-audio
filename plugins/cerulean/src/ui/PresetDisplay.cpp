@@ -110,8 +110,8 @@ void PresetDisplay::paintButton (juce::Graphics& g, bool highlighted, bool)
     {
         const auto shownWidth = juce::jmin (nameWidth, textArea.getWidth() - dotSpace);
         const auto dot = juce::Rectangle<float> (6.0f, 6.0f).withCentre ({ textArea.getX() + shownWidth + 9.0f, area.getCentreY() });
-        drawing::fillGlow (g, dot.getCentre(), 7.0f, pal.ice, 0.45f);
-        g.setColour (pal.ice);
+        drawing::fillGlow (g, dot.getCentre(), 7.0f, pal.accent, 0.45f);
+        g.setColour (pal.accent);
         g.fillEllipse (dot);
     }
 

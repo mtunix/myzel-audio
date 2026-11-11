@@ -33,7 +33,7 @@ target_sources(UmberShared INTERFACE
 target_link_libraries(UmberShared INTERFACE
     UmberDsp
     MyzelPlugin
-    MyzelUiAssets
+    MyzelUi
     juce::juce_audio_utils
     melatonin_blur)
 

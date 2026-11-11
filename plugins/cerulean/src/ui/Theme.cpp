@@ -1,8 +1,6 @@
 #include "ui/Theme.h"
 #include "ui/StudioTheme.h"
 
-#include <MyzelAssets.h>
-
 namespace cerulean::ui
 {
 
@@ -10,7 +8,7 @@ namespace
 {
     using C = juce::Colour;
 
-    Palette makeCerulean()
+    Palette makePalette()
     {
         Palette p;
 
@@ -20,7 +18,6 @@ namespace
         p.panelGrain      = C (0xffffffff);
         p.panelVignette   = C (0xff04101c);
         p.panelEdgeLight  = C (0x40ffffff);
-        p.panelEdgeDark   = C (0x99000000);
 
         // Pale silkscreen on the blue, with a soft drop shadow (drawn below the ink by
         // drawLegend as legendLight). legend >= 7.4:1 on the panel, legendDim >= 4.9:1 (WCAG AA).
@@ -38,7 +35,6 @@ namespace
         // Navy rail and key caps: the family's dark surfaces, tinted blue.
         p.headerTop       = C (0xff16212d);
         p.headerBottom    = C (0xff111a24);
-        p.headerEdge      = C (0xff2f4054);
         p.headerLegend    = C (0xffe3ecf4);
         p.headerLegendDim = C (0xff8497aa);
         p.displayGlass    = C (0xff0a121b);
@@ -59,11 +55,26 @@ namespace
         p.tickMinor       = C (0x99c3d6e6);
 
         // The only accent: ice blue, for lamps and active states.
-        p.iceCore         = C (0xffeefaff);
-        p.ice             = C (0xff8fd6ff);
-        p.iceDeep         = C (0xff2f8fd0);
+        p.accentCore         = C (0xffeefaff);
+        p.accent             = C (0xff8fd6ff);
+        p.accentDeep         = C (0xff2f8fd0);
         p.lensOff         = C (0xff111b26);
         p.lensOffRim      = C (0xff070c12);
+
+        p.focus           = C (0xff9edcff);   // light ice: >= 5:1 against the blue panel
+        p.focusOnDark     = C (0xff8fd6ff);
+        p.bubbleFill      = C (0xff111922);
+        p.bubbleEdge      = C (0x40ffffff);
+        p.overlayDim      = C (0x8a060c14);
+        p.danger          = C (0xffff9d8f);   // destructive dialog actions and errors only
+        p.caution         = C (0xfff0b45a);   // Bypass: amber, never used for "on"
+        p.cautionDeep     = C (0xff4a3a26);
+        return p;
+    }
+
+    Extras makeExtras()
+    {
+        Extras p;
 
         // Tail display: smoked glass over a deep night-blue screen.
         p.bezel           = C (0xff141b24);
@@ -77,30 +88,15 @@ namespace
         p.liveFill        = C (0x7a3f9be6);
         p.liveLine        = C (0xff9fd8ff);
 
-        // Advanced deck: a recessed strip of the same blue, a step darker.
-        p.drawerTop       = C (0xff123b5a);
-        p.drawerBottom    = C (0xff154364);
-        p.drawerLegend    = C (0xffeaf2f8);
-        p.drawerLegendDim = C (0xffa6c0d4);
         p.drawerValue     = C (0xfff4f9fc);
-
-        p.focus           = C (0xff9edcff);   // light ice: >= 5:1 against the blue panel
-        p.focusOnDark     = C (0xff8fd6ff);
-        p.bubbleFill      = C (0xff111922);
-        p.bubbleText      = C (0xfff0f5f9);
-        p.bubbleEdge      = C (0x40ffffff);
-        p.overlayDim      = C (0x8a060c14);
-        p.danger          = C (0xffff9d8f);   // destructive dialog actions and errors only
-        p.caution         = C (0xfff0b45a);   // Bypass: amber, never used for "on"
-        p.cautionDeep     = C (0xff4a3a26);
         return p;
     }
 }
 
-const Palette& Theme::palette() noexcept
+const Extras& Theme::extras() noexcept
 {
-    static const Palette cerulean = makeCerulean();
-    return cerulean;
+    static const Extras extras = makeExtras();
+    return extras;
 }
 
 namespace
@@ -164,30 +160,11 @@ const StudioPalette& Theme::studio() noexcept
     return s;
 }
 
-//==============================================================================
-Fonts::Fonts()
-    : medium   (juce::Typeface::createSystemTypefaceFor (MyzelAssets::InterMedium_otf,
-                                                         (size_t) MyzelAssets::InterMedium_otfSize)),
-      semiBold (juce::Typeface::createSystemTypefaceFor (MyzelAssets::InterSemiBold_otf,
-                                                         (size_t) MyzelAssets::InterSemiBold_otfSize)),
-      black    (juce::Typeface::createSystemTypefaceFor (MyzelAssets::InterDisplayBlack_otf,
-                                                         (size_t) MyzelAssets::InterDisplayBlack_otfSize))
-{
-}
-
-juce::Font Fonts::legend (float height) const
-{
-    return juce::Font (juce::FontOptions (semiBold).withHeight (height));
-}
-
-juce::Font Fonts::label (float height) const
-{
-    return juce::Font (juce::FontOptions (medium).withHeight (height));
-}
-
-juce::Font Fonts::display (float height) const
-{
-    return juce::Font (juce::FontOptions (black).withHeight (height));
-}
-
 } // namespace cerulean::ui
+
+// The kit colours: declared in common/ui/Theme.h, defined here for this plugin.
+const myzel::ui::Palette& myzel::ui::Theme::palette() noexcept
+{
+    static const Palette palette = cerulean::ui::makePalette();
+    return palette;
+}

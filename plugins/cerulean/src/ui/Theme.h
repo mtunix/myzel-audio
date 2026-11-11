@@ -1,90 +1,49 @@
 #pragma once
 
-#include <juce_gui_basics/juce_gui_basics.h>
+#include "common/ui/Theme.h"
 
 namespace cerulean::ui
 {
 
+using myzel::ui::Fonts;
+using myzel::ui::Palette;
+
 /**
-    Every colour of the Cerulean look, as named tokens.
-
-    A deep cerulean powder-coat panel with pale silkscreen, graphite knobs with turned
-    aluminium caps, a navy header rail, and a single ice-blue accent that is reserved for
-    things that are on (key LEDs, the selected A/B slot, focus rings, the live tail display).
-    See src/ui/DESIGN.md.
+    Colours of Cerulean's own displays: the tail display and the Advanced drawer. The kit colours
+    (a deep cerulean panel with pale silkscreen, graphite knobs, a navy header rail and a single
+    ice-blue accent) are Theme::palette(). See src/ui/DESIGN.md.
 */
-struct Palette
+struct Extras
 {
-    // Panel (deep cerulean powder coat)
-    juce::Colour panelTop, panelBottom, panelGrain, panelVignette;
-    juce::Colour panelEdgeLight, panelEdgeDark;
-
-    // Legends (pale ink on the blue panel; legendLight is the drop shadow drawn under the ink)
-    juce::Colour legend, legendDim, legendShadow, legendLight;
-    juce::Colour grooveDark, grooveLight;
-
-    // Wells (recesses the keys sit in)
-    juce::Colour wellFill, wellShadow, wellLip;
-
-    // Header rail and other dark surfaces (header keys, menus, dialogs)
-    juce::Colour headerTop, headerBottom, headerEdge;
-    juce::Colour headerLegend, headerLegendDim;
-    juce::Colour displayGlass, displayText, displayTextDim;
-    juce::Colour keyTop, keyBottom, keyText, keyTextActive;
-
-    // Knobs
-    juce::Colour skirtLight, skirtDark;
-    juce::Colour capLight, capDark;
-    juce::Colour pointer;
-    juce::Colour tickMajor, tickMinor;
-
-    // The accent (ice blue): lamps and active states only
-    juce::Colour iceCore, ice, iceDeep;
-    juce::Colour lensOff, lensOffRim;
-
     // Tail display
     juce::Colour bezel;
     juce::Colour screenTop, screenBottom, screenGrid, screenText, screenTextDim;
     juce::Colour traceMid, traceBand, liveFill, liveLine;
 
     // Advanced drawer
-    juce::Colour drawerTop, drawerBottom, drawerLegend, drawerLegendDim, drawerValue;
-
-    // Feedback
-    juce::Colour focus, focusOnDark, bubbleFill, bubbleText, bubbleEdge, overlayDim, danger;
-
-    // Caution (amber): states that silence or bypass the sound (Bypass). Never means "on".
-    juce::Colour caution, cautionDeep;
+    juce::Colour drawerValue;
 };
 
-/** Dimensions in base (100 %) editor coordinates. */
+struct StudioPalette;
+
+/** The palettes: the kit's (Theme::palette()), the panel displays' and the studio view's. */
+struct Theme : myzel::ui::Theme
+{
+    static const Extras& extras() noexcept;
+    static const StudioPalette& studio() noexcept;
+};
+
+/** Dimensions in base (100 %) editor coordinates (the shared ones come from common/ui/Theme.h). */
 namespace metrics
 {
+    using namespace myzel::ui::metrics;
+
     inline constexpr int baseWidth  = 1088;
     inline constexpr int baseHeight = 580;
-    inline constexpr float headerHeight = 50.0f;
-
-    inline constexpr float minScale = 0.75f;
-    inline constexpr float maxScale = 2.0f;
-
-    // Light comes from the top-left: every shadow is offset by this (scaled by elevation).
-    inline constexpr float shadowDx = 0.45f;
-    inline constexpr float shadowDy = 1.0f;
-
-    inline constexpr float legendSize      = 12.0f;
-    inline constexpr float legendTracking  = 0.14f;   // extra kerning for small caps legends
-    inline constexpr float scaleNumberSize = 9.5f;
-    inline constexpr float keyLabelSize    = 10.5f;
 
     // Advanced drawer: smaller type, still >= 7.5 device px at 75 %.
     inline constexpr float drawerLegendSize = 11.0f;
     inline constexpr float drawerValueSize  = 11.5f;
-
-    inline constexpr float knobStartAngle = -2.35619449f;   // -135 degrees
-    inline constexpr float knobEndAngle   =  2.35619449f;   // +135 degrees
-
-    inline constexpr float lampFadeSeconds    = 0.08f;
-    inline constexpr float legendFadeSeconds  = 0.18f;   // Param A/B relabel crossfade
 }
 
 /** Fixed positions of every control, in base coordinates (the layout grid). */
@@ -161,32 +120,5 @@ namespace layout
                  diameter + 2.0f * pad, diameter + 2.0f * pad };
     }
 }
-
-/** Shared typefaces (Inter, SIL OFL 1.1), loaded once and shared via SharedResourcePointer. */
-class Fonts
-{
-public:
-    Fonts();
-
-    juce::Font legend (float height) const;     // Inter SemiBold
-    juce::Font label (float height) const;      // Inter Medium
-    juce::Font display (float height) const;    // Inter Display Black (display headline)
-
-    juce::Typeface::Ptr getMedium() const { return medium; }
-
-private:
-    juce::Typeface::Ptr medium, semiBold, black;
-
-    JUCE_DECLARE_NON_COPYABLE (Fonts)
-};
-
-struct StudioPalette;   // StudioTheme.h
-
-/** The palettes: the panel view's, and the studio view's. */
-struct Theme
-{
-    static const Palette& palette() noexcept;
-    static const StudioPalette& studio() noexcept;
-};
 
 } // namespace cerulean::ui

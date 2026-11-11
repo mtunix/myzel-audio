@@ -1,72 +1,34 @@
 #pragma once
 
-#include <juce_gui_basics/juce_gui_basics.h>
+#include "common/ui/Theme.h"
 
 namespace umber::ui
 {
 
+using myzel::ui::Fonts;
+using myzel::ui::Palette;
+
 /**
-    Every colour of the Umber look, as named tokens.
-
-    A matte dark umber (deep brown) panel with cream silkscreen, black knobs with turned aluminium
-    caps and a single amber accent that is reserved for lamps and active states.
-    See src/ui/DESIGN.md.
+    Colours of Umber's own displays: the VU meter. The kit colours (a matte dark umber panel with
+    cream silkscreen, black knobs and a single amber accent) are Theme::palette(). See src/ui/DESIGN.md.
 */
-struct Palette
+struct Extras
 {
-    // Panel (powder-coated)
-    juce::Colour panelTop, panelBottom, panelGrain, panelVignette;
-    juce::Colour panelEdgeLight, panelEdgeDark;
-
-    // Legends (printed / engraved)
-    juce::Colour legend, legendDim, legendShadow, legendLight;
-    juce::Colour rule;
-
-    // Header rail
-    juce::Colour headerTop, headerBottom, headerEdge;
-    juce::Colour displayGlass, displayText, displayTextDim;
-    juce::Colour keyTop, keyBottom, keyText, keyTextActive;
-
-    // Knobs
-    juce::Colour skirtLight, skirtDark;
-    juce::Colour capLight, capDark;
-    juce::Colour pointer;
-    juce::Colour tickMajor, tickMinor;
-
-    // Lamps and the accent colour
-    juce::Colour emberCore, ember, emberDeep;
-    juce::Colour lensOff, lensOffRim;
-
-    // Meter
     juce::Colour meterFaceCentre, meterFaceEdge, meterInk, meterRed, needle, meterBezel;
-
-    // Feedback
-    juce::Colour focus, bubbleFill, bubbleText, bubbleEdge, overlayDim;
 };
 
-/** Dimensions in base (100 %) editor coordinates. */
+struct Theme : myzel::ui::Theme
+{
+    static const Extras& extras() noexcept;
+};
+
+/** Dimensions in base (100 %) editor coordinates (the shared ones come from common/ui/Theme.h). */
 namespace metrics
 {
+    using namespace myzel::ui::metrics;
+
     inline constexpr int baseWidth  = 1088;
     inline constexpr int baseHeight = 580;
-    inline constexpr float headerHeight = 50.0f;
-
-    inline constexpr float minScale = 0.75f;
-    inline constexpr float maxScale = 2.0f;
-
-    // Light comes from the top-left: every shadow is offset by this (scaled by elevation).
-    inline constexpr float shadowDx = 0.45f;
-    inline constexpr float shadowDy = 1.0f;
-
-    inline constexpr float legendSize      = 12.0f;
-    inline constexpr float legendTracking  = 0.14f;   // extra kerning for small caps legends
-    inline constexpr float scaleNumberSize = 9.5f;
-    inline constexpr float keyLabelSize    = 10.5f;
-
-    inline constexpr float knobStartAngle = -2.35619449f;   // -135 degrees
-    inline constexpr float knobEndAngle   =  2.35619449f;   // +135 degrees
-
-    inline constexpr float lampFadeSeconds = 0.08f;
 }
 
 /** Fixed positions of every control, in base coordinates (the layout grid). */
@@ -125,29 +87,5 @@ namespace layout
                  diameter + 2.0f * pad, diameter + 2.0f * pad };
     }
 }
-
-/** Shared typefaces (Inter, SIL OFL 1.1), loaded once and shared via SharedResourcePointer. */
-class Fonts
-{
-public:
-    Fonts();
-
-    juce::Font legend (float height) const;     // Inter SemiBold
-    juce::Font label (float height) const;      // Inter Medium
-    juce::Font display (float height) const;    // Inter Display Black (VU legend)
-
-    juce::Typeface::Ptr getMedium() const { return medium; }
-
-private:
-    juce::Typeface::Ptr medium, semiBold, black;
-
-    JUCE_DECLARE_NON_COPYABLE (Fonts)
-};
-
-/** The palette. */
-struct Theme
-{
-    static const Palette& palette() noexcept;
-};
 
 } // namespace umber::ui

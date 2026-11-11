@@ -96,7 +96,7 @@ void HeaderButton::paintButton (juce::Graphics& g, bool highlighted, bool down)
         // A thin bar under the legend: ice when on, amber for caution states.
         const auto bar = juce::Rectangle<float> (area.getWidth() * (amber ? 0.62f : 0.45f), 1.6f)
                              .withCentre ({ area.getCentreX(), area.getBottom() - 3.0f });
-        g.setColour ((amber ? pal.caution : pal.ice).withAlpha (0.9f));
+        g.setColour ((amber ? pal.caution : pal.accent).withAlpha (0.9f));
         g.fillRoundedRectangle (bar, 0.8f);
 
         if (amber)

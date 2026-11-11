@@ -1,7 +1,5 @@
 #include "ui/Theme.h"
 
-#include <MyzelAssets.h>
-
 namespace umber::ui
 {
 
@@ -9,7 +7,7 @@ namespace
 {
     using C = juce::Colour;
 
-    Palette makeStudio()
+    Palette makePalette()
     {
         Palette p;
 
@@ -19,18 +17,15 @@ namespace
         p.panelGrain      = C (0xffffffff);
         p.panelVignette   = C (0xff0c0705);
         p.panelEdgeLight  = C (0x26fff0dc);
-        p.panelEdgeDark   = C (0xa0000000);
 
         // Warm cream silkscreen.
         p.legend          = C (0xffeee3d3);
         p.legendDim       = C (0xffad9a85);
         p.legendShadow    = C (0x80000000);
         p.legendLight     = C (0x0affffff);
-        p.rule            = C (0x24eee3d3);
 
         p.headerTop       = C (0xff21170f);
         p.headerBottom    = C (0xff1b130d);
-        p.headerEdge      = C (0xff47362b);
         p.displayGlass    = C (0xff120c08);
         p.displayText     = C (0xfff1e8db);
         p.displayTextDim  = C (0xff8a7a6a);
@@ -48,11 +43,22 @@ namespace
         p.tickMinor       = C (0x80e3d8c9);
 
         // The only accent: amber, used for lamps and active states.
-        p.emberCore       = C (0xffffe2b8);
-        p.ember           = C (0xffffa040);
-        p.emberDeep       = C (0xffc8601c);
+        p.accentCore       = C (0xffffe2b8);
+        p.accent           = C (0xffffa040);
+        p.accentDeep       = C (0xffc8601c);
         p.lensOff         = C (0xff2a1a10);
         p.lensOffRim      = C (0xff0f0a07);
+
+        p.focus           = C (0xffffa040);
+        p.bubbleFill      = C (0xf01a120d);
+        p.bubbleEdge      = C (0x40ffffff);
+        p.overlayDim      = C (0x9a0a0604);
+        return p;
+    }
+
+    Extras makeExtras()
+    {
+        Extras p;
 
         p.meterFaceCentre = C (0xfff4ead2);
         p.meterFaceEdge   = C (0xffe2d1ab);
@@ -60,46 +66,21 @@ namespace
         p.meterRed        = C (0xffb5341a);
         p.needle          = C (0xff1a1714);
         p.meterBezel      = C (0xff1a120d);
-
-        p.focus           = C (0xffffa040);
-        p.bubbleFill      = C (0xf01a120d);
-        p.bubbleText      = C (0xfff5efe6);
-        p.bubbleEdge      = C (0x40ffffff);
-        p.overlayDim      = C (0x9a0a0604);
         return p;
     }
 }
 
-const Palette& Theme::palette() noexcept
+const Extras& Theme::extras() noexcept
 {
-    static const Palette studio = makeStudio();
-    return studio;
-}
-
-//==============================================================================
-Fonts::Fonts()
-    : medium   (juce::Typeface::createSystemTypefaceFor (MyzelAssets::InterMedium_otf,
-                                                         (size_t) MyzelAssets::InterMedium_otfSize)),
-      semiBold (juce::Typeface::createSystemTypefaceFor (MyzelAssets::InterSemiBold_otf,
-                                                         (size_t) MyzelAssets::InterSemiBold_otfSize)),
-      black    (juce::Typeface::createSystemTypefaceFor (MyzelAssets::InterDisplayBlack_otf,
-                                                         (size_t) MyzelAssets::InterDisplayBlack_otfSize))
-{
-}
-
-juce::Font Fonts::legend (float height) const
-{
-    return juce::Font (juce::FontOptions (semiBold).withHeight (height));
-}
-
-juce::Font Fonts::label (float height) const
-{
-    return juce::Font (juce::FontOptions (medium).withHeight (height));
-}
-
-juce::Font Fonts::display (float height) const
-{
-    return juce::Font (juce::FontOptions (black).withHeight (height));
+    static const Extras extras = makeExtras();
+    return extras;
 }
 
 } // namespace umber::ui
+
+// The kit colours: declared in common/ui/Theme.h, defined here for this plugin.
+const myzel::ui::Palette& myzel::ui::Theme::palette() noexcept
+{
+    static const Palette palette = umber::ui::makePalette();
+    return palette;
+}

@@ -159,6 +159,7 @@ void NeedleMeter::resized()
 void NeedleMeter::paint (juce::Graphics& g)
 {
     const auto& pal = Theme::palette();
+    const auto& ext = Theme::extras();
     const auto face = faceArea();
 
     bezelLayer.draw (g, getLocalBounds().toFloat(), [this] (juce::Graphics& lg, juce::Rectangle<float> a, float) { renderBezel (lg, a); });
@@ -179,9 +180,9 @@ void NeedleMeter::paint (juce::Graphics& g)
 
         if (peakLamp > 0.01f)
         {
-            drawing::fillGlow (g, lampC, 18.0f, pal.ember, 0.8f * peakLamp);
-            g.setGradientFill (juce::ColourGradient (pal.emberCore.withAlpha (peakLamp), lampC,
-                                                     pal.emberDeep.withAlpha (peakLamp), lampC.translated (4.0f, 0.0f), true));
+            drawing::fillGlow (g, lampC, 18.0f, pal.accent, 0.8f * peakLamp);
+            g.setGradientFill (juce::ColourGradient (pal.accentCore.withAlpha (peakLamp), lampC,
+                                                     pal.accentDeep.withAlpha (peakLamp), lampC.translated (4.0f, 0.0f), true));
             g.fillEllipse (lamp);
         }
 
@@ -207,11 +208,11 @@ void NeedleMeter::paint (juce::Graphics& g)
         needlePath.lineTo (tip - normal * 0.45f);
         needlePath.lineTo (tail - normal * 1.1f);
         needlePath.closeSubPath();
-        g.setColour (pal.needle);
+        g.setColour (ext.needle);
         g.fillPath (needlePath);
 
         // The tip carries a thin ember vane, so it reads at a glance.
-        g.setColour (pal.emberDeep);
+        g.setColour (pal.accentDeep);
         g.drawLine ({ drawing::polar (p, scaleRadius() - 6.0f, angle), tip }, 1.3f);
 
         glassLayer.draw (g, face, [this] (juce::Graphics& lg, juce::Rectangle<float> a, float) { renderGlass (lg, a); });
@@ -220,15 +221,15 @@ void NeedleMeter::paint (juce::Graphics& g)
 
 void NeedleMeter::renderBezel (juce::Graphics& g, juce::Rectangle<float> area) const
 {
-    const auto& pal = Theme::palette();
+    const auto& ext = Theme::extras();
     const auto outer = area.reduced (1.0f);
 
     juce::Path frame;
     frame.addRoundedRectangle (outer, 9.0f);
     drawing::drawContactShadow (g, frame, 4.0f);
 
-    g.setGradientFill (juce::ColourGradient (pal.meterBezel.brighter (0.55f), outer.getX(), outer.getY(),
-                                             pal.meterBezel, outer.getX() + outer.getWidth() * 0.4f, outer.getBottom(), false));
+    g.setGradientFill (juce::ColourGradient (ext.meterBezel.brighter (0.55f), outer.getX(), outer.getY(),
+                                             ext.meterBezel, outer.getX() + outer.getWidth() * 0.4f, outer.getBottom(), false));
     g.fillPath (frame);
 
     juce::Path edge;
@@ -248,12 +249,12 @@ void NeedleMeter::renderBezel (juce::Graphics& g, juce::Rectangle<float> area) c
 
 void NeedleMeter::renderFace (juce::Graphics& g, juce::Rectangle<float> area) const
 {
-    const auto& pal = Theme::palette();
+    const auto& ext = Theme::extras();
     const auto w = area.getWidth(), h = area.getHeight();
 
     // Backlit card: brightest in the middle where the lamp sits, warmer at the edges.
-    juce::ColourGradient card (pal.meterFaceCentre, w * 0.5f, h * 0.72f, pal.meterFaceEdge, -w * 0.05f, -h * 0.1f, true);
-    card.addColour (0.55, pal.meterFaceCentre.interpolatedWith (pal.meterFaceEdge, 0.35f));
+    juce::ColourGradient card (ext.meterFaceCentre, w * 0.5f, h * 0.72f, ext.meterFaceEdge, -w * 0.05f, -h * 0.1f, true);
+    card.addColour (0.55, ext.meterFaceCentre.interpolatedWith (ext.meterFaceEdge, 0.35f));
     g.setGradientFill (card);
     g.fillRect (area);
 
@@ -268,7 +269,7 @@ void NeedleMeter::renderFace (juce::Graphics& g, juce::Rectangle<float> area) co
         const auto a1 = angleForPosition (fullScale);
         juce::Path band;
         band.addCentredArc (p.x, p.y, r + 3.0f, r + 3.0f, 0.0f, a0, a1, true);
-        g.setColour (pal.meterRed);
+        g.setColour (ext.meterRed);
         g.strokePath (band, juce::PathStrokeType (6.0f, juce::PathStrokeType::mitered, juce::PathStrokeType::butt));
     }
 
@@ -276,7 +277,7 @@ void NeedleMeter::renderFace (juce::Graphics& g, juce::Rectangle<float> area) co
     {
         juce::Path arc;
         arc.addCentredArc (p.x, p.y, r, r, 0.0f, angleForPosition (linearFromVu (-20.0f)), angleForPosition (fullScale), true);
-        g.setColour (pal.meterInk);
+        g.setColour (ext.meterInk);
         g.strokePath (arc, juce::PathStrokeType (1.1f));
     }
 
@@ -289,7 +290,7 @@ void NeedleMeter::renderFace (juce::Graphics& g, juce::Rectangle<float> area) co
         const auto red = m.vu > 0.0f;
         const auto len = m.major ? 9.0f : 5.0f;
 
-        g.setColour (red ? pal.meterRed : pal.meterInk);
+        g.setColour (red ? ext.meterRed : ext.meterInk);
         g.drawLine ({ drawing::polar (p, r, a), drawing::polar (p, r + len, a) }, m.major ? 1.3f : 0.9f);
 
         if (m.text != nullptr)
@@ -304,7 +305,7 @@ void NeedleMeter::renderFace (juce::Graphics& g, juce::Rectangle<float> area) co
         const auto r2 = r - 12.0f;
         juce::Path arc;
         arc.addCentredArc (p.x, p.y, r2, r2, 0.0f, angleForPosition (0.0f), angleForPosition (1.0f), true);
-        g.setColour (pal.meterInk.withAlpha (0.55f));
+        g.setColour (ext.meterInk.withAlpha (0.55f));
         g.strokePath (arc, juce::PathStrokeType (0.8f));
 
         for (int i = 0; i <= 10; ++i)
@@ -316,19 +317,19 @@ void NeedleMeter::renderFace (juce::Graphics& g, juce::Rectangle<float> area) co
 
     // End signs.
     g.setFont (fonts->legend (15.0f));
-    g.setColour (pal.meterInk);
+    g.setColour (ext.meterInk);
     g.drawText (juce::String::fromUTF8 ("\xe2\x88\x92"), juce::Rectangle<float> (16.0f, 16.0f).withCentre (drawing::polar (p, r + 22.0f, -halfSweep - 0.13f)),
                 juce::Justification::centred, false);
-    g.setColour (pal.meterRed);
+    g.setColour (ext.meterRed);
     g.drawText ("+", juce::Rectangle<float> (16.0f, 16.0f).withCentre (drawing::polar (p, r + 22.0f, halfSweep + 0.12f)),
                 juce::Justification::centred, false);
 
     // Legends.
-    g.setColour (pal.meterInk);
+    g.setColour (ext.meterInk);
     g.setFont (drawing::tracked (fonts->display (25.0f), 0.04f));
     g.drawText ("VU", juce::Rectangle<float> (0.0f, h * 0.53f, w, 26.0f), juce::Justification::centred, false);
 
-    g.setColour (pal.meterInk.withAlpha (0.75f));
+    g.setColour (ext.meterInk.withAlpha (0.75f));
     g.setFont (drawing::tracked (fonts->legend (8.5f), 0.28f));
     g.drawText (mode == Mode::output ? "OUTPUT" : "DRIVE", juce::Rectangle<float> (0.0f, h * 0.53f + 25.0f, w, 12.0f),
                 juce::Justification::centred, false);
@@ -340,6 +341,7 @@ void NeedleMeter::renderFace (juce::Graphics& g, juce::Rectangle<float> area) co
 void NeedleMeter::renderGlass (juce::Graphics& g, juce::Rectangle<float> area) const
 {
     const auto& pal = Theme::palette();
+    const auto& ext = Theme::extras();
     const auto w = area.getWidth(), h = area.getHeight();
 
     // Hood over the needle pivot.
@@ -351,8 +353,8 @@ void NeedleMeter::renderGlass (juce::Graphics& g, juce::Rectangle<float> area) c
         hood.addEllipse (juce::Rectangle<float> (hoodR * 2.0f * 1.9f, hoodR * 2.0f).withCentre (p));
         drawing::drawContactShadow (g, hood, 3.0f, 0.8f);
 
-        g.setGradientFill (juce::ColourGradient (pal.meterBezel.brighter (0.6f), p.x - hoodR, p.y - hoodR,
-                                                 pal.meterBezel, p.x + hoodR * 0.6f, p.y, false));
+        g.setGradientFill (juce::ColourGradient (ext.meterBezel.brighter (0.6f), p.x - hoodR, p.y - hoodR,
+                                                 ext.meterBezel, p.x + hoodR * 0.6f, p.y, false));
         g.fillPath (hood);
         g.setColour (juce::Colour (0x40ffffff));
         g.strokePath (hood, juce::PathStrokeType (0.8f));

@@ -72,7 +72,7 @@ void HeaderButton::paintButton (juce::Graphics& g, bool highlighted, bool down)
     if (lit)
     {
         // A thin amber bar under the legend.
-        g.setColour (pal.ember.withAlpha (0.9f));
+        g.setColour (pal.accent.withAlpha (0.9f));
         g.fillRoundedRectangle (juce::Rectangle<float> (area.getWidth() * 0.45f, 1.6f)
                                     .withCentre ({ area.getCentreX(), area.getBottom() - 3.0f }), 0.8f);
     }

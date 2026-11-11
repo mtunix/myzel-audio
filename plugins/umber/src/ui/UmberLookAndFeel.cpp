@@ -27,7 +27,7 @@ UmberLookAndFeel::UmberLookAndFeel()
     setColour (juce::PopupMenu::backgroundColourId, pal.headerTop);
     setColour (juce::PopupMenu::textColourId, pal.keyText);
     setColour (juce::PopupMenu::headerTextColourId, pal.legendDim);
-    setColour (juce::PopupMenu::highlightedBackgroundColourId, pal.ember.withAlpha (0.18f));
+    setColour (juce::PopupMenu::highlightedBackgroundColourId, pal.accent.withAlpha (0.18f));
     setColour (juce::PopupMenu::highlightedTextColourId, pal.keyTextActive);
 
     setColour (juce::TooltipWindow::backgroundColourId, pal.bubbleFill);
@@ -36,10 +36,10 @@ UmberLookAndFeel::UmberLookAndFeel()
 
     setColour (juce::TextEditor::backgroundColourId, pal.displayGlass);
     setColour (juce::TextEditor::textColourId, pal.displayText);
-    setColour (juce::TextEditor::highlightColourId, pal.ember.withAlpha (0.35f));
+    setColour (juce::TextEditor::highlightColourId, pal.accent.withAlpha (0.35f));
     setColour (juce::TextEditor::outlineColourId, juce::Colour (0x40ffffff));
-    setColour (juce::TextEditor::focusedOutlineColourId, pal.ember);
-    setColour (juce::CaretComponent::caretColourId, pal.ember);
+    setColour (juce::TextEditor::focusedOutlineColourId, pal.accent);
+    setColour (juce::CaretComponent::caretColourId, pal.accent);
 }
 
 juce::Typeface::Ptr UmberLookAndFeel::getTypefaceForFont (const juce::Font& font)
@@ -64,7 +64,7 @@ void UmberLookAndFeel::drawPopupMenuBackground (juce::Graphics& g, int width, in
     g.fillRect (area);
     g.setColour (juce::Colour (0x26ffffff));
     g.drawRect (area, 1.0f);
-    g.setColour (pal.ember.withAlpha (0.5f));
+    g.setColour (pal.accent.withAlpha (0.5f));
     g.fillRect (area.getX() + 1.0f, 0.0f, area.getWidth() - 2.0f, 1.5f);
 }
 
@@ -99,9 +99,9 @@ void UmberLookAndFeel::drawPopupMenuItem (juce::Graphics& g, const juce::Rectang
 
     if (isHighlighted && isActive)
     {
-        g.setColour (pal.ember.withAlpha (0.16f));
+        g.setColour (pal.accent.withAlpha (0.16f));
         g.fillRoundedRectangle (r.reduced (3.0f, 1.0f), 3.0f);
-        g.setColour (pal.ember);
+        g.setColour (pal.accent);
         g.fillRoundedRectangle (juce::Rectangle<float> (2.0f, r.getHeight() - 10.0f).withPosition (r.getX() + 3.0f, r.getY() + 5.0f), 1.0f);
     }
 
@@ -120,8 +120,8 @@ void UmberLookAndFeel::drawPopupMenuItem (juce::Graphics& g, const juce::Rectang
     if (isTicked)
     {
         const auto c = tickArea.getCentre().translated (2.0f, 0.0f);
-        drawing::fillGlow (g, c, 9.0f, pal.ember, 0.6f);
-        g.setColour (pal.emberCore);
+        drawing::fillGlow (g, c, 9.0f, pal.accent, 0.6f);
+        g.setColour (pal.accentCore);
         g.fillEllipse (juce::Rectangle<float> (5.0f, 5.0f).withCentre (c));
     }
 

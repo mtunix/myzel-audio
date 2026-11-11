@@ -26,3 +26,13 @@ juce_add_binary_data(MyzelUiAssets
         ${CMAKE_CURRENT_SOURCE_DIR}/ui/assets/fonts/Inter-SemiBold.otf
         ${CMAKE_CURRENT_SOURCE_DIR}/ui/assets/fonts/InterDisplay-Black.otf)
 set_target_properties(MyzelUiAssets PROPERTIES POSITION_INDEPENDENT_CODE ON)
+
+# The UI kit: theme, fonts and the shared widgets.
+file(GLOB MYZEL_UI_SOURCES CONFIGURE_DEPENDS ${CMAKE_CURRENT_SOURCE_DIR}/ui/*.cpp)
+add_library(MyzelUi INTERFACE)
+target_sources(MyzelUi INTERFACE ${MYZEL_UI_SOURCES})
+target_link_libraries(MyzelUi INTERFACE
+    MyzelCommon
+    MyzelUiAssets
+    juce::juce_gui_extra
+    melatonin_blur)

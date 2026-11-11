@@ -369,11 +369,11 @@ void Knob::showTextEntry()
     ed.setJustification (juce::Justification::centred);
     ed.setColour (juce::TextEditor::backgroundColourId, pal.displayGlass);
     ed.setColour (juce::TextEditor::textColourId, pal.displayText);
-    ed.setColour (juce::TextEditor::highlightColourId, pal.ember.withAlpha (0.35f));
-    ed.setColour (juce::TextEditor::highlightedTextColourId, pal.emberCore);
+    ed.setColour (juce::TextEditor::highlightColourId, pal.accent.withAlpha (0.35f));
+    ed.setColour (juce::TextEditor::highlightedTextColourId, pal.accentCore);
     ed.setColour (juce::TextEditor::outlineColourId, pal.bubbleEdge);
-    ed.setColour (juce::TextEditor::focusedOutlineColourId, pal.ember);
-    ed.setColour (juce::CaretComponent::caretColourId, pal.ember);
+    ed.setColour (juce::TextEditor::focusedOutlineColourId, pal.accent);
+    ed.setColour (juce::CaretComponent::caretColourId, pal.accent);
     ed.setFont (juce::SharedResourcePointer<Fonts>()->label (13.0f));
     ed.setIndents (4, 3);
     ed.setText (getValueText(), false);

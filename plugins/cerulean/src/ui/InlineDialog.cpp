@@ -32,8 +32,8 @@ public:
         const auto& pal = Theme::palette();
         const auto area = getLocalBounds().toFloat().reduced (0.5f).translated (0.0f, down ? 0.6f : 0.0f);
 
-        auto top = primary ? (destructive ? pal.keyTop : pal.iceDeep) : pal.keyTop;
-        auto bottom = primary ? (destructive ? pal.keyBottom : pal.iceDeep.darker (0.35f)) : pal.keyBottom;
+        auto top = primary ? (destructive ? pal.keyTop : pal.accentDeep) : pal.keyTop;
+        auto bottom = primary ? (destructive ? pal.keyBottom : pal.accentDeep.darker (0.35f)) : pal.keyBottom;
 
         if (highlighted)
         {
@@ -48,7 +48,7 @@ public:
         g.setColour (juce::Colour (0x30ffffff));
         g.drawRoundedRectangle (area.reduced (0.5f), 3.5f, 0.8f);
 
-        g.setColour (primary ? (destructive ? pal.danger : pal.iceCore) : pal.keyText);
+        g.setColour (primary ? (destructive ? pal.danger : pal.accentCore) : pal.keyText);
         g.setFont (drawing::tracked (juce::SharedResourcePointer<Fonts>()->legend (11.5f), 0.12f));
         g.drawText (getButtonText().toUpperCase(), area, juce::Justification::centred, false);
 
@@ -75,11 +75,11 @@ InlineDialog::InlineDialog()
     const auto& pal = Theme::palette();
     textField.setColour (juce::TextEditor::backgroundColourId, pal.displayGlass);
     textField.setColour (juce::TextEditor::textColourId, pal.displayText);
-    textField.setColour (juce::TextEditor::highlightColourId, pal.ice.withAlpha (0.35f));
-    textField.setColour (juce::TextEditor::highlightedTextColourId, pal.iceCore);
+    textField.setColour (juce::TextEditor::highlightColourId, pal.accent.withAlpha (0.35f));
+    textField.setColour (juce::TextEditor::highlightedTextColourId, pal.accentCore);
     textField.setColour (juce::TextEditor::outlineColourId, juce::Colour (0x40ffffff));
-    textField.setColour (juce::TextEditor::focusedOutlineColourId, pal.ice);
-    textField.setColour (juce::CaretComponent::caretColourId, pal.ice);
+    textField.setColour (juce::TextEditor::focusedOutlineColourId, pal.accent);
+    textField.setColour (juce::CaretComponent::caretColourId, pal.accent);
     textField.setFont (fonts->label (14.0f));
     textField.setIndents (8, 5);
     textField.setTitle ("Name");
@@ -185,7 +185,7 @@ void InlineDialog::paint (juce::Graphics& g)
     g.setGradientFill (juce::ColourGradient (pal.headerTop.brighter (0.25f), card.getX(), card.getY(),
                                              pal.headerBottom, card.getX(), card.getBottom(), false));
     g.fillPath (cardPath);
-    g.setColour (pal.ice.withAlpha (0.45f));
+    g.setColour (pal.accent.withAlpha (0.45f));
     g.fillRect (card.getX() + 8.0f, card.getY(), card.getWidth() - 16.0f, 2.0f);
     g.setColour (juce::Colour (0x24ffffff));
     g.strokePath (cardPath, juce::PathStrokeType (1.0f));

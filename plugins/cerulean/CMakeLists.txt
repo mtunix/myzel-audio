@@ -42,7 +42,7 @@ target_sources(CeruleanShared INTERFACE
 target_link_libraries(CeruleanShared INTERFACE
     CeruleanDsp
     MyzelPlugin
-    MyzelUiAssets
+    MyzelUi
     juce::juce_audio_utils
     melatonin_blur)
 

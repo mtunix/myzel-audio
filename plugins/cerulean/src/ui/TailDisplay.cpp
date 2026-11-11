@@ -236,7 +236,7 @@ void TailDisplay::paint (juce::Graphics& g)
 
 void TailDisplay::drawLive (juce::Graphics& g, juce::Rectangle<float> screen) const
 {
-    const auto& pal = Theme::palette();
+    const auto& ext = Theme::extras();
     const auto plot = plotArea().translated (screen.getX(), screen.getY());
     const auto columns = juce::jmax (1, (int) std::round (plot.getWidth()));
     const auto entriesPerColumn = (double) span * historyRate / (double) columns;
@@ -269,23 +269,24 @@ void TailDisplay::drawLive (juce::Graphics& g, juce::Rectangle<float> screen) co
     area.lineTo (plot.getX() - 1.0f, floorY);
     area.closeSubPath();
 
-    g.setGradientFill (juce::ColourGradient (pal.liveFill, 0.0f, plot.getY(),
-                                             pal.liveFill.withMultipliedAlpha (0.15f), 0.0f, floorY, false));
+    g.setGradientFill (juce::ColourGradient (ext.liveFill, 0.0f, plot.getY(),
+                                             ext.liveFill.withMultipliedAlpha (0.15f), 0.0f, floorY, false));
     g.fillPath (area);
-    g.setColour (pal.liveLine.withAlpha (0.7f));
+    g.setColour (ext.liveLine.withAlpha (0.7f));
     g.strokePath (line, juce::PathStrokeType (1.1f, juce::PathStrokeType::curved, juce::PathStrokeType::rounded));
 }
 
 void TailDisplay::drawBypassStamp (juce::Graphics& g, juce::Rectangle<float> screen) const
 {
     const auto& pal = Theme::palette();
+    const auto& ext = Theme::extras();
     const auto alpha = 1.0f;
     const auto font = drawing::tracked (fonts->legend (17.0f), 0.30f);
     const auto text = juce::String ("BYPASSED");
     const auto w = juce::GlyphArrangement::getStringWidth (font, text) + 26.0f;
     const auto box = juce::Rectangle<float> (w, 32.0f).withCentre (screen.getCentre().translated (0.0f, -4.0f));
 
-    g.setColour (pal.screenBottom.withAlpha (0.85f * alpha));
+    g.setColour (ext.screenBottom.withAlpha (0.85f * alpha));
     g.fillRoundedRectangle (box, 4.0f);
     drawing::fillGlow (g, box.getCentre(), w * 0.6f, pal.caution, 0.12f * alpha);
     g.setColour (pal.caution.withAlpha (alpha));
@@ -302,15 +303,15 @@ void TailDisplay::drawBypassStamp (juce::Graphics& g, juce::Rectangle<float> scr
 //==============================================================================
 void TailDisplay::renderBezel (juce::Graphics& g, juce::Rectangle<float> area) const
 {
-    const auto& pal = Theme::palette();
+    const auto& ext = Theme::extras();
     const auto outer = area.reduced (1.0f);
 
     juce::Path frame;
     frame.addRoundedRectangle (outer, 9.0f);
     drawing::drawContactShadow (g, frame, 4.0f, 0.8f);
 
-    g.setGradientFill (juce::ColourGradient (pal.bezel.brighter (0.6f), outer.getX(), outer.getY(),
-                                             pal.bezel, outer.getX() + outer.getWidth() * 0.4f, outer.getBottom(), false));
+    g.setGradientFill (juce::ColourGradient (ext.bezel.brighter (0.6f), outer.getX(), outer.getY(),
+                                             ext.bezel, outer.getX() + outer.getWidth() * 0.4f, outer.getBottom(), false));
     g.fillPath (frame);
 
     juce::Path edge;
@@ -330,21 +331,21 @@ void TailDisplay::renderBezel (juce::Graphics& g, juce::Rectangle<float> area) c
 
 void TailDisplay::renderScreen (juce::Graphics& g, juce::Rectangle<float> area) const
 {
-    const auto& pal = Theme::palette();
+    const auto& ext = Theme::extras();
     const auto w = area.getWidth(), h = area.getHeight();
     const auto plot = plotArea();
 
-    g.setGradientFill (juce::ColourGradient (pal.screenTop, 0.0f, 0.0f, pal.screenBottom, 0.0f, h, false));
+    g.setGradientFill (juce::ColourGradient (ext.screenTop, 0.0f, 0.0f, ext.screenBottom, 0.0f, h, false));
     g.fillRect (area);
 
     // A faint backlight bloom behind the plot.
-    juce::ColourGradient bloom (pal.traceMid.withAlpha (0.07f), w * 0.35f, h * 0.45f,
-                                pal.traceMid.withAlpha (0.0f), w * 0.95f, h * 1.1f, true);
+    juce::ColourGradient bloom (ext.traceMid.withAlpha (0.07f), w * 0.35f, h * 0.45f,
+                                ext.traceMid.withAlpha (0.0f), w * 0.95f, h * 1.1f, true);
     g.setGradientFill (bloom);
     g.fillRect (area);
 
     // Grid: every 12 dB, and the time steps.
-    g.setColour (pal.screenGrid);
+    g.setColour (ext.screenGrid);
 
     for (float db = -12.0f; db > tail::floorDb + 1.0f; db -= 12.0f)
         g.drawHorizontalLine (juce::roundToInt (yForDb (db, plot)), plot.getX(), plot.getRight());
@@ -361,7 +362,7 @@ void TailDisplay::renderScreen (juce::Graphics& g, juce::Rectangle<float> area) 
             break;
 
         const auto x = xForTime (t, plot);
-        g.setColour (pal.screenGrid);
+        g.setColour (ext.screenGrid);
         g.drawVerticalLine (juce::roundToInt (x), plot.getY(), plot.getBottom());
 
         auto text = timeLabel (t, step);
@@ -372,18 +373,19 @@ void TailDisplay::renderScreen (juce::Graphics& g, juce::Rectangle<float> area) 
         const auto tw = juce::GlyphArrangement::getStringWidth (labelFont, text) + 2.0f;
         auto box = juce::Rectangle<float> (tw, 12.0f).withCentre ({ x, plot.getBottom() + 10.0f });
         box = box.constrainedWithin (area.reduced (3.0f, 0.0f));
-        g.setColour (pal.screenTextDim);
+        g.setColour (ext.screenTextDim);
         g.drawText (text, box, juce::Justification::centred, false);
     }
 
     // Floor line.
-    g.setColour (pal.screenGrid.withMultipliedAlpha (1.8f));
+    g.setColour (ext.screenGrid.withMultipliedAlpha (1.8f));
     g.drawHorizontalLine (juce::roundToInt (plot.getBottom()), plot.getX(), plot.getRight());
 }
 
 void TailDisplay::renderEnvelope (juce::Graphics& g, juce::Rectangle<float> area) const
 {
     const auto& pal = Theme::palette();
+    const auto& ext = Theme::extras();
     const auto plot = plotArea();
     const auto floorY = yForDb (tail::floorDb, plot);
     const auto t0 = shape.preDelayMs * 0.001f;
@@ -392,13 +394,13 @@ void TailDisplay::renderEnvelope (juce::Graphics& g, juce::Rectangle<float> area
     {
         const auto name = params::algorithmNames()[juce::jlimit (0, numAlgorithms - 1, (int) shape.algorithm)].toUpperCase();
         const auto nameFont = drawing::tracked (fonts->legend (10.5f), 0.24f);
-        g.setColour (pal.screenText);
+        g.setColour (ext.screenText);
         g.setFont (nameFont);
         g.drawText (name, juce::Rectangle<float> (plot.getX(), 8.0f, 120.0f, 14.0f), juce::Justification::centredLeft, false);
 
         // Pre-delay, dimmer, after the name.
         const auto nameWidth = juce::GlyphArrangement::getStringWidth (nameFont, name);
-        g.setColour (pal.screenTextDim);
+        g.setColour (ext.screenTextDim);
         g.setFont (drawing::tracked (fonts->label (10.5f), 0.02f));
         g.drawText ("PRE " + juce::String (juce::roundToInt (shape.preDelayMs)) + " ms",
                     juce::Rectangle<float> (plot.getX() + nameWidth + 10.0f, 8.0f, 90.0f, 14.0f), juce::Justification::centredLeft, false);
@@ -410,14 +412,14 @@ void TailDisplay::renderEnvelope (juce::Graphics& g, juce::Rectangle<float> area
             const auto font = drawing::tracked (fonts->legend (10.5f), 0.24f);
             const juce::String label (shape.layering ? "FREEZE + LAYER" : "FREEZE");
             const auto tw = juce::GlyphArrangement::getStringWidth (font, label);
-            drawing::fillGlow (g, { headerRight.getRight() - tw * 0.5f, headerRight.getCentreY() }, tw * 0.9f, pal.ice, 0.22f);
-            g.setColour (pal.iceCore);
+            drawing::fillGlow (g, { headerRight.getRight() - tw * 0.5f, headerRight.getCentreY() }, tw * 0.9f, pal.accent, 0.22f);
+            g.setColour (pal.accentCore);
             g.setFont (font);
             g.drawText (label, headerRight, juce::Justification::centredRight, false);
         }
         else
         {
-            g.setColour (pal.screenText);
+            g.setColour (ext.screenText);
             g.setFont (drawing::tracked (fonts->label (12.0f), 0.02f));
             g.drawText (decayText (shape.decaySeconds), headerRight, juce::Justification::centredRight, false);
         }
@@ -453,9 +455,9 @@ void TailDisplay::renderEnvelope (juce::Graphics& g, juce::Rectangle<float> area
 
             const auto y = yForDb (spikes[(size_t) i].levelDb, plot);
             const auto alpha = (shape.freeze ? 0.3f : 1.0f) * (isEcho ? 0.85f : 0.55f);
-            g.setColour (pal.traceMid.withAlpha (alpha));
+            g.setColour (ext.traceMid.withAlpha (alpha));
             g.drawLine (x, floorY, x, y, isEcho ? 1.4f : 1.0f);
-            g.setColour (pal.traceMid.withAlpha (juce::jmin (1.0f, alpha * 1.4f)));
+            g.setColour (ext.traceMid.withAlpha (juce::jmin (1.0f, alpha * 1.4f)));
             g.fillEllipse (juce::Rectangle<float> (2.4f, 2.4f).withCentre ({ x, y }));
         }
     }
@@ -463,7 +465,7 @@ void TailDisplay::renderEnvelope (juce::Graphics& g, juce::Rectangle<float> area
     // Pre-delay: a dotted run along the floor from the dry hit to where the reverb starts.
     if (t0 > 0.0f && xStart > plot.getX() + 3.0f)
     {
-        g.setColour (pal.screenText.withAlpha (0.45f));
+        g.setColour (ext.screenText.withAlpha (0.45f));
 
         for (auto x = plot.getX(); x < xStart - 1.0f; x += 4.0f)
             g.fillRect (juce::Rectangle<float> (x, floorY - 2.0f, 1.6f, 1.2f));
@@ -504,12 +506,12 @@ void TailDisplay::renderEnvelope (juce::Graphics& g, juce::Rectangle<float> area
         juce::Path under (flat);
         under.lineTo (plot.getRight() + 2.0f, floorY);
         under.closeSubPath();
-        g.setGradientFill (juce::ColourGradient (pal.ice.withAlpha (0.20f), 0.0f, y, pal.ice.withAlpha (0.0f), 0.0f, floorY, false));
+        g.setGradientFill (juce::ColourGradient (pal.accent.withAlpha (0.20f), 0.0f, y, pal.accent.withAlpha (0.0f), 0.0f, floorY, false));
         g.fillPath (under);
 
-        g.setColour (pal.ice.withAlpha (0.22f));
+        g.setColour (pal.accent.withAlpha (0.22f));
         g.strokePath (flat, juce::PathStrokeType (5.0f, juce::PathStrokeType::curved, juce::PathStrokeType::rounded));
-        g.setColour (pal.iceCore);
+        g.setColour (pal.accentCore);
         g.strokePath (flat, juce::PathStrokeType (1.8f, juce::PathStrokeType::curved, juce::PathStrokeType::rounded));
         return;
     }
@@ -543,11 +545,11 @@ void TailDisplay::renderEnvelope (juce::Graphics& g, juce::Rectangle<float> area
             fan.lineTo (*it);
 
         fan.closeSubPath();
-        g.setGradientFill (juce::ColourGradient (pal.traceBand.withMultipliedAlpha (0.42f), plot.getX(), 0.0f,
-                                                 pal.traceBand.withMultipliedAlpha (0.16f), plot.getRight(), 0.0f, false));
+        g.setGradientFill (juce::ColourGradient (ext.traceBand.withMultipliedAlpha (0.42f), plot.getX(), 0.0f,
+                                                 ext.traceBand.withMultipliedAlpha (0.16f), plot.getRight(), 0.0f, false));
         g.fillPath (fan);
 
-        g.setColour (pal.traceBand.withMultipliedAlpha (0.8f));
+        g.setColour (ext.traceBand.withMultipliedAlpha (0.8f));
         g.strokePath (curve (tail::Band::low), juce::PathStrokeType (0.8f));
         g.strokePath (curve (tail::Band::high), juce::PathStrokeType (0.8f));
     }
@@ -559,13 +561,13 @@ void TailDisplay::renderEnvelope (juce::Graphics& g, juce::Rectangle<float> area
         juce::Path under (mid);
         under.lineTo (plot.getRight() + stepPx, floorY);
         under.closeSubPath();
-        g.setGradientFill (juce::ColourGradient (pal.traceMid.withAlpha (0.16f), 0.0f, yForDb (tail::tailStartDb, plot),
-                                                 pal.traceMid.withAlpha (0.0f), 0.0f, floorY, false));
+        g.setGradientFill (juce::ColourGradient (ext.traceMid.withAlpha (0.16f), 0.0f, yForDb (tail::tailStartDb, plot),
+                                                 ext.traceMid.withAlpha (0.0f), 0.0f, floorY, false));
         g.fillPath (under);
 
-        g.setColour (pal.traceMid.withAlpha (0.18f));
+        g.setColour (ext.traceMid.withAlpha (0.18f));
         g.strokePath (mid, juce::PathStrokeType (4.0f, juce::PathStrokeType::curved, juce::PathStrokeType::rounded));
-        g.setColour (pal.traceMid);
+        g.setColour (ext.traceMid);
         g.strokePath (mid, juce::PathStrokeType (1.6f, juce::PathStrokeType::curved, juce::PathStrokeType::rounded));
     }
 }

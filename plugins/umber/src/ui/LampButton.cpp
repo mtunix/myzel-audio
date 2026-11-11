@@ -149,15 +149,15 @@ void LampButton::drawLed (juce::Graphics& g, juce::Rectangle<float> key, const j
     {
         juce::Graphics::ScopedSaveState s (g);
         g.reduceClipRegion (face);
-        juce::ColourGradient spill (pal.ember.withAlpha (0.16f * lit), led.getCentre(),
-                                    pal.ember.withAlpha (0.0f), led.getCentre().translated (0.0f, wide ? 0.0f : 14.0f), true);
+        juce::ColourGradient spill (pal.accent.withAlpha (0.16f * lit), led.getCentre(),
+                                    pal.accent.withAlpha (0.0f), led.getCentre().translated (0.0f, wide ? 0.0f : 14.0f), true);
         g.setGradientFill (spill);
         g.fillRect (led.expanded (wide ? 12.0f : 14.0f, wide ? 14.0f : 10.0f));
     }
 
-    g.setColour (pal.ember.withAlpha (lit));
+    g.setColour (pal.accent.withAlpha (lit));
     g.fillRoundedRectangle (led, 1.5f);
-    g.setColour (pal.emberCore.withAlpha (0.7f * lit));
+    g.setColour (pal.accentCore.withAlpha (0.7f * lit));
     g.fillRoundedRectangle (led.reduced (wide ? 0.8f : 3.0f, wide ? 3.0f : 0.8f), 1.0f);
 }
 

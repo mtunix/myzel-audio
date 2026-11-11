@@ -73,7 +73,7 @@ public:
 
     void paint (juce::Graphics& g) override
     {
-        const auto& pal = Theme::palette();
+        const auto& ext = Theme::extras();
 
         background.draw (g, getLocalBounds().toFloat(), [this] (juce::Graphics& lg, juce::Rectangle<float> a, float scale)
         {
@@ -85,7 +85,7 @@ public:
 
         for (const auto& c : cells)
         {
-            g.setColour (pal.drawerValue.withMultipliedAlpha (c->dimmed ? 0.45f : 1.0f));
+            g.setColour (ext.drawerValue.withMultipliedAlpha (c->dimmed ? 0.45f : 1.0f));
             g.drawText (c->shownValue, c->valueArea(), juce::Justification::centred, false);
         }
     }
@@ -403,8 +403,8 @@ void AdvancedTab::paintButton (juce::Graphics& g, bool highlighted, bool down)
 
     if (open)
     {
-        drawing::fillGlow (g, led.getCentre(), 9.0f, pal.ice, 0.5f);
-        g.setColour (pal.ice);
+        drawing::fillGlow (g, led.getCentre(), 9.0f, pal.accent, 0.5f);
+        g.setColour (pal.accent);
     }
     else
     {

@@ -404,7 +404,7 @@ int runUiSelfTest()
         editor->setView (ui::ViewMode::studio);
         check (editor->getViewMode() == ui::ViewMode::studio, "switches to the studio view");
         check (processor.getUiState().getProperty (ui::uistate::view).toString() == "studio", "view stored in the session");
-        check (ui::viewPreference::getDefault() == ui::ViewMode::studio, "the chosen view becomes the default for new instances");
+        check (ui::viewPreference::getDefault ("Cerulean") == ui::ViewMode::studio, "the chosen view becomes the default for new instances");
         check (editor->getWidth() == sizeBefore, "switching does not resize the window");
         check (editor->getController().getPresets().getCurrentName() == presetName
                && editor->getController().getAb().getActiveSlot() == abSlot, "preset and A/B state survive the switch");
@@ -605,7 +605,7 @@ int runUiSelfTest()
         check (editor->getViewMode() == ui::ViewMode::studio, "header switch waits for the click to finish");
         juce::MessageManager::getInstance()->runDispatchLoopUntil (50);
         check (editor->getViewMode() == ui::ViewMode::panel, "then shows the panel");
-        check (ui::viewPreference::getDefault() == ui::ViewMode::panel, "and the panel is the default again");
+        check (ui::viewPreference::getDefault ("Cerulean") == ui::ViewMode::panel, "and the panel is the default again");
         check (editor->getMainPanel().getAdvancedTab().isVisible(), "ADVANCED is on the panel");
     }
 

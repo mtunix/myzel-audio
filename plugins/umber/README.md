@@ -30,8 +30,8 @@ whether lows or highs saturate first without changing the tone) · **Stereo** (L
 Side only) · **Tone** (tilt) · **Low Cut** with **Weight** (resonant bump) · **High Cut** ·
 **Mix** · **Output** · **Auto** (loudness-matched output) · **Delta** (hear only what the circuit
 adds) · VU meter (Output or Drive level). Header: presets (38 factory + user), Bypass, A/B,
-undo/redo, quality (Eco 2x / Standard 4x / High 8x, plus a separate offline-render setting up to
-16x), and UI scale (75–200 %).
+undo/redo, and a settings menu with quality (Eco 2x / Standard 4x / High 8x, plus a separate
+offline-render setting up to 16x), a mix lock for preset browsing, and UI scale (75–200 %).
 
 ## How it's built
 

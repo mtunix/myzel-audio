@@ -1,15 +1,15 @@
 #pragma once
 
-#include "ui/Theme.h"
+#include "common/ui/Theme.h"
 
-namespace umber::ui
+namespace myzel::ui
 {
 
 /** Styles the stock JUCE pieces we use (popup menus, tooltips, text fields) to match the panel. */
-class UmberLookAndFeel final : public juce::LookAndFeel_V4
+class KitLookAndFeel final : public juce::LookAndFeel_V4
 {
 public:
-    UmberLookAndFeel();
+    KitLookAndFeel();
 
     juce::Typeface::Ptr getTypefaceForFont (const juce::Font&) override;
 
@@ -36,7 +36,7 @@ public:
 private:
     juce::SharedResourcePointer<Fonts> fonts;
 
-    JUCE_DECLARE_NON_COPYABLE_WITH_LEAK_DETECTOR (UmberLookAndFeel)
+    JUCE_DECLARE_NON_COPYABLE_WITH_LEAK_DETECTOR (KitLookAndFeel)
 };
 
-} // namespace umber::ui
+} // namespace myzel::ui

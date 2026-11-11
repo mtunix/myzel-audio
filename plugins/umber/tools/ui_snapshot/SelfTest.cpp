@@ -3,6 +3,7 @@
 #include "ui/Theme.h"
 
 #include "plugin/PluginProcessor.h"
+#include "ui/Header.h"
 #include "ui/UmberEditor.h"
 #include "ui/UiState.h"
 
@@ -195,6 +196,40 @@ int runUiSelfTest()
         check (std::abs ((float) processor.getUiState().getProperty (ui::uistate::scale) - 1.5f) < 0.001f, "scale persisted");
         editor->setScale (5.0f);
         check (editor->getWidth() == 2 * umber::ui::metrics::baseWidth, "scale is clamped to 200 %");
+    }
+
+    std::printf ("Settings menu\n");
+    {
+        juce::PopupMenu menu;
+        ui::headerConfig (processor).addSettings (menu);
+
+        bool allHaveIds = true;
+        juce::PopupMenu::Item* highest = nullptr;
+
+        for (juce::PopupMenu::MenuItemIterator it (menu); it.next();)
+        {
+            auto& item = it.getItem();
+
+            if (item.action != nullptr)
+            {
+                allHaveIds = allHaveIds && item.itemID != 0;
+
+                if (highest == nullptr && item.itemID >= myzel::ui::HeaderConfig::firstPluginItemId
+                                       && item.itemID < myzel::ui::HeaderConfig::firstPluginItemId + 100)
+                    highest = &item;   // the first realtime quality entry
+            }
+        }
+
+        check (allHaveIds, "every settings entry with an action has an ID (JUCE skips the action otherwise)");
+        check (highest != nullptr, "the realtime quality choices are in the settings menu");
+
+        if (highest != nullptr)
+        {
+            auto* quality = processor.getState().getParameter (params::quality);
+            quality->setValueNotifyingHost (1.0f);
+            highest->action();
+            check (quality->getValue() < 0.5f, "choosing a quality in the settings menu sets it");
+        }
     }
 
     std::printf ("Meter mode\n");

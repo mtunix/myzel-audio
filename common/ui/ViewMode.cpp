@@ -1,6 +1,6 @@
-#include "ui/ViewMode.h"
+#include "common/ui/ViewMode.h"
 
-namespace cerulean::ui
+namespace myzel::ui
 {
 
 namespace
@@ -40,15 +40,15 @@ ViewMode viewModeFromString (const juce::String& text, ViewMode fallback)
 
 namespace viewPreference
 {
-    juce::File getSettingsFile()
+    juce::File getSettingsFile (const juce::String& pluginName)
     {
         if (settingsOverride() != juce::File())
             return settingsOverride();
 
         return juce::File::getSpecialLocation (juce::File::userApplicationDataDirectory)
             .getChildFile ("Myzel Audio")
-            .getChildFile ("Cerulean")
-            .getChildFile ("Cerulean.settings");
+            .getChildFile (pluginName)
+            .getChildFile (pluginName + ".settings");
     }
 
     void setSettingsFileOverride (const juce::File& file)
@@ -56,9 +56,9 @@ namespace viewPreference
         settingsOverride() = file;
     }
 
-    ViewMode getDefault()
+    ViewMode getDefault (const juce::String& pluginName)
     {
-        const auto file = getSettingsFile();
+        const auto file = getSettingsFile (pluginName);
 
         if (! file.existsAsFile())
             return ViewMode::panel;
@@ -67,9 +67,9 @@ namespace viewPreference
         return viewModeFromString (props.getValue (defaultViewKey), ViewMode::panel);
     }
 
-    void setDefault (ViewMode mode)
+    void setDefault (const juce::String& pluginName, ViewMode mode)
     {
-        const auto file = getSettingsFile();
+        const auto file = getSettingsFile (pluginName);
         file.getParentDirectory().createDirectory();
 
         juce::PropertiesFile props (file, settingsOptions());
@@ -82,4 +82,4 @@ namespace viewPreference
     }
 }
 
-} // namespace cerulean::ui
+} // namespace myzel::ui

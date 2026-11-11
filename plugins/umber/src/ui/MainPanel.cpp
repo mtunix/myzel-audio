@@ -45,7 +45,7 @@ MainPanel::MainPanel (UmberProcessor& p)
     : processor (p),
       presets (p, presetFormat()),
       ab (p, presets),
-      header (p, presets, ab, dialog),
+      header (p, presets, ab, dialog, headerConfig (p)),
       vblank (this, [this] (double t) { animateFrame (t); })
 {
     setOpaque (true);

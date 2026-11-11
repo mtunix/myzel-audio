@@ -250,6 +250,9 @@ int main (int argc, char* argv[])
               e.getMainPanel().getDialog().open (o);
           }, false },
 
+        { "10-bypass", [] (UmberProcessor& p) { setParam (p, params::bypass, 1.0f); },
+          { 0.06f, 0.09f, 0.0f }, 1.0f, nullptr },
+
     };
 
     for (const auto& scene : scenes)

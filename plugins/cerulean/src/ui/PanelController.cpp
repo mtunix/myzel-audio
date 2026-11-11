@@ -212,13 +212,13 @@ juce::String PanelController::algorithmTagline (Algorithm a)
 ViewMode PanelController::getView() const
 {
     const auto stored = processor.getUiState().getProperty (uistate::view).toString();
-    return viewModeFromString (stored, viewPreference::getDefault());
+    return viewModeFromString (stored, viewPreference::getDefault (presets.getPluginName()));
 }
 
 void PanelController::setView (ViewMode mode)
 {
     processor.getUiState().setProperty (uistate::view, toString (mode), nullptr);
-    viewPreference::setDefault (mode);
+    viewPreference::setDefault (presets.getPluginName(), mode);
 }
 
 } // namespace cerulean::ui

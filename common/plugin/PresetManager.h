@@ -75,6 +75,7 @@ public:
     PresetManager (PresetHost& host, PresetFormat format);
 
     const juce::StringArray& parameterIds() const noexcept { return format.parameterIds; }
+    const juce::String& getPluginName() const noexcept { return format.pluginName; }
     juce::File getUserPresetDirectory() const;
 
     /** Tests: redirect user presets to a scratch folder (an empty File restores the default). */

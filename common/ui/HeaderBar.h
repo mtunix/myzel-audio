@@ -1,23 +1,38 @@
 #pragma once
 
-#include "ui/FactoryPresets.h"
+#include "common/plugin/AbCompare.h"
+#include "common/plugin/PresetManager.h"
 #include "common/ui/HeaderButton.h"
 #include "common/ui/InlineDialog.h"
 #include "common/ui/PresetDisplay.h"
-#include "ui/Theme.h"
-#include "ui/ViewMode.h"
+#include "common/ui/ViewMode.h"
 
-namespace cerulean
+namespace myzel::ui
 {
-class CeruleanProcessor;
-}
 
-namespace cerulean::ui
+/** What a plugin's header says and offers. */
+struct HeaderConfig
 {
+    juce::String name;                  // printed on the rail, e.g. "UMBER"
+    juce::String productName;           // e.g. "Umber", for the settings menu
+    juce::String version;               // e.g. "0.1.0"
+    juce::String bypassId = "bypass";
+    juce::String bypassTooltip;
+    juce::String bypassedText, activeText;      // the bypass state, for screen readers
+    juce::String settingsTooltip = "Settings: mix lock, window size";
+    juce::String mixLockLabel = "Lock Mix";
+    bool hasViews = false;              // show the PANEL | STUDIO switch
+
+    /** Adds the plugin's own entries at the top of the settings menu. Each item carries its own
+        action and an ID from firstPluginItemId up (JUCE only runs actions of items with an ID). */
+    std::function<void (juce::PopupMenu&)> addSettings;
+    static constexpr int firstPluginItemId = 30000;   // the header's own IDs are below
+};
 
 /**
     The header rail: name, preset browser (with SAVE while there are unsaved changes), bypass,
-    A/B compare, undo/redo, the view switch (PANEL | STUDIO) and the settings menu (window size).
+    A/B compare, undo/redo, the view switch (PANEL | STUDIO, plugins with two views) and the
+    settings menu (the plugin's own settings, mix lock, window size).
 
     Both views use the same header with the same layout: nothing moves when the view changes,
     so Bypass and A/B stay where the hand expects them. View-specific keys (the panel's
@@ -26,7 +41,7 @@ namespace cerulean::ui
 class HeaderBar final : public juce::Component
 {
 public:
-    HeaderBar (CeruleanProcessor& processor, PresetManager& presets, AbCompare& ab, InlineDialog& dialog);
+    HeaderBar (plugin::PresetHost& host, plugin::PresetManager& presets, plugin::AbCompare& ab, InlineDialog& dialog, HeaderConfig config);
     ~HeaderBar() override;
 
     /** Pulls state that can change behind the UI's back (undo history, preset dirty flag). */
@@ -57,10 +72,11 @@ private:
     void promptDelete (int index);
     juce::PopupMenu::Options menuOptionsFor (juce::Component& target) const;
 
-    CeruleanProcessor& processor;
-    PresetManager& presets;
-    AbCompare& ab;
+    plugin::PresetHost& host;
+    plugin::PresetManager& presets;
+    plugin::AbCompare& ab;
     InlineDialog& dialog;
+    const HeaderConfig config;
 
     HeaderButton prevButton { "Previous preset", HeaderButton::Icon::previous };
     HeaderButton nextButton { "Next preset", HeaderButton::Icon::next };
@@ -81,4 +97,4 @@ private:
     JUCE_DECLARE_NON_COPYABLE_WITH_LEAK_DETECTOR (HeaderBar)
 };
 
-} // namespace cerulean::ui
+} // namespace myzel::ui

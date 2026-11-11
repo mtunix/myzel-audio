@@ -74,9 +74,14 @@ Switching circuits crossfades, so it never clicks.
 
 ### Header
 
-Presets (the ‹ › arrows step through them), **Bypass**, **A/B** compare (A→B copies the current
-setting to the other slot), undo and redo, oversampling quality, and window size (75–200 %; you
-can also resize the plugin window in your host, which keeps the proportions).
+Presets (the ‹ › arrows step through them; **SAVE** appears in the preset field when you have
+changed a sound), **Bypass** (lit red while bypassed), **A/B** compare (A→B copies the current
+setting to the other slot), undo and redo, and the **⚙ settings** menu: oversampling quality,
+**Lock Mix**, and window size (75–200 %; you can also resize the plugin window in your host, which
+keeps the proportions).
+
+**Lock Mix** keeps the Mix knob where it is while you load presets or switch A/B, so browsing
+sounds never changes your wet/dry balance. It is saved with the session.
 
 ## What Bias does on each circuit
 
@@ -103,7 +108,7 @@ The circuits run oversampled, which keeps their distortion from folding back as 
 | Standard (default) | 4x | about 2.7–5 % |
 | High | 8x | about 5–10 % |
 
-**Offline render** (in the quality menu) sets the oversampling for offline bounces: the same as
+**Offline render** (in the ⚙ settings menu) sets the oversampling for offline bounces: the same as
 realtime, 8x or 16x. Switching quality crossfades, and the plugin's latency stays the same in
 every mode, so your timing never shifts.
 
@@ -112,7 +117,7 @@ every mode, so your timing never shifts.
 There are 38 factory presets in seven categories, plus your own. Use **Save as** in the preset
 menu to save one. User presets are plain files in `~/.config/Myzel Audio/Umber/Presets` (Linux).
 
-Presets store the sound only. Quality, Bypass and Delta belong to the session. A preset made
+Presets store the sound only. Quality, Bypass, Delta and the mix lock belong to the session. A preset made
 before a control existed loads with that control at its default.
 
 ## Mouse and keyboard

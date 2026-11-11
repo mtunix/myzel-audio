@@ -1,8 +1,8 @@
-#include "ui/HeaderBar.h"
+#include "common/ui/HeaderBar.h"
 
-#include "plugin/PluginProcessor.h"
+#include "common/ui/Theme.h"
 
-namespace cerulean::ui
+namespace myzel::ui
 {
 
 namespace
@@ -22,43 +22,39 @@ namespace
         mixLockId,
         scaleBase = 20000       // + index into scales
     };
-
-    juce::String versionText()
-    {
-       #ifdef CERULEAN_VERSION_STRING
-        return juce::String ("v") + CERULEAN_VERSION_STRING;
-       #else
-        return {};
-       #endif
-    }
-
 }
 
-HeaderBar::HeaderBar (CeruleanProcessor& p, PresetManager& pm, AbCompare& abCompare, InlineDialog& d)
-    : processor (p),
+HeaderBar::HeaderBar (plugin::PresetHost& h, plugin::PresetManager& pm, plugin::AbCompare& abCompare, InlineDialog& d, HeaderConfig c)
+    : host (h),
       presets (pm),
       ab (abCompare),
-      dialog (d)
+      dialog (d),
+      config (std::move (c))
 {
     for (auto* b : std::initializer_list<juce::Component*> { &prevButton, &presetDisplay, &nextButton, &bypassButton, &slotA, &slotB,
-                                                             &copyButton, &undoButton, &redoButton, &panelViewButton, &studioViewButton,
-                                                             &settingsButton })
+                                                             &copyButton, &undoButton, &redoButton, &settingsButton })
         addAndMakeVisible (b);
+
+    if (config.hasViews)
+    {
+        addAndMakeVisible (panelViewButton);
+        addAndMakeVisible (studioViewButton);
+    }
 
     addChildComponent (saveButton);   // over the right end of the preset field, only with unsaved changes
 
-    bypassButton.setTooltip ("Bypass: the dry signal passes untouched. With Trails on (Advanced), the reverb keeps ringing out.");
+    bypassButton.setTooltip (config.bypassTooltip);
     bypassButton.setTitle ("Bypass");
     bypassButton.setClickingTogglesState (false);
 
     // Not undoable on purpose: bypass is for listening, not part of the sound.
     bypassAttachment = std::make_unique<juce::ParameterAttachment> (
-        *processor.getState().getParameter (params::bypass),
+        *host.getState().getParameter (config.bypassId),
         [this] (float v)
         {
             bypassButton.setLit (v >= 0.5f);
             bypassButton.setToggleState (v >= 0.5f, juce::dontSendNotification);
-            bypassButton.setDescription (v >= 0.5f ? "Bypassed: the reverb is off" : "Reverb on");
+            bypassButton.setDescription (v >= 0.5f ? config.bypassedText : config.activeText);
         });
     bypassButton.setCaution (true);
     bypassAttachment->sendInitialUpdate();
@@ -71,7 +67,7 @@ HeaderBar::HeaderBar (CeruleanProcessor& p, PresetManager& pm, AbCompare& abComp
     copyButton.setTooltip ("Copy the current setting to the other compare slot");
     undoButton.setTooltip ("Undo");
     redoButton.setTooltip ("Redo");
-    settingsButton.setTooltip ("Settings: mix lock, window size");
+    settingsButton.setTooltip (config.settingsTooltip);
     settingsButton.setTitle ("Settings");
     saveButton.setTooltip ("Save the changes: overwrites a user preset, or asks for a name for a factory preset.");
     saveButton.setTitle ("Save preset");
@@ -93,8 +89,8 @@ HeaderBar::HeaderBar (CeruleanProcessor& p, PresetManager& pm, AbCompare& abComp
     slotA.onClick = [this] { ab.selectSlot (0); refresh(); };
     slotB.onClick = [this] { ab.selectSlot (1); refresh(); };
     copyButton.onClick = [this] { ab.copyActiveToOther(); refresh(); };
-    undoButton.onClick = [this] { processor.getUndoManager().undo(); refresh(); };
-    redoButton.onClick = [this] { processor.getUndoManager().redo(); refresh(); };
+    undoButton.onClick = [this] { host.getUndoManager().undo(); refresh(); };
+    redoButton.onClick = [this] { host.getUndoManager().redo(); refresh(); };
     saveButton.onClick = [this] { saveCurrent(); };
     settingsButton.onClick = [this] { showSettingsMenu(); };
 
@@ -128,7 +124,7 @@ void HeaderBar::refresh()
         presetDisplay.setReservedRight (presets.isModified() ? (float) saveButton.getWidth() : 0.0f);
     }
 
-    auto& um = processor.getUndoManager();
+    auto& um = host.getUndoManager();
     undoButton.setEnabled (um.canUndo());
     redoButton.setEnabled (um.canRedo());
 
@@ -148,8 +144,12 @@ void HeaderBar::resized()
     // Right to left. The same in both views: nothing moves when the view changes.
     auto x = (float) getWidth() - 16.0f;
     x -= 30.0f; settingsButton.setBounds (key (x, 30.0f));
-    x -= 12.0f + 60.0f; studioViewButton.setBounds (key (x, 60.0f));
-    x -= 54.0f; panelViewButton.setBounds (key (x, 54.0f));
+
+    if (config.hasViews)
+    {
+        x -= 12.0f + 60.0f; studioViewButton.setBounds (key (x, 60.0f));
+        x -= 54.0f; panelViewButton.setBounds (key (x, 54.0f));
+    }
 
     x -= 22.0f + 28.0f; redoButton.setBounds (key (x, 28.0f));
     x -= 2.0f + 28.0f; undoButton.setBounds (key (x, 28.0f));
@@ -191,7 +191,7 @@ void HeaderBar::paint (juce::Graphics& g)
         // The name, set plainly: no emblem, no effects. The version follows it, dimmed, so
         // screenshots and bug reports always say which build they are from.
         const auto nameFont = drawing::tracked (fonts->legend (12.5f), 0.26f);
-        const juce::String name ("CERULEAN");
+        const auto& name = config.name;
         lg.setColour (pal.headerLegend);
         lg.setFont (nameFont);
         lg.drawText (name, juce::Rectangle<float> (24.0f, 0.0f, 240.0f, a.getHeight()),
@@ -200,7 +200,7 @@ void HeaderBar::paint (juce::Graphics& g)
         const auto nameWidth = juce::GlyphArrangement::getStringWidth (nameFont, name);
         lg.setColour (pal.headerLegendDim);
         lg.setFont (drawing::tracked (fonts->label (10.0f), 0.06f));
-        lg.drawText (versionText(), juce::Rectangle<float> (24.0f + nameWidth + 8.0f, 1.0f, 80.0f, a.getHeight()),
+        lg.drawText ("v" + config.version, juce::Rectangle<float> (24.0f + nameWidth + 8.0f, 1.0f, 80.0f, a.getHeight()),
                      juce::Justification::centredLeft, false);
 
         // Grooves between groups.
@@ -215,7 +215,7 @@ void HeaderBar::paint (juce::Graphics& g)
         groove ((float) slotA.getX() - 12.0f);
         groove ((float) bypassButton.getX() - 11.0f);
         groove ((float) undoButton.getX() - 11.0f);
-        groove ((float) panelViewButton.getX() - 11.0f);
+        groove ((float) (config.hasViews ? panelViewButton : settingsButton).getX() - 11.0f);
     });
 }
 
@@ -424,8 +424,15 @@ void HeaderBar::showSettingsMenu()
     const auto current = getScale != nullptr ? getScale() : 1.0f;
 
     juce::PopupMenu menu;
-    menu.addSectionHeader ("Presets");
-    menu.addItem (mixLockId, "Lock Mix and Wet", true, presets.isMixLocked());
+
+    if (config.addSettings != nullptr)
+        config.addSettings (menu);
+
+    if (presets.canLockMix())
+    {
+        menu.addSectionHeader ("Presets");
+        menu.addItem (mixLockId, config.mixLockLabel, true, presets.isMixLocked());
+    }
 
     menu.addSectionHeader ("Window size");
 
@@ -434,7 +441,7 @@ void HeaderBar::showSettingsMenu()
                       std::abs (scales[i] - current) < 0.01f);
 
     menu.addSeparator();
-    menu.addItem (-1, "Cerulean " + versionText() + " by Myzel Audio", false, false);
+    menu.addItem (-1, config.productName + " v" + config.version + " by Myzel Audio", false, false);
 
     juce::Component::SafePointer<HeaderBar> safe (this);
     menu.showMenuAsync (menuOptionsFor (settingsButton).withMinimumWidth (170), [safe] (int result)
@@ -455,4 +462,4 @@ void HeaderBar::showSettingsMenu()
     });
 }
 
-} // namespace cerulean::ui
+} // namespace myzel::ui

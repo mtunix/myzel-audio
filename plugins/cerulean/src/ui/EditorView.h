@@ -1,9 +1,9 @@
 #pragma once
 
-#include "ui/HeaderBar.h"
+#include "ui/Header.h"
 #include "common/ui/InlineDialog.h"
 #include "ui/Theme.h"
-#include "ui/ViewMode.h"
+#include "common/ui/ViewMode.h"
 
 namespace cerulean::ui
 {

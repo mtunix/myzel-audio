@@ -1,6 +1,7 @@
 #pragma once
 
-#include "ui/CeruleanLookAndFeel.h"
+#include "common/ui/KitLookAndFeel.h"
+#include "ui/Theme.h"
 #include "ui/EditorView.h"
 #include "ui/MainPanel.h"
 #include "ui/PanelController.h"
@@ -58,7 +59,7 @@ private:
     void valueTreeRedirected (juce::ValueTree&) override;
 
     CeruleanProcessor& processor;
-    ui::CeruleanLookAndFeel lookAndFeel;     // declared first: outlives every child
+    ui::KitLookAndFeel lookAndFeel;        // declared first: outlives every child
     ui::PanelController controller;        // outlives the views
     std::unique_ptr<ui::EditorView> view;
     std::unique_ptr<juce::TooltipWindow> tooltips;

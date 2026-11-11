@@ -1,7 +1,7 @@
 #pragma once
 
 #include "ui/FactoryPresets.h"
-#include "ui/HeaderBar.h"
+#include "ui/Header.h"
 #include "common/ui/InlineDialog.h"
 #include "common/ui/Knob.h"
 #include "common/ui/LampButton.h"

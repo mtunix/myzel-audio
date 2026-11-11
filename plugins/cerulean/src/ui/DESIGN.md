@@ -275,11 +275,9 @@ UI state keys (`UiState.h`, never rename): `scale`, `advancedOpen`, `presetName`
 | `TailModel`, `TailDisplay` | the decay picture and the live wet level |
 | `AdvancedDrawer`, `AdvancedTab` | the Advanced deck below the panel, and ADVANCED on the bottom edge |
 | `LockBadge` | the padlock after MIX while the mix lock is on (both views) |
-| `HeaderBar` | header rail |
+| `Header` | Cerulean's header: name and texts; the rail itself is the shared `HeaderBar` |
 | `FactoryPresets` | the factory presets and Cerulean's preset format (`presetFormat()`); the preset and A/B logic is shared (`common/plugin/`: `PresetManager`, `AbCompare`) |
-| `CeruleanLookAndFeel` | popup menus, tooltips, text fields |
 | `PanelController` | the editor's model, shared by both views: presets, A/B, parameter meanings (`Meanings`), value texts, tail shape, the stored view |
-| `ViewMode` | `panel` / `studio`, and the default-view preference (`Cerulean.settings`) |
 | `EditorView` | base of both views: header wiring, frame hook |
 | `MainPanel` | the panel view: composition, frame clock, meaning changes |
 | `StudioTheme` | studio palette tokens (defined in `Theme.cpp`) and the studio layout grid |
@@ -292,7 +290,8 @@ UI state keys (`UiState.h`, never rename): `scale`, `advancedOpen`, `presetName`
 From the shared kit (`common/ui/`): `Drawing` (cached layers, legends, screws, recesses, grooves,
 shadows, grain, glow), `PanelArtwork` (the static front panel, knob scales and titles), `Knob`
 (re-bindable, custom read-out), `LampButton` (incl. momentary keys), `ValueBubble`, `HeaderButton`,
-`PresetDisplay`, `InlineDialog`.
+`PresetDisplay`, `InlineDialog`, `HeaderBar`, `KitLookAndFeel` (popup menus, tooltips, text fields),
+`ViewMode` (`panel` / `studio`, and the default-view preference in `Cerulean.settings`).
 
 ## Two views
 

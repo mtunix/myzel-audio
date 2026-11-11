@@ -1,9 +1,9 @@
-#include "ui/UmberLookAndFeel.h"
+#include "common/ui/KitLookAndFeel.h"
 
 #include "common/ui/Drawing.h"
-#include "ui/Theme.h"
+#include "common/ui/Theme.h"
 
-namespace umber::ui
+namespace myzel::ui
 {
 
 namespace
@@ -13,7 +13,7 @@ namespace
         const auto& pal = Theme::palette();
         juce::AttributedString s;
         s.setJustification (juce::Justification::centredLeft);
-        s.append (text, fonts.label (12.5f), pal.legend);
+        s.append (text, fonts.label (12.5f), pal.headerLegend);
 
         juce::TextLayout tl;
         tl.createLayoutWithBalancedLineLengths (s, 280.0f);
@@ -21,18 +21,18 @@ namespace
     }
 }
 
-UmberLookAndFeel::UmberLookAndFeel()
+KitLookAndFeel::KitLookAndFeel()
 {
     const auto& pal = Theme::palette();
 
     setColour (juce::PopupMenu::backgroundColourId, pal.headerTop);
     setColour (juce::PopupMenu::textColourId, pal.keyText);
-    setColour (juce::PopupMenu::headerTextColourId, pal.legendDim);
+    setColour (juce::PopupMenu::headerTextColourId, pal.headerLegendDim);
     setColour (juce::PopupMenu::highlightedBackgroundColourId, pal.accent.withAlpha (0.18f));
     setColour (juce::PopupMenu::highlightedTextColourId, pal.keyTextActive);
 
     setColour (juce::TooltipWindow::backgroundColourId, pal.bubbleFill);
-    setColour (juce::TooltipWindow::textColourId, pal.legend);
+    setColour (juce::TooltipWindow::textColourId, pal.headerLegend);
     setColour (juce::TooltipWindow::outlineColourId, pal.bubbleEdge);
 
     setColour (juce::TextEditor::backgroundColourId, pal.displayGlass);
@@ -43,7 +43,7 @@ UmberLookAndFeel::UmberLookAndFeel()
     setColour (juce::CaretComponent::caretColourId, pal.accent);
 }
 
-juce::Typeface::Ptr UmberLookAndFeel::getTypefaceForFont (const juce::Font& font)
+juce::Typeface::Ptr KitLookAndFeel::getTypefaceForFont (const juce::Font& font)
 {
     if (font.getTypefaceName() == juce::Font::getDefaultSansSerifFontName())
         return fonts->getMedium();
@@ -51,12 +51,12 @@ juce::Typeface::Ptr UmberLookAndFeel::getTypefaceForFont (const juce::Font& font
     return LookAndFeel_V4::getTypefaceForFont (font);
 }
 
-juce::Font UmberLookAndFeel::getPopupMenuFont()
+juce::Font KitLookAndFeel::getPopupMenuFont()
 {
     return fonts->label (14.0f);
 }
 
-void UmberLookAndFeel::drawPopupMenuBackground (juce::Graphics& g, int width, int height)
+void KitLookAndFeel::drawPopupMenuBackground (juce::Graphics& g, int width, int height)
 {
     const auto& pal = Theme::palette();
     const auto area = juce::Rectangle<float> (0.0f, 0.0f, (float) width, (float) height);
@@ -69,7 +69,7 @@ void UmberLookAndFeel::drawPopupMenuBackground (juce::Graphics& g, int width, in
     g.fillRect (area.getX() + 1.0f, 0.0f, area.getWidth() - 2.0f, 1.5f);
 }
 
-void UmberLookAndFeel::getIdealPopupMenuItemSize (const juce::String& text, bool isSeparator, int standardHeight,
+void KitLookAndFeel::getIdealPopupMenuItemSize (const juce::String& text, bool isSeparator, int standardHeight,
                                                      int& idealWidth, int& idealHeight)
 {
     LookAndFeel_V4::getIdealPopupMenuItemSize (text, isSeparator, standardHeight, idealWidth, idealHeight);
@@ -80,7 +80,7 @@ void UmberLookAndFeel::getIdealPopupMenuItemSize (const juce::String& text, bool
     idealWidth += 18;
 }
 
-void UmberLookAndFeel::drawPopupMenuItem (juce::Graphics& g, const juce::Rectangle<int>& area, bool isSeparator,
+void KitLookAndFeel::drawPopupMenuItem (juce::Graphics& g, const juce::Rectangle<int>& area, bool isSeparator,
                                              bool isActive, bool isHighlighted, bool isTicked, bool hasSubMenu,
                                              const juce::String& text, const juce::String& shortcutKeyText,
                                              const juce::Drawable*, const juce::Colour* textColour)
@@ -109,13 +109,13 @@ void UmberLookAndFeel::drawPopupMenuItem (juce::Graphics& g, const juce::Rectang
     auto ink = textColour != nullptr ? *textColour : pal.keyText;
 
     if (! isActive)
-        ink = pal.legendDim.withMultipliedAlpha (0.8f);
+        ink = pal.headerLegendDim.withMultipliedAlpha (0.8f);
     else if (isHighlighted)
         ink = pal.keyTextActive;
     else if (isTicked)
         ink = pal.displayText;
 
-    // Tick: an ember lamp dot.
+    // Tick: a lit accent dot.
     auto tickArea = r.removeFromLeft (26.0f);
 
     if (isTicked)
@@ -144,22 +144,22 @@ void UmberLookAndFeel::drawPopupMenuItem (juce::Graphics& g, const juce::Rectang
 
     if (shortcutKeyText.isNotEmpty())
     {
-        g.setColour (pal.legendDim);
+        g.setColour (pal.headerLegendDim);
         g.setFont (fonts->label (12.0f));
         g.drawText (shortcutKeyText, r.withTrimmedRight (10.0f), juce::Justification::centredRight, true);
     }
 }
 
-void UmberLookAndFeel::drawPopupMenuSectionHeader (juce::Graphics& g, const juce::Rectangle<int>& area, const juce::String& name)
+void KitLookAndFeel::drawPopupMenuSectionHeader (juce::Graphics& g, const juce::Rectangle<int>& area, const juce::String& name)
 {
     const auto& pal = Theme::palette();
-    g.setColour (pal.legendDim);
+    g.setColour (pal.headerLegendDim);
     g.setFont (drawing::tracked (fonts->legend (10.0f), 0.22f));
     g.drawText (name.toUpperCase(), area.toFloat().withTrimmedLeft (12.0f).withTrimmedTop (4.0f),
                 juce::Justification::centredLeft, true);
 }
 
-juce::Rectangle<int> UmberLookAndFeel::getTooltipBounds (const juce::String& tipText, juce::Point<int> screenPos,
+juce::Rectangle<int> KitLookAndFeel::getTooltipBounds (const juce::String& tipText, juce::Point<int> screenPos,
                                                             juce::Rectangle<int> parentArea)
 {
     const auto tl = layoutTooltip (tipText, *fonts);
@@ -172,7 +172,7 @@ juce::Rectangle<int> UmberLookAndFeel::getTooltipBounds (const juce::String& tip
         .constrainedWithin (parentArea);
 }
 
-void UmberLookAndFeel::drawTooltip (juce::Graphics& g, const juce::String& text, int width, int height)
+void KitLookAndFeel::drawTooltip (juce::Graphics& g, const juce::String& text, int width, int height)
 {
     const auto& pal = Theme::palette();
     const auto area = juce::Rectangle<float> ((float) width, (float) height);
@@ -185,17 +185,17 @@ void UmberLookAndFeel::drawTooltip (juce::Graphics& g, const juce::String& text,
     layoutTooltip (text, *fonts).draw (g, area.reduced (11.0f, 7.0f));
 }
 
-void UmberLookAndFeel::fillTextEditorBackground (juce::Graphics& g, int width, int height, juce::TextEditor& editor)
+void KitLookAndFeel::fillTextEditorBackground (juce::Graphics& g, int width, int height, juce::TextEditor& editor)
 {
     g.setColour (editor.findColour (juce::TextEditor::backgroundColourId));
     g.fillRoundedRectangle (juce::Rectangle<float> ((float) width, (float) height), 4.0f);
 }
 
-void UmberLookAndFeel::drawTextEditorOutline (juce::Graphics& g, int width, int height, juce::TextEditor& editor)
+void KitLookAndFeel::drawTextEditorOutline (juce::Graphics& g, int width, int height, juce::TextEditor& editor)
 {
     const auto focused = editor.hasKeyboardFocus (true) && ! editor.isReadOnly();
     g.setColour (editor.findColour (focused ? juce::TextEditor::focusedOutlineColourId : juce::TextEditor::outlineColourId));
     g.drawRoundedRectangle (juce::Rectangle<float> ((float) width, (float) height).reduced (0.5f), 4.0f, focused ? 1.4f : 1.0f);
 }
 
-} // namespace umber::ui
+} // namespace myzel::ui

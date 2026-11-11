@@ -69,6 +69,10 @@ namespace
         p.danger          = p.accent;
         p.primaryTop      = p.accent.darker (0.15f);
         p.primaryBottom   = p.accentDeep;
+
+        // Caution (Bypass): a signal red, so a bypassed plugin never looks like a lit amber key.
+        p.caution         = C (0xffe8603f);
+        p.cautionDeep     = C (0xff4c2117);
         return p;
     }
 

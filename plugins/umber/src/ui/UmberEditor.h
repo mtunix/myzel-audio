@@ -1,7 +1,8 @@
 #pragma once
 
 #include "ui/MainPanel.h"
-#include "ui/UmberLookAndFeel.h"
+#include "common/ui/KitLookAndFeel.h"
+#include "ui/Theme.h"
 
 #include <juce_audio_processors/juce_audio_processors.h>
 
@@ -30,7 +31,7 @@ public:
 
 private:
     UmberProcessor& processor;
-    ui::UmberLookAndFeel lookAndFeel;     // declared first: outlives every child
+    ui::KitLookAndFeel lookAndFeel;      // declared first: outlives every child
     std::unique_ptr<ui::MainPanel> panel;
     std::unique_ptr<juce::TooltipWindow> tooltips;
     float scale = 1.0f;

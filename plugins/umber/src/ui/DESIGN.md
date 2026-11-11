@@ -57,7 +57,7 @@ The header name is 12.5 px with +0.26 tracking. Values and menus use Medium 12.5
 
 ```
  0 ┌───────────────────────────────────────────────────────────────────────────────────────┐
-   │ UMBER          ‹ [CATEGORY  Preset name        ▾] ›  BYPASS │ A B A→B │ ↶ ↷ │ 4× │ 100% │
+   │ UMBER v0.1.0  ‹ [CATEGORY ›    Preset name    SAVE ▾] ›  BYPASS │ A B A→B │ ↶ ↷ │ ⚙      │
 50 ├────────────────────────────────┬──────────────────────────┬───────────────────────────┤
    │ STEREO   EMPHASIS   BIAS       │      DRIVE (Ø196)        │   VU meter 256×168        │
    │ 100,178  228,178    356,178    │      centre 608,204      │   at 796,84               │
@@ -97,7 +97,8 @@ The header name is 12.5 px with +0.26 tracking. Values and menus use Medium 12.5
 - Tone, Emphasis and Bias have a **centre detent**: dragging through 12 o'clock sticks at the
   centre for a short distance.
 - Bypass (header) and Delta (rail) are listening switches: they are not stored in presets or A/B
-  slots and do not enter the undo history.
+  slots and do not enter the undo history. Bypass lights in the caution colour (signal red), never
+  the amber accent, so a bypassed plugin cannot be mistaken for a selected key.
 - Every other edit is wrapped in a host gesture (begin/end) and starts a new undo transaction through
   `ParameterAttachment`. Pending wheel gestures are closed before any other edit, so gestures never nest.
 - Keyboard focus shows an amber focus ring, but only when focus arrived by keyboard.
@@ -117,8 +118,7 @@ A single `VBlankAttachment` in `MainPanel` is the frame clock. Each frame:
    300 ms with about 1.2 % overshoot, and the scale is voltage-linear like a real VU. 0 VU =
    −18 dBFS for Output and −12 dBFS for Drive. The peak lamp lights when the output peak reaches
    −0.1 dBFS (held 0.6 s). Click the meter to switch modes. The mode is saved in the UI state.
-3. Every 6 frames the header refreshes: preset modified flag, undo/redo availability and the
-   effective oversampling factor.
+3. Every 6 frames the header refreshes: preset modified flag (and SAVE) and undo/redo availability.
 
 Each element repaints only its own bounds, and only when its visible state changes by more than a
 small threshold. The frame logic costs well under 1 µs and allocates nothing.
@@ -138,8 +138,8 @@ A cold repaint happens only on open or resize.
 ## Scaling
 
 The editor holds one `MainPanel` at the base size and applies `AffineTransform::scale`. The
-window is resizable with a fixed aspect ratio, from 75 % to 200 %. The scale menu offers
-75–200 % in 25 % steps. The scale is stored in `getUiState()` and restored on open.
+window is resizable with a fixed aspect ratio, from 75 % to 200 %. The ⚙ settings menu offers
+75–200 % in 25 % steps, with the realtime and offline-render quality and the mix lock above them. The scale is stored in `getUiState()` and restored on open.
 
 ## Presets, A/B, undo
 
@@ -165,16 +165,16 @@ UI state keys (`UiState.h`, never rename): `scale`, `meterMode`, `presetName`, `
 |---|---|
 | `Theme` | Umber's colours (kit palette, VU meter extras), panel finish, layout grid |
 | `NeedleMeter`, `VuBallistics` | VU meter |
-| `HeaderBar` | header rail |
+| `Header` | Umber's header: name, texts and its settings entries (quality); the rail itself is the shared `HeaderBar` |
 | `FactoryPresets` | the factory presets and Umber's preset format (`presetFormat()`); the preset and A/B logic is shared (`common/plugin/`: `PresetManager`, `AbCompare`) |
 | `InlineDialog` | in-editor save/rename/delete prompts |
-| `UmberLookAndFeel` | popup menus, tooltips, text fields |
 | `MainPanel` | composition, frame clock |
 | `UmberEditor` | scaling host |
 
 From the shared kit (`common/ui/`): `Drawing` (cached layers, legends, screws, recesses, shadows,
 grain, glow), `PanelArtwork` (the static front panel), `Knob`, `LampButton`, `ValueBubble`,
-`HeaderButton`, `PresetDisplay`, `InlineDialog`.
+`HeaderButton`, `PresetDisplay`, `InlineDialog`, `HeaderBar`, `KitLookAndFeel` (popup menus, tooltips,
+text fields).
 
 ## Snapshot tool
 

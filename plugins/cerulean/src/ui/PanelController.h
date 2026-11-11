@@ -3,7 +3,8 @@
 #include "plugin/Parameters.h"
 #include "ui/FactoryPresets.h"
 #include "ui/TailModel.h"
-#include "ui/ViewMode.h"
+#include "common/ui/ViewMode.h"
+#include "ui/Theme.h"
 
 namespace cerulean
 {

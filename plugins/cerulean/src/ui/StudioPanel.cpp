@@ -39,7 +39,7 @@ namespace
 StudioPanel::StudioPanel (PanelController& c)
     : controller (c),
       processor (c.getProcessor()),
-      header (processor, c.getPresets(), c.getAb(), dialog),
+      header (processor, c.getPresets(), c.getAb(), dialog, headerConfig (processor)),
       meters (processor.getMeters()),
       vblank (this, [this] (double t) { animateFrame (t); })
 {

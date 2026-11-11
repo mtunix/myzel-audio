@@ -6,7 +6,8 @@ if(UMBER_UI_SNAPSHOT_SOURCES)
     juce_add_console_app(UmberUiSnapshot PRODUCT_NAME "UmberUiSnapshot")
     target_sources(UmberUiSnapshot PRIVATE ${UMBER_UI_SNAPSHOT_SOURCES})
     target_link_libraries(UmberUiSnapshot PRIVATE UmberShared)
-    target_compile_definitions(UmberUiSnapshot PRIVATE JUCE_STANDALONE_APPLICATION=1)
+    # Modal loops: the self-test pumps the message loop to check asynchronous view switching.
+    target_compile_definitions(UmberUiSnapshot PRIVATE JUCE_STANDALONE_APPLICATION=1 JUCE_MODAL_LOOPS_PERMITTED=1)
 endif()
 
 # Calibration: measures every model through the full chain and writes the Auto gain tables.

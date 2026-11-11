@@ -20,7 +20,6 @@ namespace
 StudioPanel::StudioPanel (EditorController& c, UmberProcessor& p)
     : controller (c),
       processor (p),
-      header (p, c.getPresets(), c.getAb(), dialog, headerConfig (p)),
       meters ({ { "IN",    [&m = p.getMeters()] { return m.inputRms.load (std::memory_order_relaxed); },
                            [&m = p.getMeters()] { return m.inputPeak.exchange (0.0f, std::memory_order_relaxed); } },
                 { "DRIVE", [&m = p.getMeters()] { return m.driveRms.load (std::memory_order_relaxed); }, nullptr },
@@ -28,8 +27,7 @@ StudioPanel::StudioPanel (EditorController& c, UmberProcessor& p)
                            [&m = p.getMeters()] { return m.outputPeak.exchange (0.0f, std::memory_order_relaxed); } } },
               std::nullopt,
               "Input level, the level hitting the circuit (after Drive and Slam) and the output level "
-              "(bar: RMS, line: peak hold, number: peak). Click to reset the peaks."),
-      vblank (this, [this] (double t) { animateFrame (t); })
+              "(bar: RMS, line: peak hold, number: peak). Click to reset the peaks.")
 {
     setOpaque (true);
     setSize (metrics::baseWidth, metrics::baseHeight);
@@ -37,35 +35,12 @@ StudioPanel::StudioPanel (EditorController& c, UmberProcessor& p)
 
     buildControls();
     addAndMakeVisible (meters);
-    addAndMakeVisible (header);
-    addChildComponent (dialog);
 
-    wireHeader (header);
-
-    // Mix lock: a padlock after the MIX label while it is on.
-    {
-        const auto labelFont = drawing::tracked (fonts->legend (studio::labelSize), studio::labelTracking);
-        const auto row = studio::outputRow (0);
-        const auto x = row.getX() + juce::GlyphArrangement::getStringWidth (labelFont, "MIX") + 10.0f;
-        mixLockBadge.setBounds (juce::Rectangle<int> (LockBadge::width, LockBadge::height)
-                                    .withCentre ({ juce::roundToInt (x), juce::roundToInt (row.getY() + 8.5f) }));
-    }
-    addChildComponent (mixLockBadge);
-
-    controller.getPresets().onChange = [this]
-    {
-        header.refresh();
-        mixLockBadge.setVisible (controller.getPresets().isMixLocked());
-    };
-    mixLockBadge.setVisible (controller.getPresets().isMixLocked());
-    processor.getState().state.addListener (this);
-    header.refresh();
-}
-
-StudioPanel::~StudioPanel()
-{
-    controller.getPresets().onChange = nullptr;
-    processor.getState().state.removeListener (this);
+    // Mix lock: the padlock goes after the MIX label.
+    const auto labelFont = drawing::tracked (fonts->legend (studio::labelSize), studio::labelTracking);
+    const auto row = studio::outputRow (0);
+    const auto x = row.getX() + juce::GlyphArrangement::getStringWidth (labelFont, "MIX") + 10.0f;
+    mixLockAnchor = { juce::roundToInt (x), juce::roundToInt (row.getY() + 8.5f) };
 }
 
 //==============================================================================
@@ -178,35 +153,23 @@ StudioToggle* StudioPanel::findToggle (const juce::String& id) noexcept
     return nullptr;
 }
 
-void StudioPanel::valueTreeRedirected (juce::ValueTree&)
+void StudioPanel::animateFrame (float dt)
 {
-    header.refresh();
-}
-
-void StudioPanel::animateFrame (double timeSeconds)
-{
-    const auto dt = lastFrameTime < 0.0 ? (1.0f / 60.0f)
-                                        : (float) juce::jlimit (0.0, 0.1, timeSeconds - lastFrameTime);
-    lastFrameTime = timeSeconds;
-
     meters.tick (dt);
 
-    if (++framesSinceRefresh >= 6)
+    if (++framesSinceDimming >= 6)
     {
-        framesSinceRefresh = 0;
+        framesSinceDimming = 0;
 
         // Weight does nothing while Low Cut is off: shown greyed out (still editable), as on the panel.
         const auto lowCut = processor.getState().getRawParameterValue (params::lowCut)->load (std::memory_order_relaxed);
         weightKey.setDimmed (params::isLowCutOff (lowCut));
-        header.refresh();
     }
 }
 
 //==============================================================================
 void StudioPanel::resized()
 {
-    header.setBounds (layout::header().toNearestInt());
-    dialog.setBounds (getLocalBounds());
     background.invalidate();
 }
 

@@ -19,6 +19,7 @@ myzel::ui::HeaderConfig headerConfig (CeruleanProcessor&)
     c.activeText = "Reverb on";
     c.settingsTooltip = "Settings: mix lock, window size";
     c.mixLockLabel = "Lock Mix and Wet";
+    c.mixLockTooltip = "Mix lock is on: presets and A/B keep Mix and Wet as they are. Turn it off in the settings menu.";
     c.hasViews = true;
     return c;
 }

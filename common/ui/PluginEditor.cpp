@@ -14,12 +14,15 @@ namespace
     }
 }
 
-PluginEditor::PluginEditor (juce::AudioProcessor& p, std::unique_ptr<EditorController> c, int width, ViewFactory factory)
+PluginEditor::PluginEditor (juce::AudioProcessor& p, std::unique_ptr<EditorController> c, int width,
+                            HeaderConfig headerConfig, ViewFactory factory)
     : juce::AudioProcessorEditor (p),
       host (c->getHost()),
       controller (std::move (c)),
       makeView (std::move (factory)),
-      baseWidth (width)
+      header (host, controller->getPresets(), controller->getAb(), dialog, headerConfig),
+      baseWidth (width),
+      vblank (this, [this] (double t) { animateFrame (t); })
 {
     setLookAndFeel (&lookAndFeel);
     setOpaque (true);
@@ -29,6 +32,34 @@ PluginEditor::PluginEditor (juce::AudioProcessor& p, std::unique_ptr<EditorContr
     scale = storedScale;
 
     setResizable (true, false);
+
+    header.getScale = [this] { return scale; };
+    header.onScaleChosen = [this] (float s) { setScale (s); };
+    header.onViewChosen = [this] (ViewMode m)
+    {
+        if (m != getViewMode())
+            setView (m);
+    };
+
+    mixLockBadge.setTooltip (headerConfig.mixLockTooltip);
+
+    // Keyboard order: the header and the dialog before the view's controls.
+    header.setExplicitFocusOrder (1);
+    dialog.setExplicitFocusOrder (2);
+
+    content.addAndMakeVisible (header);
+    content.addChildComponent (mixLockBadge);
+    content.addChildComponent (dialog);
+    addAndMakeVisible (content);
+
+    tooltips = std::make_unique<juce::TooltipWindow> (&content, 900);
+    tooltips->setOpaque (false);
+
+    controller->getPresets().onChange = [this]
+    {
+        header.refresh();
+        updateMixLockBadge();
+    };
 
     // The session remembers the view it was edited in (the user's default if it has none yet).
     const auto mode = controller->getView();
@@ -42,6 +73,7 @@ PluginEditor::PluginEditor (juce::AudioProcessor& p, std::unique_ptr<EditorContr
 PluginEditor::~PluginEditor()
 {
     host.getState().state.removeListener (this);
+    controller->getPresets().onChange = nullptr;
     tooltips.reset();
     view.reset();
     setLookAndFeel (nullptr);
@@ -52,36 +84,41 @@ void PluginEditor::showView (ViewMode mode)
     if (view != nullptr && view->getMode() == mode)
         return;
 
-    tooltips.reset();
     view.reset();
-
     view = makeView (mode, *controller);
 
-    view->getScale = [this] { return scale; };
     view->onBaseSizeChanged = [this] { applyBaseSize (scale); };
-    view->onScaleChosen = [this] (float s) { setScale (s); };
+    view->refreshHeader = [this] { header.refresh(); };
 
-    // The header button that asks for a switch belongs to the view being replaced, so the switch
-    // happens after its click handler has returned.
-    view->onViewChosen = [safe = juce::Component::SafePointer<PluginEditor> (this)] (ViewMode m)
-    {
-        juce::MessageManager::callAsync ([safe, m]
-        {
-            if (safe != nullptr)
-                safe->setView (m);
-        });
-    };
+    content.addAndMakeVisible (*view, 0);   // under the header, the badge and the dialog
 
-    addAndMakeVisible (*view);
+    header.setView (mode);
+    header.refresh();
+    updateMixLockBadge();
 
-    tooltips = std::make_unique<juce::TooltipWindow> (view.get(), 900);
-    tooltips->setOpaque (false);
+    // A new view starts its frame clock afresh.
+    lastFrameTime = -1.0;
+    framesSinceRefresh = 0;
 
     if (getConstrainer() != nullptr && getWidth() > 0)
         applyBaseSize (scale);   // the panel with its deck open is taller than the studio view
 
     resized();
     repaint();
+}
+
+void PluginEditor::updateMixLockBadge()
+{
+    if (view == nullptr)
+        return;
+
+    const auto anchor = view->getMixLockAnchor();
+    mixLockBadge.setInk (view->getMode() == ViewMode::studio ? Theme::studio().textDim : Theme::palette().legendDim);
+
+    if (anchor.has_value())
+        mixLockBadge.setBounds (juce::Rectangle<int> (LockBadge::width, LockBadge::height).withCentre (*anchor));
+
+    mixLockBadge.setVisible (anchor.has_value() && controller->getPresets().isMixLocked());
 }
 
 void PluginEditor::applyBaseSize (float newScale)
@@ -106,9 +143,29 @@ void PluginEditor::setView (ViewMode mode)
     showView (mode);
 }
 
+void PluginEditor::animateFrame (double timeSeconds)
+{
+    const auto dt = lastFrameTime < 0.0 ? (1.0f / 60.0f)
+                                        : (float) juce::jlimit (0.0, 0.1, timeSeconds - lastFrameTime);
+    lastFrameTime = timeSeconds;
+
+    view->animateFrame (dt);
+
+    // Undo history and the preset's modified flag change behind the header's back.
+    if (++framesSinceRefresh >= 6)
+    {
+        framesSinceRefresh = 0;
+        header.refresh();
+    }
+}
+
 void PluginEditor::valueTreeRedirected (juce::ValueTree&)
 {
-    // The host restored a session while the editor is open: follow its view.
+    // The host restored a session while the editor is open: re-read it, then follow its view.
+    view->sessionRestored();
+    header.refresh();
+    updateMixLockBadge();
+
     const auto mode = controller->getView();
 
     juce::MessageManager::callAsync ([safe = juce::Component::SafePointer<PluginEditor> (this), mode]
@@ -135,8 +192,14 @@ void PluginEditor::resized()
         return;
 
     scale = clampScale ((float) getWidth() / (float) baseWidth);
-    view->setTransform (juce::AffineTransform::scale (scale));
-    view->setBounds (0, 0, baseWidth, view->getBaseHeight());
+
+    const auto bounds = juce::Rectangle<int> (baseWidth, view->getBaseHeight());
+    content.setTransform (juce::AffineTransform::scale (scale));
+    content.setBounds (bounds);
+    view->setBounds (bounds);
+    header.setBounds (juce::Rectangle<float> ((float) baseWidth, metrics::headerHeight).toNearestInt());
+    dialog.setBounds (bounds);
+
     host.getUiState().setProperty (plugin::uistate::scale, scale, nullptr);
 }
 

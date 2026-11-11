@@ -39,7 +39,6 @@ namespace
 StudioPanel::StudioPanel (PanelController& c)
     : controller (c),
       processor (c.getProcessor()),
-      header (processor, c.getPresets(), c.getAb(), dialog, headerConfig (processor)),
       meters ({ { "IN",  [&m = processor.getMeters()] { return m.inputRms.load (std::memory_order_relaxed); },
                          [&m = processor.getMeters()] { return m.inputPeak.exchange (0.0f, std::memory_order_relaxed); } },
                 { "WET", [&m = processor.getMeters()] { return m.wetRms.load (std::memory_order_relaxed); },
@@ -48,8 +47,7 @@ StudioPanel::StudioPanel (PanelController& c)
                          [&m = processor.getMeters()] { return m.outputPeak.exchange (0.0f, std::memory_order_relaxed); } } },
               StudioMeters::Reduction { "DUCK", [&m = processor.getMeters()] { return m.duckGain.load (std::memory_order_relaxed); } },
               "Input, wet and output level (bar: RMS, line: peak hold, number: peak) and the ducker's gain reduction. "
-              "Click to reset the peaks."),
-      vblank (this, [this] (double t) { animateFrame (t); })
+              "Click to reset the peaks.")
 {
     setOpaque (true);
     setSize (metrics::baseWidth, metrics::baseHeight);
@@ -58,39 +56,16 @@ StudioPanel::StudioPanel (PanelController& c)
     buildControls();
     addAndMakeVisible (tail);
     addAndMakeVisible (meters);
-    addAndMakeVisible (header);
-    addChildComponent (dialog);
 
-    wireHeader (header);
-
-    // Mix lock: a padlock after the MIX label while it is on.
-    {
-        const auto labelFont = drawing::tracked (fonts->legend (studio::labelSize), studio::labelTracking);
-        const auto row = studio::outputRow (0);
-        const auto x = row.getX() + juce::GlyphArrangement::getStringWidth (labelFont, "MIX") + 10.0f;
-        mixLockBadge.setBounds (juce::Rectangle<int> (LockBadge::width, LockBadge::height)
-                                    .withCentre ({ juce::roundToInt (x), juce::roundToInt (row.getY() + 8.5f) }));
-    }
-    addChildComponent (mixLockBadge);
-
-    controller.getPresets().onChange = [this]
-    {
-        header.refresh();
-        mixLockBadge.setVisible (controller.getPresets().isMixLocked());
-    };
-    mixLockBadge.setVisible (controller.getPresets().isMixLocked());
-    processor.getState().state.addListener (this);
+    // Mix lock: the padlock goes after the MIX label.
+    const auto labelFont = drawing::tracked (fonts->legend (studio::labelSize), studio::labelTracking);
+    const auto row = studio::outputRow (0);
+    const auto x = row.getX() + juce::GlyphArrangement::getStringWidth (labelFont, "MIX") + 10.0f;
+    mixLockAnchor = { juce::roundToInt (x), juce::roundToInt (row.getY() + 8.5f) };
 
     updateMeanings();
     updateTempo();
     tail.setShape (controller.currentTailShape());
-    header.refresh();
-}
-
-StudioPanel::~StudioPanel()
-{
-    controller.getPresets().onChange = nullptr;
-    processor.getState().state.removeListener (this);
 }
 
 //==============================================================================
@@ -433,36 +408,24 @@ void StudioPanel::updateTempo()
     }
 }
 
-void StudioPanel::valueTreeRedirected (juce::ValueTree&)
+void StudioPanel::animateFrame (float dt)
 {
-    header.refresh();
-}
-
-void StudioPanel::animateFrame (double timeSeconds)
-{
-    const auto dt = lastFrameTime < 0.0 ? (1.0f / 60.0f)
-                                        : (float) juce::jlimit (0.0, 0.1, timeSeconds - lastFrameTime);
-    lastFrameTime = timeSeconds;
-
     updateMeanings();
     tail.setShape (controller.currentTailShape());
     tail.tick (dt, processor.getMeters().wetRms.load (std::memory_order_relaxed));
     meters.setChannelMuted (1, tail.getShape().bypassed);
     meters.tick (dt);
 
-    if (++framesSinceRefresh >= 6)
+    if (++framesSinceTempo >= 6)
     {
-        framesSinceRefresh = 0;
+        framesSinceTempo = 0;
         updateTempo();
-        header.refresh();
     }
 }
 
 //==============================================================================
 void StudioPanel::resized()
 {
-    header.setBounds (layout::header().toNearestInt());
-    dialog.setBounds (getLocalBounds());
     background.invalidate();
 }
 

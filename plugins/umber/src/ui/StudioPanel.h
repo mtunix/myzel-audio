@@ -2,10 +2,8 @@
 
 #include "common/ui/EditorController.h"
 #include "common/ui/EditorView.h"
-#include "common/ui/LockBadge.h"
 #include "common/ui/StudioControls.h"
 #include "common/ui/StudioMeters.h"
-#include "ui/Header.h"
 #include "ui/StudioLayout.h"
 #include "ui/Theme.h"
 
@@ -27,18 +25,15 @@ namespace umber::ui
     and a note on the circuit), Input (Stereo, Low Cut with Weight), Tone (High Cut, Tone) and
     Output (meters, Mix, Output). See src/ui/DESIGN.md.
 */
-class StudioPanel final : public EditorView,
-                          private juce::ValueTree::Listener
+class StudioPanel final : public EditorView
 {
 public:
     StudioPanel (EditorController& controller, UmberProcessor& processor);
-    ~StudioPanel() override;
 
     ViewMode getMode() const noexcept override { return ViewMode::studio; }
     int getBaseHeight() const noexcept override { return metrics::baseHeight; }
-    void animateFrame (double timeSeconds) override;
-    HeaderBar& getHeader() noexcept override { return header; }
-    InlineDialog& getDialog() noexcept override { return dialog; }
+    void animateFrame (float dt) override;
+    std::optional<juce::Point<int>> getMixLockAnchor() const override { return mixLockAnchor; }
 
     // Test hooks.
     StudioSlider* findSlider (const juce::String& parameterId) const;
@@ -54,15 +49,12 @@ private:
     StudioSlider& addSlider (const char* parameterId, const juce::String& label, juce::Rectangle<float> bounds, const juce::String& tip);
     StudioToggle& addToggle (StudioToggle& toggle, const char* parameterId, juce::Rectangle<float> bounds, const juce::String& tip);
     void renderBackground (juce::Graphics& g, juce::Rectangle<float> area) const;
-    void valueTreeRedirected (juce::ValueTree&) override;
 
     EditorController& controller;
     UmberProcessor& processor;
 
-    InlineDialog dialog;
-    HeaderBar header;
-    LockBadge mixLockBadge { Theme::studio().textDim, "Mix lock is on: presets and A/B keep Mix as it is. Turn it off in the settings menu." };
     StudioMeters meters;
+    juce::Point<int> mixLockAnchor;
 
     std::array<std::unique_ptr<SelectorRow>, 5> circuitRows;
     std::unique_ptr<juce::ParameterAttachment> circuitAttachment;
@@ -79,9 +71,7 @@ private:
     drawing::CachedLayer background;
     juce::SharedResourcePointer<Fonts> fonts;
 
-    juce::VBlankAttachment vblank;
-    double lastFrameTime = -1.0;
-    int framesSinceRefresh = 0;
+    int framesSinceDimming = 0;
 
     JUCE_DECLARE_NON_COPYABLE_WITH_LEAK_DETECTOR (StudioPanel)
 };

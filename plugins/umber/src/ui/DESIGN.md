@@ -110,7 +110,8 @@ The header name is 12.5 px with +0.26 tracking. Values and menus use Medium 12.5
 
 ## Animation
 
-A single `VBlankAttachment` in `MainPanel` is the frame clock. Each frame:
+The frame clock is the editor's single `VBlankAttachment` (`PluginEditor`), which calls the
+shown view each frame with the clamped frame time. On the panel, each frame:
 
 1. **Key LEDs** fade towards their state with τ = fade / 3 (about 95 % in 80 ms). They are
    steady: no flicker and no level-dependent brightness.
@@ -118,7 +119,8 @@ A single `VBlankAttachment` in `MainPanel` is the frame clock. Each frame:
    300 ms with about 1.2 % overshoot, and the scale is voltage-linear like a real VU. 0 VU =
    −18 dBFS for Output and −12 dBFS for Drive. The peak lamp lights when the output peak reaches
    −0.1 dBFS (held 0.6 s). Click the meter to switch modes. The mode is saved in the UI state.
-3. Every 6 frames the header refreshes: preset modified flag (and SAVE) and undo/redo availability.
+3. Every 6 frames Weight's LED follows Low Cut, and the editor refreshes the header: preset
+   modified flag (and SAVE) and undo/redo availability.
 
 Each element repaints only its own bounds, and only when its visible state changes by more than a
 small threshold. The frame logic costs well under 1 µs and allocates nothing.
@@ -137,7 +139,8 @@ A cold repaint happens only on open or resize.
 
 ## Scaling
 
-The editor holds one `MainPanel` at the base size and applies `AffineTransform::scale`. The
+The editor holds the shown view (`MainPanel` or `StudioPanel`) at the base size, with its header,
+dialog and mix-lock padlock over it, and scales them together with `AffineTransform::scale`. The
 window is resizable with a fixed aspect ratio, from 75 % to 200 %. The ⚙ settings menu offers
 75–200 % in 25 % steps, with the realtime and offline-render quality and the mix lock above them. The scale is stored in `getUiState()` and restored on open.
 
@@ -200,10 +203,10 @@ value and accepts typed values; nothing is hidden.
 | `Header` | Umber's header: name, texts and its settings entries (quality); the rail itself is the shared `HeaderBar` |
 | `FactoryPresets` | the factory presets and Umber's preset format (`presetFormat()`); the preset and A/B logic is shared (`common/plugin/`: `PresetManager`, `AbCompare`) |
 | `Texts` | circuit descriptions and taglines, tooltips (the same in both views) |
-| `MainPanel` | the panel view: composition, frame clock |
+| `MainPanel` | the panel view: composition, lamps and meter per frame |
 | `StudioLayout` | the studio view's layout grid |
-| `StudioPanel` | the studio view: composition, frame clock |
-| `UmberEditor` | the `PluginEditor` with Umber's two views |
+| `StudioPanel` | the studio view: composition, meters per frame |
+| `UmberEditor` | the `PluginEditor` with Umber's two views and header |
 
 From the shared kit (`common/ui/`): `Drawing` (cached layers, legends, screws, recesses, shadows,
 grain, glow), `PanelArtwork` (the static front panel), `Knob`, `LampButton`, `ValueBubble`,
@@ -216,9 +219,11 @@ text fields), `ViewMode`, and for the two views `PluginEditor`, `EditorControlle
 ```
 cmake --build build-ui --target UmberUiSnapshot
 xvfb-run -a -s "-screen 0 3000x2000x24" build-ui/plugins/umber/tools/UmberUiSnapshot_artefacts/Release/UmberUiSnapshot plugins/umber/docs/screenshots
-… UmberUiSnapshot --selftest              # drag/fine/reset/wheel/detent/a11y/undo/presets/A-B/scale/studio view checks
+… UmberUiSnapshot --selftest              # drag/fine/reset/wheel/detent/a11y/undo/presets/A-B/mix lock/scale/studio view checks
 … UmberUiSnapshot --leakcheck             # open/close the editor 8× (use a Debug build for the leak detector)
 ```
 
 The xvfb screen must be larger than the editor. On the default 640 × 480 screen, JUCE constrains
-the window and the snapshots come out at 75 %.
+the window and the snapshots come out at 75 %. The tool writes user presets and the default-view
+setting to a scratch folder only, never to the real ones (`ScratchSession`). CI runs the
+self-test on Linux.

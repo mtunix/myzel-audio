@@ -1,12 +1,13 @@
 #include "ui/UmberEditor.h"
 
 #include "plugin/PluginProcessor.h"
+#include "ui/Header.h"
 
 namespace umber
 {
 
 UmberEditor::UmberEditor (UmberProcessor& p)
-    : PluginEditor (p, std::make_unique<myzel::ui::EditorController> (p, p.getPresets()), ui::metrics::baseWidth,
+    : PluginEditor (p, std::make_unique<myzel::ui::EditorController> (p, p.getPresets()), ui::metrics::baseWidth, ui::headerConfig (p),
                     [&p] (ui::ViewMode mode, myzel::ui::EditorController& c) -> std::unique_ptr<myzel::ui::EditorView>
                     {
                         if (mode == ui::ViewMode::studio)

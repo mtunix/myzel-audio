@@ -2,10 +2,7 @@
 
 #include "common/ui/EditorController.h"
 #include "common/ui/EditorView.h"
-#include "common/ui/LockBadge.h"
 #include "ui/FactoryPresets.h"
-#include "ui/Header.h"
-#include "common/ui/InlineDialog.h"
 #include "common/ui/Knob.h"
 #include "common/ui/LampButton.h"
 #include "ui/NeedleMeter.h"
@@ -27,21 +24,19 @@ namespace umber::ui
     The whole instrument face at base (100 %) size. The editor scales it with a transform, so
     everything is laid out once on the fixed grid in Theme.h.
 
-    Owns the frame clock: one VBlankAttachment drives the lamps and the meter, and each of
-    those repaints only its own pixels when something visibly changed.
+    The editor's frame clock drives the lamps and the meter, and each of those repaints only
+    its own pixels when something visibly changed.
 */
-class MainPanel final : public EditorView,
-                        private juce::ValueTree::Listener
+class MainPanel final : public EditorView
 {
 public:
     MainPanel (EditorController& controller, UmberProcessor& processor);
-    ~MainPanel() override;
 
     ViewMode getMode() const noexcept override { return ViewMode::panel; }
     int getBaseHeight() const noexcept override { return metrics::baseHeight; }
-    void animateFrame (double timeSeconds) override;
-    HeaderBar& getHeader() noexcept override { return header; }
-    InlineDialog& getDialog() noexcept override { return dialog; }
+    void animateFrame (float dt) override;
+    void sessionRestored() override { applyUiState(); }
+    std::optional<juce::Point<int>> getMixLockAnchor() const override { return mixLockAnchor; }
 
     // Test hooks for the snapshot tool.
     Knob* findKnob (const juce::String& parameterId) const;
@@ -51,7 +46,6 @@ public:
     void resized() override;
 
 private:
-    void valueTreeRedirected (juce::ValueTree&) override;
     void applyUiState();
     void buildControls();
     void updateWeightDimming();
@@ -59,11 +53,9 @@ private:
     EditorController& controller;
     UmberProcessor& processor;
 
-    InlineDialog dialog;
-    HeaderBar header;
     ValueBubble bubble;
     NeedleMeter meter;
-    LockBadge mixLockBadge { Theme::palette().legendDim, "Mix lock is on: presets and A/B keep Mix as it is. Turn it off in the settings menu." };
+    std::optional<juce::Point<int>> mixLockAnchor;
 
     std::vector<std::unique_ptr<Knob>> knobs;
 
@@ -79,10 +71,7 @@ private:
     drawing::CachedLayer panelLayer;
     juce::SharedResourcePointer<Fonts> fonts;
 
-    // Frame clock.
-    juce::VBlankAttachment vblank;
-    double lastFrameTime = -1.0;
-    int framesSinceRefresh = 0;
+    int framesSinceDimming = 0;
 
     JUCE_DECLARE_NON_COPYABLE_WITH_LEAK_DETECTOR (MainPanel)
 };

@@ -1,8 +1,6 @@
 #pragma once
 
 #include "common/ui/EditorView.h"
-#include "ui/Header.h"
-#include "common/ui/LockBadge.h"
 #include "ui/PanelController.h"
 #include "common/ui/StudioControls.h"
 #include "common/ui/StudioMeters.h"
@@ -29,22 +27,19 @@ namespace cerulean::ui
           mode, Tempo    |  (exact values, typed entry)              |
 
     Laid out once at the panel's base size (so switching views never resizes the window) and
-    scaled by the editor. One VBlankAttachment drives the meters, the graph and the meaning
+    scaled by the editor. The editor's frame clock drives the meters, the graph and the meaning
     changes (Param A/B relabel, Pre-delay and Echo sync), polled from the PanelController.
     See src/ui/DESIGN.md.
 */
-class StudioPanel final : public EditorView,
-                          private juce::ValueTree::Listener
+class StudioPanel final : public EditorView
 {
 public:
     explicit StudioPanel (PanelController& controller);
-    ~StudioPanel() override;
 
     ViewMode getMode() const noexcept override { return ViewMode::studio; }
     int getBaseHeight() const noexcept override { return metrics::baseHeight; }
-    void animateFrame (double timeSeconds) override;
-    HeaderBar& getHeader() noexcept override { return header; }
-    InlineDialog& getDialog() noexcept override { return dialog; }
+    void animateFrame (float dt) override;
+    std::optional<juce::Point<int>> getMixLockAnchor() const override { return mixLockAnchor; }
 
     // Test hooks.
     /** The slider that currently edits a parameter (follows rebinding: Pre-delay note, Echo note). */
@@ -67,16 +62,13 @@ private:
     void updateMeanings();
     void updateTempo();
     void renderBackground (juce::Graphics& g, juce::Rectangle<float> area) const;
-    void valueTreeRedirected (juce::ValueTree&) override;
 
     PanelController& controller;
     CeruleanProcessor& processor;
 
-    InlineDialog dialog;
-    HeaderBar header;
     StudioTail tail;
-    LockBadge mixLockBadge { Theme::studio().textDim, "Mix lock is on: presets and A/B keep Mix and Wet as they are. Turn it off in the settings menu." };
     StudioMeters meters;
+    juce::Point<int> mixLockAnchor;
 
     std::array<std::unique_ptr<SelectorRow>, numAlgorithms> algorithmRows;
     std::unique_ptr<juce::ParameterAttachment> algorithmAttachment;
@@ -109,9 +101,7 @@ private:
     drawing::CachedLayer background;
     juce::SharedResourcePointer<Fonts> fonts;
 
-    juce::VBlankAttachment vblank;
-    double lastFrameTime = -1.0;
-    int framesSinceRefresh = 0;
+    int framesSinceTempo = 0;
 
     JUCE_DECLARE_NON_COPYABLE_WITH_LEAK_DETECTOR (StudioPanel)
 };

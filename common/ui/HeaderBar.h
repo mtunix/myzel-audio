@@ -21,6 +21,7 @@ struct HeaderConfig
     juce::String bypassedText, activeText;      // the bypass state, for screen readers
     juce::String settingsTooltip = "Settings: mix lock, window size";
     juce::String mixLockLabel = "Lock Mix";
+    juce::String mixLockTooltip;        // on the padlock after Mix while the lock is on
     bool hasViews = false;              // show the PANEL | STUDIO switch
 
     /** Adds the plugin's own entries at the top of the settings menu. Each item carries its own
@@ -34,8 +35,8 @@ struct HeaderConfig
     A/B compare, undo/redo, the view switch (PANEL | STUDIO, plugins with two views) and the
     settings menu (the plugin's own settings, mix lock, window size).
 
-    Both views use the same header with the same layout: nothing moves when the view changes,
-    so Bypass and A/B stay where the hand expects them. View-specific keys (the panel's
+    The editor owns one header and shows it over both views: nothing moves when the view
+    changes, so Bypass and A/B stay where the hand expects them. View-specific keys (the panel's
     ADVANCED key) live in the view, next to what they open.
 */
 class HeaderBar final : public juce::Component

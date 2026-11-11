@@ -21,8 +21,6 @@ public:
     void selectSlot (int slot);
     void copyActiveToOther();
 
-    std::function<void()> onChange;
-
 private:
     juce::ValueTree slotTree (int slot) const;
     void storeInto (int slot);

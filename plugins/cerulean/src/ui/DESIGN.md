@@ -116,7 +116,7 @@ least 7.5 device pixels.
 a small LED, the legend and a chevron between engraved rules. Clicking it opens a lower section
 of the instrument below the panel (`layout::deck()`, 132 high): the panel's own powder coat behind
 an engraved seam, with the bottom screws. The editor grows by that strip (`EditorView::
-getBaseHeight()`, `CeruleanEditor::applyBaseSize()`), so nothing on the panel is covered and every
+getBaseHeight()`, `PluginEditor::applyBaseSize()`), so nothing on the panel is covered and every
 change shows on the tail display as it is made. While it is open, ADVANCED sits on the deck's
 bottom edge with its LED lit and the chevron pointing up.
 
@@ -198,7 +198,8 @@ by a whole pixel column, and not at all while it is silent.
 
 ## Animation
 
-A single `VBlankAttachment` in `MainPanel` is the frame clock. Each frame (≈0.001 ms of logic):
+The frame clock is the editor's single `VBlankAttachment` (`PluginEditor`), which calls the
+shown view each frame with the clamped frame time. On the panel, each frame (≈0.001 ms of logic):
 
 1. Polls the parameters that change what a control means (algorithm, syncs, freeze mode) and
    re-binds / relabels when they change.
@@ -207,7 +208,8 @@ A single `VBlankAttachment` in `MainPanel` is the frame clock. Each frame (≈0.
 3. **Legend crossfades** (Pre-delay, Param A, Param B) advance; each is two cached images.
 4. **Tail display**: shape (cheap equality test) and live history.
 5. **Drawer**: slide (ease-out cubic) and its value read-outs (repainted only when the text changes).
-6. Every 6 frames the header refreshes: preset modified flag (dot and SAVE), undo/redo availability.
+6. Every 6 frames the editor refreshes the header: preset modified flag (dot and SAVE), undo/redo
+   availability.
 
 The audio thread is only ever touched through atomics (`MeterValues`, raw parameter values,
 `notifyPresetLoaded()`).
@@ -228,12 +230,13 @@ A live tail-display repaint costs about 0.3 ms.
 
 The ⚙ menu's **Lock Mix and Wet** (`PresetManager::setMixLocked`, saved in the session's UI state)
 makes preset loads and A/B leave Mix and Wet alone, and the unsaved-changes dot ignores them. A
-`LockBadge` (a 9 × 11 padlock, `legendDim` on the panel, `textDim` in the studio) sits after the
-MIX legend in both views while it is on, with a tooltip saying where to turn it off.
+`LockBadge` (a 9 × 11 padlock, `legendDim` on the panel, `textDim` in the studio; the editor's,
+placed by each view) sits after the MIX legend in both views while it is on, with a tooltip saying where to turn it off.
 
 ## Scaling
 
-The editor holds one `MainPanel` at the base size and applies `AffineTransform::scale`. The
+The editor holds the shown view (`MainPanel` or `StudioPanel`) at the base size, with its header,
+dialog and mix-lock padlock over it, and scales them together with `AffineTransform::scale`. The
 window is resizable with a fixed aspect ratio, from 75 % to 200 %; the ratio follows the view's
 base height (1088 × 580, or 1088 × 712 with the panel's Advanced deck open). The header's ⚙ menu
 offers 75–200 % in 25 % steps. The scale is stored in `getUiState()` and restored on open.
@@ -277,10 +280,10 @@ UI state keys (`UiState.h`, never rename): `scale`, `advancedOpen`, `presetName`
 | `Header` | Cerulean's header: name and texts; the rail itself is the shared `HeaderBar` |
 | `FactoryPresets` | the factory presets and Cerulean's preset format (`presetFormat()`); the preset and A/B logic is shared (`common/plugin/`: `PresetManager`, `AbCompare`) |
 | `PanelController` | Cerulean's editor model (an `EditorController`): parameter meanings (`Meanings`), value texts, tail shape |
-| `MainPanel` | the panel view: composition, frame clock, meaning changes |
+| `MainPanel` | the panel view: composition, per-frame animation, meaning changes |
 | `StudioTheme` | the tail graph's studio colours and the studio layout grid |
 | `StudioTail` | the studio tail graph (per-band curves, RT60 read-outs, live level) |
-| `StudioPanel` | the studio view: composition, frame clock, meaning changes |
+| `StudioPanel` | the studio view: composition, per-frame animation, meaning changes |
 | `CeruleanEditor` | the `PluginEditor` with Cerulean's controller and its two views |
 
 From the shared kit (`common/ui/`): `Drawing` (cached layers, legends, screws, recesses, grooves,
@@ -288,10 +291,10 @@ shadows, grain, glow), `PanelArtwork` (the static front panel, knob scales and t
 (re-bindable, custom read-out), `LampButton` (incl. momentary keys), `ValueBubble`, `HeaderButton`,
 `PresetDisplay`, `InlineDialog`, `HeaderBar`, `KitLookAndFeel` (popup menus, tooltips, text fields),
 `ViewMode` (`panel` / `studio`, and the default-view preference in `Cerulean.settings`), and for the
-two views: `PluginEditor` (scaling host, swaps the views), `EditorController` (presets, A/B, the stored
-view), `EditorView`, `StudioTheme` (studio palette), `StudioControls` (`StudioSlider`, `StudioToggle`,
-`SelectorRow` for the algorithm list), `StudioMeters` (input / wet / output and duck gain reduction),
-`LockBadge`.
+two views: `PluginEditor` (scaling host, swaps the views; owns the header, dialog, mix-lock
+padlock and frame clock), `EditorController` (presets, A/B, the stored view), `EditorView`,
+`StudioTheme` (studio palette), `StudioControls` (`StudioSlider`, `StudioToggle`, `SelectorRow` for
+the algorithm list), `StudioMeters` (input / wet / output and duck gain reduction), `LockBadge`.
 
 ## Two views
 
@@ -303,12 +306,11 @@ value texts (`preDelayText`, `characterText`, `noteText`) and the tail shape. Ea
 only its own presentation: knob styles and scale marks on the panel, slider steps and labels in
 the studio.
 
-- **Switching:** PANEL | STUDIO in the header. Both views use the same `HeaderBar` with the same
-  layout, so no key moves when the view changes (view-specific keys, like ADVANCED, live in the
-  view). Switching keeps the window size, except that the panel is taller while its Advanced
-  deck is open. The view being replaced owns the clicked button, so the editor swaps views
-  asynchronously, after the click handler has returned. Only one view exists at a time, with one
-  frame clock.
+- **Switching:** PANEL | STUDIO in the header. The editor shows one `HeaderBar` over both
+  views, so no key moves when the view changes (view-specific keys, like ADVANCED, live in the
+  view), and a click switches at once. Switching keeps the window size, except that the panel is
+  taller while its Advanced deck is open. Only one view exists at a time; the editor's frame
+  clock drives whichever is shown.
 - **Persistence:** the session stores its view (`uistate::view`). A session without one opens in
   the user's default view: the last one chosen in any instance, kept in
   `userApplicationDataDirectory/Myzel Audio/Cerulean/Cerulean.settings` (`viewPreference`). The editor
@@ -442,9 +444,9 @@ scale is cached; the bars repaint only when a value moves by 0.25 dB.
 
 ### Frame clock
 
-`StudioPanel` has its own `VBlankAttachment` (≈0.001 ms of logic per frame): the meanings (via
-`PanelController::readMeanings()`), tail shape and live level, and meters every frame. Tempo,
-Duck dimming and the header refresh every 6 frames. Full repaint: about 2.8 ms at 1× and 7.9 ms
+The editor's frame clock calls `StudioPanel::animateFrame` (≈0.001 ms of logic per frame): the
+meanings (via `PanelController::readMeanings()`), tail shape and live level, and meters every
+frame; Tempo and Duck dimming every 6 frames, when the editor also refreshes the header. Full repaint: about 2.8 ms at 1× and 7.9 ms
 at 2× (the panel: 3.6 / 11.4 ms).
 
 ## Snapshot tool
@@ -452,11 +454,12 @@ at 2× (the panel: 3.6 / 11.4 ms).
 ```
 cmake --build build-ui --target CeruleanUiSnapshot
 xvfb-run -a -s "-screen 0 3000x2000x24" build-ui/plugins/cerulean/tools/CeruleanUiSnapshot_artefacts/Release/CeruleanUiSnapshot plugins/cerulean/docs/screenshots
-… CeruleanUiSnapshot --selftest    # panel: drag/fine/reset/wheel/detent/a11y/relabel/sync/freeze/deck/undo/presets/A-B/scale;
+… CeruleanUiSnapshot --selftest    # panel: drag/fine/reset/wheel/detent/a11y/relabel/sync/freeze/deck/undo/presets/A-B/mix lock/scale;
                                  # studio: switching/persistence/default view, sliders, typed values, relabel/sync, freeze, tempo, meters
 … CeruleanUiSnapshot --leakcheck   # open/close the editor 8× (use a Debug build for the leak detector)
 ```
 
 Scenes 01–14 are the panel, 20–29 the studio view. The xvfb screen must be larger than the editor. On the default 640 × 480 screen, JUCE constrains
-the window and the snapshots come out at 75 %. The self-test writes user presets to a scratch
-folder, never to the real preset folder. The tools redirect the default-view setting to a scratch file too.
+the window and the snapshots come out at 75 %. The tool writes user presets and the default-view
+setting to a scratch folder only, never to the real ones (`ScratchSession`). CI runs the
+self-test on Linux.

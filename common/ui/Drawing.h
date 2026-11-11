@@ -11,6 +11,14 @@ inline float physicalScale (juce::Graphics& g)
     return juce::jmax (0.25f, g.getInternalContext().getPhysicalPixelScaleFactor());
 }
 
+/** Bounds on a 4-unit grid: those map to whole device pixels at every menu scale (75-200 %). */
+inline juce::Rectangle<int> snapped (juce::Rectangle<float> r)
+{
+    auto snap = [] (float v) { return (int) (std::round (v / 4.0f) * 4.0f); };
+    const auto x = snap (r.getX()), y = snap (r.getY());
+    return { x, y, snap (r.getRight()) - x, snap (r.getBottom()) - y };
+}
+
 /**
     An image cache for static artwork, rendered at the physical pixel scale so it stays crisp
     at every editor scale and display density. It re-renders only when the size or scale changes

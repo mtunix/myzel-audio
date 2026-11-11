@@ -62,17 +62,11 @@ void AbCompare::selectSlot (int slot)
     }
 
     host.getUiState().setProperty (uistate::abActive, slot, nullptr);
-
-    if (onChange != nullptr)
-        onChange();
 }
 
 void AbCompare::copyActiveToOther()
 {
     storeInto (1 - getActiveSlot());
-
-    if (onChange != nullptr)
-        onChange();
 }
 
 } // namespace myzel::plugin

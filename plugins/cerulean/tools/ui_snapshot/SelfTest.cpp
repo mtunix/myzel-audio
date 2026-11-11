@@ -1,11 +1,12 @@
 #include "SelfTest.h"
 
-#include "common/testing/UiTestKit.h"
+#include "common/testing/EditorSelfTest.h"
 
 #include "ui/Theme.h"
 
 #include "plugin/PluginProcessor.h"
 #include "ui/CeruleanEditor.h"
+#include "ui/FactoryPresets.h"
 #include "ui/UiState.h"
 
 namespace
@@ -23,15 +24,9 @@ void frames (CeruleanEditor& editor, int n)
 
 }
 
-int runUiSelfTest()
+int runUiSelfTest (const ScratchSession& scratch)
 {
     failures = 0;
-
-    const auto scratch = juce::File::getSpecialLocation (juce::File::tempDirectory).getChildFile ("cerulean-ui-selftest");
-    scratch.deleteRecursively();
-    ui::PresetManager::setUserPresetDirectoryOverride (scratch);
-    scratch.createDirectory();
-    ui::viewPreference::setSettingsFileOverride (scratch.getChildFile ("Cerulean.settings"));
 
     CeruleanProcessor processor;
     auto editor = std::make_unique<CeruleanEditor> (processor);
@@ -219,27 +214,17 @@ int runUiSelfTest()
         frames (*editor, 1);
     }
 
-    std::printf ("Bypass, value read-out, save\n");
+    std::printf ("Bypass, value read-out\n");
     {
         setParam (processor, params::bypass, 1.0f);
         frames (*editor, 1);
-        check (panel.getTail().getShape().bypassed && panel.getHeader().getBypassButton().isLit(), "Bypass shows on the tail display");
+        check (panel.getTail().getShape().bypassed && editor->getHeader().getBypassButton().isLit(), "Bypass shows on the tail display");
         setParam (processor, params::bypass, 0.0f);
         frames (*editor, 1);
         check (! panel.getTail().getShape().bypassed, "and goes away");
 
         auto* toneKnob = panel.findKnob (params::tone);
         check (toneKnob->getValueAnchor().y < toneKnob->getBounds().getCentreY(), "the value sits above the knob (legend stays)");
-
-        auto& presets = panel.getPresets();
-        presets.load (0);
-        panel.getHeader().refresh();
-        check (! panel.getHeader().getSaveButton().isVisible(), "no SAVE without changes");
-        setParam (processor, params::size, 77.0f);
-        panel.getHeader().refresh();
-        check (presets.isModified() && panel.getHeader().getSaveButton().isVisible(), "SAVE appears with unsaved changes");
-        presets.load (0);
-        panel.getHeader().refresh();
     }
 
     std::printf ("Undo\n");
@@ -259,7 +244,7 @@ int runUiSelfTest()
         check (! um.canUndo(), "Freeze is not recorded");
     }
 
-    std::printf ("Presets\n");
+    std::printf ("Factory presets and A/B restart the engine\n");
     {
         auto& presets = panel.getPresets();
         check (presets.getEntries().size() >= 10, "at least 10 factory presets");
@@ -271,45 +256,18 @@ int runUiSelfTest()
             if (entries[i].name == "Octave Halo")
                 haloIndex = (int) i;
 
-        const auto generation = processor.readSettings().presetGeneration;
+        auto generation = processor.readSettings().presetGeneration;
         presets.load (haloIndex);
         check (juce::roundToInt (valueOf (processor, params::algorithm)) == (int) Algorithm::halo, "loading a preset sets the parameters");
         check (processor.readSettings().presetGeneration != generation, "loading a preset starts a fresh engine (trails)");
-        check (! presets.isModified(), "freshly loaded preset is not modified");
-        panel.findKnob (params::decay)->setNormalisedValueAsGesture (0.2f);
-        check (presets.isModified(), "editing marks the preset modified");
 
-        const auto saved = presets.saveUserPreset ("Selftest Preset");
-        check (saved.wasOk() && presets.isCurrentUserPreset(), "save user preset");
-        check (scratch.getChildFile ("Selftest Preset.xml").existsAsFile(), "user preset written as XML");
-        const auto idx = presets.getCurrentIndex();
-        check (presets.renameUserPreset (idx, "Selftest Renamed").wasOk() && presets.getCurrentName() == "Selftest Renamed",
-               "rename user preset");
-        check (presets.deleteUserPreset (presets.getCurrentIndex()).wasOk(), "delete user preset");
-        check (! presets.userPresetExists ("Selftest Renamed"), "file is gone");
-
-        presets.load (0);
-        presets.step (1);
-        check (presets.getCurrentIndex() == 1, "next preset");
-        presets.step (-2);
-        check (presets.getCurrentIndex() == (int) presets.getEntries().size() - 1, "previous preset wraps around");
-    }
-
-    std::printf ("A/B compare\n");
-    {
         auto& ab = panel.getAb();
-        setParam (processor, params::decay, 2.0f);
-        ab.selectSlot (1);    // B starts as a copy
-        setParam (processor, params::decay, 9.0f);
-        const auto generation = processor.readSettings().presetGeneration;
-        ab.selectSlot (0);
-        check (std::abs (valueOf (processor, params::decay) - 2.0f) < 0.01f, "A recalls its own setting");
-        check (processor.readSettings().presetGeneration != generation, "switching A/B starts a fresh engine (trails)");
         ab.selectSlot (1);
-        check (std::abs (valueOf (processor, params::decay) - 9.0f) < 0.01f, "B recalls its own setting");
-        ab.copyActiveToOther();
+        setParam (processor, params::decay, 9.0f);
+        generation = processor.readSettings().presetGeneration;
         ab.selectSlot (0);
-        check (std::abs (valueOf (processor, params::decay) - 9.0f) < 0.01f, "copy B to A");
+        check (processor.readSettings().presetGeneration != generation, "switching A/B starts a fresh engine (trails)");
+        presets.load (0);
     }
 
     std::printf ("Scale\n");
@@ -344,25 +302,8 @@ int runUiSelfTest()
 
     std::printf ("Studio view\n");
     {
-        editor->getController().getPresets().load (2);
-        const auto presetName = editor->getController().getPresets().getCurrentName();
-        const auto abSlot = editor->getController().getAb().getActiveSlot();
-        const auto sizeBefore = editor->getWidth();
-        const auto bypassBounds = editor->getMainPanel().getHeader().getBypassButton().getBounds();
-        const auto abBounds = editor->getMainPanel().getHeader().getSettingsButton().getBounds();
-
         editor->setView (ui::ViewMode::studio);
-        check (editor->getViewMode() == ui::ViewMode::studio, "switches to the studio view");
-        check (processor.getUiState().getProperty (ui::uistate::view).toString() == "studio", "view stored in the session");
-        check (ui::viewPreference::getDefault ("Cerulean") == ui::ViewMode::studio, "the chosen view becomes the default for new instances");
-        check (editor->getWidth() == sizeBefore, "switching does not resize the window");
-        check (editor->getController().getPresets().getCurrentName() == presetName
-               && editor->getController().getAb().getActiveSlot() == abSlot, "preset and A/B state survive the switch");
-
         auto& studio = editor->getStudioPanel();
-        check (studio.getHeader().getBypassButton().getBounds() == bypassBounds
-               && studio.getHeader().getSettingsButton().getBounds() == abBounds, "the header keys keep their places in both views");
-        check (studio.getHeader().getViewButton (ui::ViewMode::studio).isLit(), "STUDIO is lit");
         frames (*editor, 2);
 
         // Every sound parameter (plus the performance ones) has a control.
@@ -539,31 +480,15 @@ int runUiSelfTest()
             frames (*editor, 1);
         }
 
-        // A new editor follows the session's view, or the default when the session has none.
-        {
-            CeruleanProcessor fresh;
-            auto e2 = std::make_unique<CeruleanEditor> (fresh);
-            check (e2->getViewMode() == ui::ViewMode::studio, "a new instance opens in the default view (studio)");
-            fresh.getUiState().setProperty (ui::uistate::view, "panel", nullptr);
-            e2.reset();
-            e2 = std::make_unique<CeruleanEditor> (fresh);
-            check (e2->getViewMode() == ui::ViewMode::panel, "a session's stored view wins over the default");
-        }
-
-        // The header switch is asynchronous (its button belongs to the view being replaced).
-        studio.getHeader().getViewButton (ui::ViewMode::panel).onClick();
-        check (editor->getViewMode() == ui::ViewMode::studio, "header switch waits for the click to finish");
-        juce::MessageManager::getInstance()->runDispatchLoopUntil (50);
-        check (editor->getViewMode() == ui::ViewMode::panel, "then shows the panel");
-        check (ui::viewPreference::getDefault ("Cerulean") == ui::ViewMode::panel, "and the panel is the default again");
+        editor->setView (ui::ViewMode::panel);
+        check (editor->getViewMode() == ui::ViewMode::panel, "and back to the panel");
         check (editor->getMainPanel().getAdvancedTab().isVisible(), "ADVANCED is on the panel");
     }
 
     processor.getState().getParameter (params::decay)->removeListener (&rec);
+    runEditorChecks (processor, *editor, scratch, { .pluginName = "Cerulean", .parameter = params::decay,
+                                                    .lockableIds = ui::presetFormat().lockableIds });
     editor.reset();
-    scratch.deleteRecursively();
-    ui::PresetManager::setUserPresetDirectoryOverride ({});
-    ui::viewPreference::setSettingsFileOverride ({});
 
     std::printf ("%s: %d failure(s)\n", failures == 0 ? "PASSED" : "FAILED", failures);
     return failures;

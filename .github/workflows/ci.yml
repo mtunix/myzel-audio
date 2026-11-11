@@ -49,6 +49,14 @@ jobs:
       - name: Tests
         run: ctest --test-dir build --output-on-failure -j 4
 
+      # The screen must be larger than the editor, or JUCE shrinks the window.
+      - name: UI self-test
+        run: |
+          name="${{ matrix.plugin }}"
+          name="${name^}"
+          xvfb-run -a -s "-screen 0 3000x2000x24" \
+            "build/plugins/${{ matrix.plugin }}/tools/${name}UiSnapshot_artefacts/Release/${name}UiSnapshot" --selftest
+
       - name: pluginval (strictness 10)
         run: xvfb-run -a tools/pluginval.sh ${{ matrix.plugin }} build 10
 

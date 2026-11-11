@@ -1,16 +1,19 @@
 #pragma once
 
-#include "common/ui/HeaderBar.h"
-#include "common/ui/InlineDialog.h"
 #include "common/ui/ViewMode.h"
+
+#include <juce_gui_basics/juce_gui_basics.h>
+
+#include <optional>
 
 namespace myzel::ui
 {
 
 /**
     One face of the editor (the panel or the studio view), laid out once at base size and scaled
-    by the editor (PluginEditor). Each view owns its header, dialog and frame clock; the model
-    they share (presets, A/B, the stored view) is the EditorController, which outlives them.
+    by the editor (PluginEditor). The editor owns the chrome both views share (header, dialog,
+    mix-lock badge, frame clock) and draws it over the view; the model they share (presets, A/B,
+    the stored view) is the EditorController, which outlives the views.
 */
 class EditorView : public juce::Component
 {
@@ -25,34 +28,17 @@ public:
     /** Wired by the editor: called when getBaseHeight() changes, so the window follows. */
     std::function<void()> onBaseSizeChanged;
 
-    /** One animation frame (called on vblank; the snapshot tool calls it directly). */
-    virtual void animateFrame (double timeSeconds) = 0;
+    /** One animation frame, from the editor's frame clock; dt is in seconds, at most 0.1. */
+    virtual void animateFrame (float dt) = 0;
 
-    virtual HeaderBar& getHeader() noexcept = 0;
-    virtual InlineDialog& getDialog() noexcept = 0;
+    /** The host restored a session while the view is shown: re-read the view's UI state. */
+    virtual void sessionRestored() {}
 
-    /** Wired by the editor: the scale menu and the view switch in the header. */
-    std::function<void (float)> onScaleChosen;
-    std::function<float()> getScale;
-    std::function<void (ViewMode)> onViewChosen;
+    /** Where the mix-lock padlock is centred, in view coordinates (none: no badge). */
+    virtual std::optional<juce::Point<int>> getMixLockAnchor() const { return std::nullopt; }
 
-protected:
-    /** Connects the header's scale menu and view switch to the callbacks above. */
-    void wireHeader (HeaderBar& header)
-    {
-        header.getScale = [this] { return getScale != nullptr ? getScale() : 1.0f; };
-        header.onScaleChosen = [this] (float s)
-        {
-            if (onScaleChosen != nullptr)
-                onScaleChosen (s);
-        };
-        header.onViewChosen = [this] (ViewMode m)
-        {
-            if (onViewChosen != nullptr && m != getMode())
-                onViewChosen (m);
-        };
-        header.setView (getMode());
-    }
+    /** Wired by the editor: for a view that changes what the header shows. */
+    std::function<void()> refreshHeader;
 };
 
 } // namespace myzel::ui

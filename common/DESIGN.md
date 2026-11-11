@@ -48,7 +48,7 @@ sizes, knob sweep, fade times); each plugin adds its base size and layout grid.
 
 | File | Role |
 |---|---|
-| `Drawing` | cached layers, legends, screws, recesses, grooves, shadows, grain, glow |
+| `Drawing` | cached layers, the 4-unit grid snap, legends, screws, recesses, grooves, shadows, grain, glow |
 | `PanelArtwork` | the static front panel from a spec (knob scales, wells, grooves, legends) |
 | `Knob` | rotary control: drag/fine/wheel/keys/typed entry, re-bindable, accessibility |
 | `LampButton` | console key with an LED bar (square, wide, compact; latching or momentary) |
@@ -58,20 +58,36 @@ sizes, knob sweep, fade times); each plugin adds its base size and layout grid.
 | `KitLookAndFeel` | popup menus, tooltips, text fields |
 | `LockBadge` | the padlock after Mix while the mix lock is on |
 
-The header is the same in every plugin and both views: name and version, preset browser (SAVE
-appears in the field with unsaved changes), Bypass, A/B, undo/redo, PANEL | STUDIO (plugins with
-two views) and ⚙. The ⚙ menu holds the plugin's own settings (`HeaderConfig::addSettings`,
-item IDs from `firstPluginItemId`: JUCE runs an item's action only if it has an ID), the mix
-lock and the window size.
+The header is the same in every plugin, and the editor shows one header over both views: name
+and version, preset browser (SAVE appears in the field with unsaved changes), Bypass, A/B,
+undo/redo, PANEL | STUDIO (plugins with two views) and ⚙. The ⚙ menu holds the plugin's own
+settings (`HeaderConfig::addSettings`, item IDs from `firstPluginItemId`: JUCE runs an item's
+action only if it has an ID), the mix lock and the window size. `HeaderConfig` also carries the
+mix lock's texts (menu label, padlock tooltip).
 
 ## Two views
 
 `PluginEditor` hosts one `EditorView` at a time and scales it (75–200 %, fixed aspect ratio).
 It owns the `EditorController` (presets, A/B, undo, parameter access, the stored view), which
-outlives the views; the plugin passes a factory that builds the panel or the studio view.
-Switching is deferred until the header's click handler has returned, never resizes the window,
-and the header keys keep their places. The session stores its view (`uistate::view`); a new
-session opens in the view chosen last (`ViewMode`, `<plugin>.settings`).
+outlives the views; the plugin passes a factory that builds the panel or the studio view, and
+its `HeaderConfig`. The editor also owns what both views show the same way, in one scaled
+layer over the view:
+
+- the `HeaderBar` over the view's top strip (the view still paints the header's shadow);
+- the `LockBadge`, centred where the view's `getMixLockAnchor()` says and inked for the view
+  (`legendDim` on the panel, `textDim` in the studio), visible while the mix lock is on;
+- the `InlineDialog`, on top of everything;
+- the frame clock: one `VBlankAttachment` that clamps the frame time (at most 0.1 s), calls the
+  view's `animateFrame (dt)` and refreshes the header every 6 frames;
+- `PresetManager::onChange` (header and padlock) and the session listener: a session restored
+  by the host refreshes the header, calls the view's `sessionRestored()` and then follows the
+  session's view.
+
+A view keeps only its own controls and per-frame work; it calls `refreshHeader` when it changes
+something the header shows. Switching is immediate (the header is not part of the view it
+replaces), never resizes the window, and the header keys keep their places. The session stores
+its view (`uistate::view`); a new session opens in the view chosen last (`ViewMode`,
+`<plugin>.settings`).
 
 The studio view is built from `StudioControls` (`StudioSlider` rows with typed entry,
 `StudioToggle` chips/switches/blocks/segments, `SelectorRow` lists), `StudioMeters` (level bars
@@ -94,7 +110,16 @@ is the plugin's; the grid (12 px gutters, selector column left, output column ri
 
 ## Tests and tools
 
-`testing/UiTestKit.h`: helpers for the editor self-tests and snapshot renderers (`check`,
-mouse events, gesture recorder, parameter helpers, `saveSnapshot`). `tools/ui_diff.py` renders a
-plugin's snapshots and compares them pixel by pixel with a recorded baseline: run it before and
-after any change to shared UI code, for **both** plugins.
+Each plugin's `tools/ui_snapshot` is a snapshot renderer and an editor self-test
+(`--selftest`), built on header-only helpers in `testing/`:
+
+| File | Role |
+|---|---|
+| `UiTestKit` | `check`, mouse events and drags, gesture recorder, parameter helpers, `saveSnapshot` |
+| `ScratchSession` | redirects every file written for the user (user presets, the default-view setting) to a fresh temp folder, and deletes it afterwards. Create it before any processor: the `PresetManager` scans its folder when it is built |
+| `SnapshotTool` | the tool's `main()` (`runSnapshotTool`): arguments, `--selftest` (exit 1 on a failure), the 8× `--leakcheck`, scenes and timing, all in a scratch session. The plugin brings its scenes, meter seeding and self-test |
+| `EditorSelfTest` | the checks of shared editor code, which both self-tests run (`runEditorChecks`): user presets land in the scratch folder, A/B, the mix lock, and the two views (switching, header keys, session and default view, following a restored session) |
+
+Checks of a plugin's own UI stay in its `SelfTest.cpp`. CI runs both self-tests on Linux.
+`tools/ui_diff.py` renders a plugin's snapshots and compares them pixel by pixel with a recorded
+baseline: run it before and after any change to shared UI code, for **both** plugins.

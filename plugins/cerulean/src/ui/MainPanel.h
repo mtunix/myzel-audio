@@ -2,11 +2,9 @@
 
 #include "ui/AdvancedDrawer.h"
 #include "common/ui/EditorView.h"
-#include "ui/Header.h"
 #include "common/ui/Knob.h"
 #include "ui/KnobScale.h"
 #include "common/ui/LampButton.h"
-#include "common/ui/LockBadge.h"
 #include "common/ui/PanelArtwork.h"
 #include "ui/PanelController.h"
 #include "ui/TailDisplay.h"
@@ -27,23 +25,21 @@ namespace cerulean::ui
     The panel view: the whole instrument face at base (100 %) size. The editor scales it with a transform, so
     everything is laid out once on the fixed grid in Theme.h.
 
-    Owns the frame clock: one VBlankAttachment drives the lamps, the legend crossfades, the tail
-    display and the Advanced drawer, and each of those repaints only its own pixels when
-    something visibly changed. It also follows the parameters that change what a control means
+    The editor's frame clock drives the lamps, the legend crossfades, the tail display and the
+    Advanced drawer, and each of those repaints only its own pixels when something visibly
+    changed. Each frame also follows the parameters that change what a control means
     (Algorithm relabels Param A/B; Pre-delay Sync and Echo Sync turn knobs into note values;
-    Freeze Mode makes Freeze momentary), by polling the PanelController once per frame.
+    Freeze Mode makes Freeze momentary), by polling the PanelController.
 */
-class MainPanel final : public EditorView,
-                        private juce::ValueTree::Listener
+class MainPanel final : public EditorView
 {
 public:
     explicit MainPanel (PanelController& controller);
-    ~MainPanel() override;
 
     ViewMode getMode() const noexcept override { return ViewMode::panel; }
-    void animateFrame (double timeSeconds) override;
-    HeaderBar& getHeader() noexcept override { return header; }
-    InlineDialog& getDialog() noexcept override { return dialog; }
+    void animateFrame (float dt) override;
+    void sessionRestored() override { applyUiState(); }
+    std::optional<juce::Point<int>> getMixLockAnchor() const override { return mixLockAnchor; }
 
     void setAdvancedOpen (bool shouldBeOpen);
     int getBaseHeight() const noexcept override;
@@ -64,7 +60,6 @@ public:
     void resized() override;
 
 private:
-    void valueTreeRedirected (juce::ValueTree&) override;
     void applyUiState();
     void buildControls();
     void updateMeanings (bool animate);
@@ -72,8 +67,6 @@ private:
     PanelController& controller;
     CeruleanProcessor& processor;
 
-    InlineDialog dialog;
-    HeaderBar header;
     ValueBubble bubble;
     TailDisplay tail;
 
@@ -82,7 +75,7 @@ private:
     Knob* paramAKnob = nullptr;
     Knob* paramBKnob = nullptr;
     KnobScale preDelayScale, paramAScale, paramBScale;
-    LockBadge mixLockBadge { Theme::palette().legendDim, "Mix lock is on: presets and A/B keep Mix and Wet as they are. Turn it off in the settings menu." };
+    std::optional<juce::Point<int>> mixLockAnchor;
 
     std::array<std::unique_ptr<LampButton>, 10> algorithmKeys;
     std::unique_ptr<juce::ParameterAttachment> algorithmAttachment;
@@ -104,11 +97,6 @@ private:
     // What the meaning-changing controls currently show.
     Meanings shown;
     bool meaningsShown = false;
-
-    // Frame clock.
-    juce::VBlankAttachment vblank;
-    double lastFrameTime = -1.0;
-    int framesSinceRefresh = 0;
 
     JUCE_DECLARE_NON_COPYABLE_WITH_LEAK_DETECTOR (MainPanel)
 };

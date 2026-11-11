@@ -7,18 +7,26 @@ namespace myzel::ui
 
 /**
     A small padlock printed next to the Mix legend while the mix lock is on (⚙ menu), so a
-    preset that leaves Mix alone never looks like a bug. Same glyph in both views; each view
-    passes its own ink colour and shows or hides it when the preset manager reports a change.
+    preset that leaves Mix alone never looks like a bug. Same glyph in both views; the editor
+    owns it, inks it for the view shown and places it where the view asks.
 */
 class LockBadge final : public juce::Component,
                         public juce::SettableTooltipClient
 {
 public:
-    LockBadge (juce::Colour inkColour, const juce::String& tooltip) : ink (inkColour)
+    LockBadge()
     {
         setInterceptsMouseClicks (true, false);
-        setTooltip (tooltip);
         setTitle ("Mix lock on");
+    }
+
+    void setInk (juce::Colour newInk)
+    {
+        if (newInk != ink)
+        {
+            ink = newInk;
+            repaint();
+        }
     }
 
     /** Glyph size in base coordinates; place it with setCentre(). */

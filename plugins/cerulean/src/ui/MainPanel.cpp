@@ -8,24 +8,9 @@ namespace cerulean::ui
 
 namespace
 {
-    juce::RangedAudioParameter& parameter (CeruleanProcessor& p, const char* id)
-    {
-        auto* param = p.getState().getParameter (id);
-        jassert (param != nullptr);
-        return *param;
-    }
-
     float norm (juce::RangedAudioParameter& p, float value)
     {
         return p.convertTo0to1 (value);
-    }
-
-    juce::Rectangle<int> snapped (juce::Rectangle<float> r)
-    {
-        // Positions on a 4-unit grid map to whole device pixels at every menu scale (75-200 %).
-        auto snap = [] (float v) { return (int) (std::round (v / 4.0f) * 4.0f); };
-        const auto x = snap (r.getX()), y = snap (r.getY());
-        return { x, y, snap (r.getRight()) - x, snap (r.getBottom()) - y };
     }
 
     juce::String minus() { return juce::String::fromUTF8 ("\xe2\x88\x92"); }
@@ -126,9 +111,7 @@ namespace
 MainPanel::MainPanel (PanelController& c)
     : controller (c),
       processor (c.getProcessor()),
-      header (processor, c.getPresets(), c.getAb(), dialog, headerConfig (processor)),
-      drawer (processor, bubble),
-      vblank (this, [this] (double t) { animateFrame (t); })
+      drawer (processor, bubble)
 {
     setOpaque (true);
     setSize (metrics::baseWidth, metrics::baseHeight);
@@ -143,31 +126,17 @@ MainPanel::MainPanel (PanelController& c)
     addAndMakeVisible (tail);
     addChildComponent (drawer);
     addAndMakeVisible (advancedTab);
-    addAndMakeVisible (header);
     addChildComponent (bubble);
-    addChildComponent (dialog);
 
-    wireHeader (header);
-
-    // Mix lock: a padlock after the MIX legend while it is on.
+    // Mix lock: the padlock goes after the MIX legend.
     if (auto* mix = findKnob (params::mix))
     {
         const auto legendFont = drawing::tracked (fonts->legend (metrics::legendSize), metrics::legendTracking);
         const auto anchor = mix->getLegendAnchor();
         const auto x = anchor.x + juce::GlyphArrangement::getStringWidth (legendFont, "MIX") * 0.5f + 8.0f;
-        mixLockBadge.setBounds (juce::Rectangle<int> (LockBadge::width, LockBadge::height)
-                                    .withCentre ({ juce::roundToInt (x), juce::roundToInt (anchor.y) - 1 }));
+        mixLockAnchor = juce::Point<int> (juce::roundToInt (x), juce::roundToInt (anchor.y) - 1);
     }
-    addChildComponent (mixLockBadge);
 
-    controller.getPresets().onChange = [this]
-    {
-        header.refresh();
-        mixLockBadge.setVisible (controller.getPresets().isMixLocked());
-    };
-    mixLockBadge.setVisible (controller.getPresets().isMixLocked());
-
-    processor.getState().state.addListener (this);
     updateMeanings (false);
     tail.setShape (controller.currentTailShape());
     applyUiState();
@@ -181,28 +150,21 @@ MainPanel::MainPanel (PanelController& c)
     wetKey.snapLamp();
     preSyncKey.snapLamp();
     echoSyncKey.snapLamp();
-    header.refresh();
-}
-
-MainPanel::~MainPanel()
-{
-    controller.getPresets().onChange = nullptr;
-    processor.getState().state.removeListener (this);
 }
 
 void MainPanel::buildControls()
 {
     auto* um = &processor.getUndoManager();
 
-    auto& decayP    = parameter (processor, params::decay);
-    auto& preDelayP = parameter (processor, params::preDelay);
-    auto& sizeP     = parameter (processor, params::size);
-    auto& modP      = parameter (processor, params::mod);
-    auto& toneP     = parameter (processor, params::tone);
-    auto& paramAP   = parameter (processor, params::paramA);
-    auto& paramBP   = parameter (processor, params::paramB);
-    auto& mixP      = parameter (processor, params::mix);
-    auto& outputP   = parameter (processor, params::output);
+    auto& decayP    = controller.parameter (params::decay);
+    auto& preDelayP = controller.parameter (params::preDelay);
+    auto& sizeP     = controller.parameter (params::size);
+    auto& modP      = controller.parameter (params::mod);
+    auto& toneP     = controller.parameter (params::tone);
+    auto& paramAP   = controller.parameter (params::paramA);
+    auto& paramBP   = controller.parameter (params::paramB);
+    auto& mixP      = controller.parameter (params::mix);
+    auto& outputP   = controller.parameter (params::output);
 
     struct Def
     {
@@ -285,7 +247,7 @@ void MainPanel::buildControls()
         auto knob = std::make_unique<Knob> (*d.param, um, d.style);
         knob->setValueBubble (&bubble);
         knob->setTooltip (d.tip);
-        knob->setBounds (snapped (layout::knobBounds (d.centre, d.style.diameter)));
+        knob->setBounds (drawing::snapped (layout::knobBounds (d.centre, d.style.diameter)));
         addAndMakeVisible (*knob);
 
         if (d.param == &preDelayP)  preDelayKnob = knob.get();
@@ -315,7 +277,7 @@ void MainPanel::buildControls()
         algorithmKeys[(size_t) i] = std::move (key);
     }
 
-    algorithmAttachment = std::make_unique<juce::ParameterAttachment> (parameter (processor, params::algorithm), [this] (float v)
+    algorithmAttachment = std::make_unique<juce::ParameterAttachment> (controller.parameter (params::algorithm), [this] (float v)
     {
         const auto index = juce::roundToInt (v);
 
@@ -329,7 +291,7 @@ void MainPanel::buildControls()
     freezeKey.setClickingTogglesState (false);
     freezeKey.setTitle ("Freeze");
     addAndMakeVisible (freezeKey);
-    freezeAttachment = std::make_unique<juce::ParameterAttachment> (parameter (processor, params::freeze), [this] (float v)
+    freezeAttachment = std::make_unique<juce::ParameterAttachment> (controller.parameter (params::freeze), [this] (float v)
     {
         freezeKey.setToggleState (v >= 0.5f, juce::dontSendNotification);
     }, nullptr);
@@ -362,14 +324,14 @@ void MainPanel::buildControls()
         b.setClickingTogglesState (true);
         b.setTooltip (tip);
         addAndMakeVisible (b);
-        buttonAttachments.push_back (std::make_unique<juce::ButtonParameterAttachment> (parameter (processor, id), b, um));
+        buttonAttachments.push_back (std::make_unique<juce::ButtonParameterAttachment> (controller.parameter (id), b, um));
     };
 
     bindToggle (duckKey, params::duck, layout::duckKey(),
                 "Duck: the reverb dips while you play and blooms back when you stop. Amount, threshold and release are in Advanced.");
     bindToggle (wetKey, params::wetOnly, layout::wetKey(), "Wet: kills the dry signal (100 % wet, whatever Mix says), for send/return use.");
 
-    tail.setBounds (snapped (layout::tailDisplay()));
+    tail.setBounds (drawing::snapped (layout::tailDisplay()));
 
     // ADVANCED, engraved on the bottom edge: opens the deck below the panel.
     advancedTab.setClickingTogglesState (false);
@@ -496,14 +458,8 @@ void MainPanel::setAdvancedOpen (bool shouldBeOpen)
     if (onBaseSizeChanged != nullptr)
         onBaseSizeChanged();
 
-    header.refresh();
-}
-
-void MainPanel::valueTreeRedirected (juce::ValueTree&)
-{
-    // The host restored a session while the editor is open.
-    applyUiState();
-    header.refresh();
+    if (refreshHeader != nullptr)
+        refreshHeader();
 }
 
 void MainPanel::applyUiState()
@@ -517,12 +473,8 @@ void MainPanel::applyUiState()
     advancedTab.setOpenState (open);
 }
 
-void MainPanel::animateFrame (double timeSeconds)
+void MainPanel::animateFrame (float dt)
 {
-    const auto dt = lastFrameTime < 0.0 ? (1.0f / 60.0f)
-                                        : (float) juce::jlimit (0.0, 0.1, timeSeconds - lastFrameTime);
-    lastFrameTime = timeSeconds;
-
     updateMeanings (true);
 
     for (auto& key : algorithmKeys)
@@ -542,21 +494,13 @@ void MainPanel::animateFrame (double timeSeconds)
     tail.tick (dt, processor.getMeters().wetRms.load (std::memory_order_relaxed));
 
     drawer.tick (dt);
-
-    if (++framesSinceRefresh >= 6)
-    {
-        framesSinceRefresh = 0;
-        header.refresh();
-    }
 }
 
 //==============================================================================
 void MainPanel::resized()
 {
-    header.setBounds (layout::header().toNearestInt());
     drawer.setBounds (layout::deck().toNearestInt());
     advancedTab.setBounds (layout::advancedTab (drawer.isOpen()).toNearestInt());
-    dialog.setBounds (getLocalBounds());
 }
 
 void MainPanel::paint (juce::Graphics& g)

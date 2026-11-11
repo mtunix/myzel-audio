@@ -1,10 +1,11 @@
 #include "SelfTest.h"
 
-#include "common/testing/UiTestKit.h"
+#include "common/testing/EditorSelfTest.h"
 
 #include "ui/Theme.h"
 
 #include "plugin/PluginProcessor.h"
+#include "ui/FactoryPresets.h"
 #include "ui/Header.h"
 #include "ui/UmberEditor.h"
 #include "ui/UiState.h"
@@ -28,14 +29,8 @@ void frames (UmberEditor& editor, int count)
 }
 }
 
-int runUiSelfTest()
+int runUiSelfTest (const ScratchSession& scratch)
 {
-    // Never touch the user's real default-view setting; start in the panel view.
-    const auto scratch = juce::File::getSpecialLocation (juce::File::tempDirectory).getChildFile ("umber-ui-selftest");
-    scratch.deleteRecursively();
-    scratch.createDirectory();
-    myzel::ui::viewPreference::setSettingsFileOverride (scratch.getChildFile ("Umber.settings"));
-
     failures = 0;
     UmberProcessor processor;
     auto editor = std::make_unique<UmberEditor> (processor);
@@ -52,21 +47,17 @@ int runUiSelfTest()
     std::printf ("Knob drag\n");
     {
         const auto before = valueOf (processor, params::drive);
-        const auto c = drive->getLocalBounds().toFloat().getCentre();
-        drive->mouseDown (makeEvent (*drive, c, {}));
-        drive->mouseDrag (makeEvent (*drive, c.translated (0.0f, -64.0f), {}, 1, true));
-        drive->mouseUp (makeEvent (*drive, c.translated (0.0f, -64.0f), {}, 1, true));
+        drag (*drive, -64.0f);
         const auto after = valueOf (processor, params::drive);
         check (after > before + 1.5f && after < before + 2.5f, "64 px up raises Drive by ~2 (320 px = full range)");
         check (rec.begins == 1 && rec.ends == 1, "one host gesture for the drag");
 
         const auto mid = valueOf (processor, params::drive);
-        drive->mouseDown (makeEvent (*drive, c, {}));
-        drive->mouseDrag (makeEvent (*drive, c.translated (0.0f, -64.0f), juce::ModifierKeys::shiftModifier, 1, true));
-        drive->mouseUp (makeEvent (*drive, c.translated (0.0f, -64.0f), {}, 1, true));
+        drag (*drive, -64.0f, juce::ModifierKeys::shiftModifier);
         const auto fine = valueOf (processor, params::drive) - mid;
         check (fine > 0.1f && fine < 0.4f, "Shift-drag is ~8x finer");
 
+        const auto c = drive->getLocalBounds().toFloat().getCentre();
         drive->mouseDoubleClick (makeEvent (*drive, c, {}, 2));
         check (std::abs (valueOf (processor, params::drive) - 3.0f) < 0.01f, "double-click resets to default (3.0)");
 
@@ -78,14 +69,10 @@ int runUiSelfTest()
 
     std::printf ("Tone centre detent\n");
     {
-        const auto c = tone->getLocalBounds().toFloat().getCentre();
-        auto* p = processor.getState().getParameter (params::tone);
-        p->setValueNotifyingHost (p->convertTo0to1 (-1.0f));
-        tone->mouseDown (makeEvent (*tone, c, {}));
-        tone->mouseDrag (makeEvent (*tone, c.translated (0.0f, -15.0f), {}, 1, true));
-        tone->mouseUp (makeEvent (*tone, c.translated (0.0f, -15.0f), {}, 1, true));
+        setParam (processor, params::tone, -1.0f);
+        drag (*tone, -15.0f);
         check (std::abs (valueOf (processor, params::tone)) < 0.001f, "dragging through centre sticks at Flat");
-        check (p->getCurrentValueAsText() == "Flat", "Tone shows 'Flat' at 12 o'clock");
+        check (processor.getState().getParameter (params::tone)->getCurrentValueAsText() == "Flat", "Tone shows 'Flat' at 12 o'clock");
     }
 
     std::printf ("Accessibility\n");
@@ -119,9 +106,9 @@ int runUiSelfTest()
         check (std::abs (valueOf (processor, params::drive) - before) < 0.02f, "undo restores the value");
     }
 
-    std::printf ("Presets\n");
+    std::printf ("Factory presets\n");
     {
-        ui::PresetManager presets (processor, ui::presetFormat());
+        auto& presets = editor->getController().getPresets();
         check (presets.getEntries().size() >= 20, "at least 20 factory presets");
 
         const auto& entries = presets.getEntries();
@@ -134,41 +121,7 @@ int runUiSelfTest()
         presets.load (fuzzIndex);
         check (juce::roundToInt (valueOf (processor, params::model)) == 4 && valueOf (processor, params::slam) > 0.5f,
                "loading a preset sets the parameters");
-        check (! presets.isModified(), "freshly loaded preset is not modified");
-        drive->setNormalisedValueAsGesture (0.2f);
-        check (presets.isModified(), "editing marks the preset modified");
-
-        const auto saved = presets.saveUserPreset ("Selftest Preset");
-        check (saved.wasOk() && presets.isCurrentUserPreset(), "save user preset");
-        const auto idx = presets.getCurrentIndex();
-        check (presets.renameUserPreset (idx, "Selftest Renamed").wasOk() && presets.getCurrentName() == "Selftest Renamed",
-               "rename user preset");
-        check (presets.deleteUserPreset (presets.getCurrentIndex()).wasOk(), "delete user preset");
-        check (! presets.userPresetExists ("Selftest Renamed"), "file is gone");
-
         presets.load (0);
-        presets.step (1);
-        check (presets.getCurrentIndex() == 1, "next preset");
-        presets.step (-2);
-        check (presets.getCurrentIndex() == (int) presets.getEntries().size() - 1, "previous preset wraps around");
-    }
-
-    std::printf ("A/B compare\n");
-    {
-        ui::PresetManager presets (processor, ui::presetFormat());
-        ui::AbCompare ab (processor, presets);
-        auto* p = processor.getState().getParameter (params::drive);
-
-        p->setValueNotifyingHost (p->convertTo0to1 (2.0f));
-        ab.selectSlot (1);    // B starts as a copy
-        p->setValueNotifyingHost (p->convertTo0to1 (9.0f));
-        ab.selectSlot (0);
-        check (std::abs (valueOf (processor, params::drive) - 2.0f) < 0.01f, "A recalls its own setting");
-        ab.selectSlot (1);
-        check (std::abs (valueOf (processor, params::drive) - 9.0f) < 0.01f, "B recalls its own setting");
-        ab.copyActiveToOther();
-        ab.selectSlot (0);
-        check (std::abs (valueOf (processor, params::drive) - 9.0f) < 0.01f, "copy B to A");
     }
 
     std::printf ("Scale\n");
@@ -224,21 +177,8 @@ int runUiSelfTest()
 
     std::printf ("Studio view\n");
     {
-        const auto sizeBefore = editor->getWidth();
-        const auto bypassBounds = editor->getMainPanel().getHeader().getBypassButton().getBounds();
-        const auto settingsBounds = editor->getMainPanel().getHeader().getSettingsButton().getBounds();
-        check (editor->getMainPanel().getHeader().getViewButton (ui::ViewMode::panel).isLit(), "PANEL is lit in the panel view");
-
         editor->setView (ui::ViewMode::studio);
-        check (editor->getViewMode() == ui::ViewMode::studio, "switches to the studio view");
-        check (processor.getUiState().getProperty (ui::uistate::view).toString() == "studio", "view stored in the session");
-        check (myzel::ui::viewPreference::getDefault ("Umber") == ui::ViewMode::studio, "the chosen view becomes the default for new instances");
-        check (editor->getWidth() == sizeBefore, "switching does not resize the window");
-
         auto& studio = editor->getStudioPanel();
-        check (studio.getHeader().getBypassButton().getBounds() == bypassBounds
-               && studio.getHeader().getSettingsButton().getBounds() == settingsBounds, "the header keys keep their places in both views");
-        check (studio.getHeader().getViewButton (ui::ViewMode::studio).isLit(), "STUDIO is lit");
         frames (*editor, 2);
 
         // Every sound parameter (plus the listening switches) has a control.
@@ -268,11 +208,10 @@ int runUiSelfTest()
         check (juce::roundToInt (valueOf (processor, params::model)) == 4, "a circuit row selects the circuit");
         check (studio.getCircuitRow (4).getToggleState() && ! studio.getCircuitRow (0).getToggleState(), "only the selected row is lit");
 
-        auto* lowCut = processor.getState().getParameter (params::lowCut);
-        lowCut->setValueNotifyingHost (lowCut->convertTo0to1 (20.0f));
+        setParam (processor, params::lowCut, 20.0f);
         frames (*editor, 7);
         check (studio.findToggle (params::weight)->isDimmed(), "Weight is greyed out while Low Cut is off");
-        lowCut->setValueNotifyingHost (lowCut->convertTo0to1 (120.0f));
+        setParam (processor, params::lowCut, 120.0f);
         frames (*editor, 7);
         check (! studio.findToggle (params::weight)->isDimmed(), "and lit normally with Low Cut on");
 
@@ -281,13 +220,12 @@ int runUiSelfTest()
 
         editor->setView (ui::ViewMode::panel);
         check (editor->getViewMode() == ui::ViewMode::panel, "and back to the panel");
-        check (myzel::ui::viewPreference::getDefault ("Umber") == ui::ViewMode::panel, "and the panel is the default again");
     }
 
     processor.getState().getParameter (params::drive)->removeListener (&rec);
+    runEditorChecks (processor, *editor, scratch, { .pluginName = "Umber", .parameter = params::drive,
+                                                    .lockableIds = ui::presetFormat().lockableIds });
     editor.reset();
-    myzel::ui::viewPreference::setSettingsFileOverride ({});
-    scratch.deleteRecursively();
 
     std::printf ("%s: %d failure(s)\n", failures == 0 ? "PASSED" : "FAILED", failures);
     return failures;

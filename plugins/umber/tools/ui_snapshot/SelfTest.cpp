@@ -1,5 +1,7 @@
 #include "SelfTest.h"
 
+#include "common/testing/UiTestKit.h"
+
 #include "ui/Theme.h"
 
 #include "plugin/PluginProcessor.h"
@@ -9,53 +11,14 @@
 
 namespace
 {
+using namespace myzel::testing;
 using namespace umber;
-
-int failures = 0;
-
-void check (bool condition, const char* what)
-{
-    std::printf ("  [%s] %s\n", condition ? " ok " : "FAIL", what);
-
-    if (! condition)
-        ++failures;
-}
-
-juce::MouseEvent makeEvent (juce::Component& c, juce::Point<float> pos, juce::ModifierKeys mods, int clicks = 1,
-                            bool dragged = false)
-{
-    const auto now = juce::Time::getCurrentTime();
-    return { juce::Desktop::getInstance().getMainMouseSource(), pos, mods, 0.0f, 0.0f, 0.0f, 0.0f, 0.0f,
-             &c, &c, now, pos, now, clicks, dragged };
-}
-
-float valueOf (UmberProcessor& p, const char* id)
-{
-    auto* param = p.getState().getParameter (id);
-    return param->convertFrom0to1 (param->getValue());
-}
-
-/** Records host gestures, to check that every edit is wrapped in begin/end. */
-struct GestureRecorder final : juce::AudioProcessorParameter::Listener
-{
-    int begins = 0, ends = 0, changes = 0;
-    void parameterValueChanged (int, float) override { ++changes; }
-    void parameterGestureChanged (int, bool starting) override { (starting ? begins : ends)++; }
-};
 
 void flushUndo (UmberProcessor& p)
 {
     // APVTS writes parameter values into its ValueTree (and so the undo history) on a timer;
     // copyState() forces that flush.
     juce::ignoreUnused (p.getState().copyState());
-}
-
-void dragSlider (myzel::ui::StudioSlider& s, juce::Point<float> delta)
-{
-    const auto c = s.barArea().getCentre();
-    s.mouseDown (makeEvent (s, c, {}));
-    s.mouseDrag (makeEvent (s, c + delta, {}, 1, true));
-    s.mouseUp (makeEvent (s, c + delta, {}, 1, true));
 }
 
 void frames (UmberEditor& editor, int count)

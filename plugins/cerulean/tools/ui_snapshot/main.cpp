@@ -11,44 +11,21 @@
 
 #include "SelfTest.h"
 
+#include "common/testing/UiTestKit.h"
+
 #include <juce_gui_basics/juce_gui_basics.h>
 
 namespace
 {
+using namespace myzel::testing;
 using cerulean::CeruleanEditor;
 using cerulean::CeruleanProcessor;
 namespace params = cerulean::params;
-
-void setParam (CeruleanProcessor& p, const char* id, float value)
-{
-    if (auto* param = p.getState().getParameter (id))
-        param->setValueNotifyingHost (param->convertTo0to1 (value));
-}
-
-void resetParams (CeruleanProcessor& p)
-{
-    for (auto* param : p.getParameters())
-        if (auto* ranged = dynamic_cast<juce::RangedAudioParameter*> (param))
-            ranged->setValueNotifyingHost (ranged->getDefaultValue());
-}
 
 void runFrames (CeruleanEditor& editor, int frames, double start = 0.0)
 {
     for (int i = 0; i < frames; ++i)
         editor.animateFrame (start + (double) i / 60.0);
-}
-
-void save (juce::Component& c, const juce::File& file, float scale)
-{
-    const auto image = c.createComponentSnapshot (c.getLocalBounds(), true, scale);
-    file.deleteFile();
-    juce::FileOutputStream out (file);
-
-    if (out.openedOk())
-    {
-        juce::PNGImageFormat().writeImageToStream (image, out);
-        std::printf ("wrote %s (%dx%d)\n", file.getFullPathName().toRawUTF8(), image.getWidth(), image.getHeight());
-    }
 }
 
 struct Scene
@@ -93,10 +70,10 @@ void runScene (const Scene& scene, const juce::File& dir)
     if (scene.after != nullptr)
         scene.after (*editor);
 
-    save (*editor, dir.getChildFile (juce::String (scene.name) + ".png"), 1.0f);
+    saveSnapshot (*editor, dir.getChildFile (juce::String (scene.name) + ".png"), 1.0f);
 
     if (scene.alsoRetina)
-        save (*editor, dir.getChildFile (juce::String (scene.name) + "@2x.png"), 2.0f);
+        saveSnapshot (*editor, dir.getChildFile (juce::String (scene.name) + "@2x.png"), 2.0f);
 
     editor.reset();
 }

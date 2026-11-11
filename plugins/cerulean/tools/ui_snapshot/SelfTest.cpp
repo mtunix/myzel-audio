@@ -1,5 +1,7 @@
 #include "SelfTest.h"
 
+#include "common/testing/UiTestKit.h"
+
 #include "ui/Theme.h"
 
 #include "plugin/PluginProcessor.h"
@@ -8,45 +10,8 @@
 
 namespace
 {
+using namespace myzel::testing;
 using namespace cerulean;
-
-int failures = 0;
-
-void check (bool condition, const char* what)
-{
-    std::printf ("  [%s] %s\n", condition ? " ok " : "FAIL", what);
-
-    if (! condition)
-        ++failures;
-}
-
-juce::MouseEvent makeEvent (juce::Component& c, juce::Point<float> pos, juce::ModifierKeys mods, int clicks = 1,
-                            bool dragged = false)
-{
-    const auto now = juce::Time::getCurrentTime();
-    return { juce::Desktop::getInstance().getMainMouseSource(), pos, mods, 0.0f, 0.0f, 0.0f, 0.0f, 0.0f,
-             &c, &c, now, pos, now, clicks, dragged };
-}
-
-float valueOf (CeruleanProcessor& p, const char* id)
-{
-    auto* param = p.getState().getParameter (id);
-    return param->convertFrom0to1 (param->getValue());
-}
-
-void setValue (CeruleanProcessor& p, const char* id, float plain)
-{
-    auto* param = p.getState().getParameter (id);
-    param->setValueNotifyingHost (param->convertTo0to1 (plain));
-}
-
-/** Records host gestures, to check that every edit is wrapped in begin/end. */
-struct GestureRecorder final : juce::AudioProcessorParameter::Listener
-{
-    int begins = 0, ends = 0, changes = 0;
-    void parameterValueChanged (int, float) override { ++changes; }
-    void parameterGestureChanged (int, bool starting) override { (starting ? begins : ends)++; }
-};
 
 void frames (CeruleanEditor& editor, int n)
 {
@@ -56,21 +21,6 @@ void frames (CeruleanEditor& editor, int n)
         editor.animateFrame (t += 1.0 / 60.0);
 }
 
-void dragSlider (ui::StudioSlider& s, juce::Point<float> delta, juce::ModifierKeys mods = {})
-{
-    const auto c = s.barArea().getCentre();
-    s.mouseDown (makeEvent (s, c, {}));
-    s.mouseDrag (makeEvent (s, c + delta, mods, 1, true));
-    s.mouseUp (makeEvent (s, c + delta, {}, 1, true));
-}
-
-void drag (ui::Knob& k, float dy, juce::ModifierKeys mods = {})
-{
-    const auto c = k.getLocalBounds().toFloat().getCentre();
-    k.mouseDown (makeEvent (k, c, {}));
-    k.mouseDrag (makeEvent (k, c.translated (0.0f, dy), mods, 1, true));
-    k.mouseUp (makeEvent (k, c.translated (0.0f, dy), {}, 1, true));
-}
 }
 
 int runUiSelfTest()
@@ -120,7 +70,7 @@ int runUiSelfTest()
 
     std::printf ("Tone centre detent\n");
     {
-        setValue (processor, params::tone, -1.0f);
+        setParam (processor, params::tone, -1.0f);
         drag (*tone, -15.0f);
         check (std::abs (valueOf (processor, params::tone)) < 0.001f, "dragging through centre sticks at Flat");
         check (processor.getState().getParameter (params::tone)->getCurrentValueAsText() == "Flat", "Tone shows 'Flat' at 12 o'clock");
@@ -149,14 +99,14 @@ int runUiSelfTest()
 
         auto* a = panel.findKnob (params::paramA);
         check (a != nullptr && a->getStyle().title == "INTERVAL", "Param A relabels to INTERVAL");
-        setValue (processor, params::paramA, 75.0f);
+        setParam (processor, params::paramA, 75.0f);
         check (a != nullptr && a->getValueText() == "+12", "Param A reads out the interval");
     }
 
     std::printf ("Echo sync binds Param A to the echo note\n");
     {
-        setValue (processor, params::algorithm, (float) (int) Algorithm::echo);
-        setValue (processor, params::echoSync, 1.0f);
+        setParam (processor, params::algorithm, (float) (int) Algorithm::echo);
+        setParam (processor, params::echoSync, 1.0f);
         frames (*editor, 2);
         auto* note = panel.findKnob (params::echoNote);
         check (note != nullptr && note->getStyle().steps == numNoteValues, "the Param A knob now controls the echo note");
@@ -169,7 +119,7 @@ int runUiSelfTest()
             check (juce::roundToInt (valueOf (processor, params::echoNote)) == before + 1, "arrow key steps one note value");
         }
 
-        setValue (processor, params::echoSync, 0.0f);
+        setParam (processor, params::echoSync, 0.0f);
         frames (*editor, 2);
         check (panel.findKnob (params::paramA) != nullptr && panel.findKnob (params::paramA)->getStyle().title == "ECHO TIME",
                "Echo Sync off: Param A is Echo time again");
@@ -177,12 +127,12 @@ int runUiSelfTest()
 
     std::printf ("Pre-delay sync\n");
     {
-        setValue (processor, params::preDelaySync, 1.0f);
+        setParam (processor, params::preDelaySync, 1.0f);
         frames (*editor, 2);
         auto* k = panel.findKnob (params::preDelayNote);
         check (k != nullptr && k->getStyle().title == "PRE-DELAY", "the Pre-delay knob controls the note value when synced");
         check (k != nullptr && k->getValueText().contains ("ms"), "the synced read-out shows the note and its length");
-        setValue (processor, params::preDelaySync, 0.0f);
+        setParam (processor, params::preDelaySync, 0.0f);
         frames (*editor, 2);
         check (panel.findKnob (params::preDelay) != nullptr && panel.findKnob (params::preDelay)->getStyle().title == "PRE-DELAY",
                "Sync off: back to milliseconds");
@@ -191,14 +141,14 @@ int runUiSelfTest()
     std::printf ("Freeze\n");
     {
         auto& key = panel.getFreezeKey();
-        setValue (processor, params::freezeMode, 0.0f);
+        setParam (processor, params::freezeMode, 0.0f);
         frames (*editor, 1);
         key.onClick();
         check (valueOf (processor, params::freeze) > 0.5f, "latching: a click freezes");
         key.onClick();
         check (valueOf (processor, params::freeze) < 0.5f, "latching: a second click releases");
 
-        setValue (processor, params::freezeMode, 1.0f);
+        setParam (processor, params::freezeMode, 1.0f);
         frames (*editor, 1);
         check (key.isMomentary(), "Freeze Mode Momentary makes the key momentary");
         const auto c = key.getLocalBounds().toFloat().getCentre();
@@ -206,7 +156,7 @@ int runUiSelfTest()
         check (valueOf (processor, params::freeze) > 0.5f, "momentary: frozen while held");
         static_cast<juce::Component&> (key).mouseUp (makeEvent (key, c, {}));
         check (valueOf (processor, params::freeze) < 0.5f, "momentary: released on mouse up");
-        setValue (processor, params::freezeMode, 0.0f);
+        setParam (processor, params::freezeMode, 0.0f);
         frames (*editor, 1);
     }
 
@@ -223,7 +173,7 @@ int runUiSelfTest()
         check ((bool) processor.getUiState().getProperty (ui::uistate::advancedOpen), "drawer state persisted");
         check (panel.findKnob (params::lowEnd) != nullptr && panel.findKnob (params::duckRelease) != nullptr, "drawer knobs exist");
         check (panel.getDrawer().findKey (params::trails) != nullptr, "Trails key exists");
-        setValue (processor, params::width, 150.0f);
+        setParam (processor, params::width, 150.0f);
         frames (*editor, 1);
         check (panel.getDrawer().getValueTextFor (params::width) == "150 %", "drawer values follow the parameters");
 
@@ -259,22 +209,22 @@ int runUiSelfTest()
         preSync.setToggleState (false, juce::sendNotificationSync);
         frames (*editor, 1);
 
-        setValue (processor, params::algorithm, (float) (int) Algorithm::hall);
+        setParam (processor, params::algorithm, (float) (int) Algorithm::hall);
         frames (*editor, 1);
         check (! panel.getSyncKey (true).isVisible(), "Echo's Sync key is hidden unless Echo is selected");
-        setValue (processor, params::algorithm, (float) (int) Algorithm::echo);
+        setParam (processor, params::algorithm, (float) (int) Algorithm::echo);
         frames (*editor, 1);
         check (panel.getSyncKey (true).isVisible(), "and shown with Echo");
-        setValue (processor, params::algorithm, (float) (int) Algorithm::hall);
+        setParam (processor, params::algorithm, (float) (int) Algorithm::hall);
         frames (*editor, 1);
     }
 
     std::printf ("Bypass, value read-out, save\n");
     {
-        setValue (processor, params::bypass, 1.0f);
+        setParam (processor, params::bypass, 1.0f);
         frames (*editor, 1);
         check (panel.getTail().getShape().bypassed && panel.getHeader().getBypassButton().isLit(), "Bypass shows on the tail display");
-        setValue (processor, params::bypass, 0.0f);
+        setParam (processor, params::bypass, 0.0f);
         frames (*editor, 1);
         check (! panel.getTail().getShape().bypassed, "and goes away");
 
@@ -285,7 +235,7 @@ int runUiSelfTest()
         presets.load (0);
         panel.getHeader().refresh();
         check (! panel.getHeader().getSaveButton().isVisible(), "no SAVE without changes");
-        setValue (processor, params::size, 77.0f);
+        setParam (processor, params::size, 77.0f);
         panel.getHeader().refresh();
         check (presets.isModified() && panel.getHeader().getSaveButton().isVisible(), "SAVE appears with unsaved changes");
         presets.load (0);
@@ -348,9 +298,9 @@ int runUiSelfTest()
     std::printf ("A/B compare\n");
     {
         auto& ab = panel.getAb();
-        setValue (processor, params::decay, 2.0f);
+        setParam (processor, params::decay, 2.0f);
         ab.selectSlot (1);    // B starts as a copy
-        setValue (processor, params::decay, 9.0f);
+        setParam (processor, params::decay, 9.0f);
         const auto generation = processor.readSettings().presetGeneration;
         ab.selectSlot (0);
         check (std::abs (valueOf (processor, params::decay) - 2.0f) < 0.01f, "A recalls its own setting");
@@ -493,28 +443,28 @@ int runUiSelfTest()
         check (studio.getCharacterTitle().contains ("Halo"), "the Character card names the algorithm");
         check (a != nullptr && a->commitText ("+7") && a->getValueText() == "+7", "type an interval");
 
-        setValue (processor, params::algorithm, (float) (int) Algorithm::echo);
-        setValue (processor, params::echoSync, 1.0f);
+        setParam (processor, params::algorithm, (float) (int) Algorithm::echo);
+        setParam (processor, params::echoSync, 1.0f);
         frames (*editor, 1);
         auto* note = studio.findSlider (params::echoNote);
         check (note != nullptr && note->getLabel().contains ("ECHO TIME"), "with Echo Sync, Param A edits the echo note");
         check (studio.findToggle (params::echoSync)->isVisible(), "Echo's SYNC key is shown with Echo");
         check (note != nullptr && note->commitText ("1/4") && juce::roundToInt (valueOf (processor, params::echoNote)) == (int) NoteValue::n1_4,
                "type a note value");
-        setValue (processor, params::echoSync, 0.0f);
-        setValue (processor, params::algorithm, (float) (int) Algorithm::hall);
+        setParam (processor, params::echoSync, 0.0f);
+        setParam (processor, params::algorithm, (float) (int) Algorithm::hall);
         frames (*editor, 1);
         check (studio.findSlider (params::paramA) != nullptr && ! studio.findToggle (params::echoSync)->isVisible(),
                "back to Param A, SYNC hidden");
 
-        setValue (processor, params::preDelaySync, 1.0f);
+        setParam (processor, params::preDelaySync, 1.0f);
         frames (*editor, 1);
         auto* preNote = studio.findSlider (params::preDelayNote);
         check (preNote != nullptr && ! preNote->getValueText().contains ("ms") && preNote->getCaption().contains ("ms"),
                "synced pre-delay shows the note, and its length under the bar");
         check (preNote != nullptr && preNote->commitText ("1/8d  375 ms") && juce::roundToInt (valueOf (processor, params::preDelayNote)) == (int) NoteValue::n1_8D,
                "the read-out can be typed back");
-        setValue (processor, params::preDelaySync, 0.0f);
+        setParam (processor, params::preDelaySync, 0.0f);
         frames (*editor, 1);
 
         // Freeze, latching and momentary.
@@ -544,20 +494,20 @@ int runUiSelfTest()
         frames (*editor, 7);
         check (bpm->isEnabled(), "Tempo editable without host tempo");
 
-        setValue (processor, params::duck, 0.0f);
+        setParam (processor, params::duck, 0.0f);
         frames (*editor, 7);
         check (studio.getMeters().getReadoutText().endsWith ("Duck off"), "reduction meter off with Duck off");
-        setValue (processor, params::duck, 1.0f);
+        setParam (processor, params::duck, 1.0f);
         frames (*editor, 7);
         check (! studio.getMeters().getReadoutText().endsWith ("Duck off"), "and on with Duck on");
-        setValue (processor, params::duck, 0.0f);
+        setParam (processor, params::duck, 0.0f);
 
-        setValue (processor, params::decay, 3.0f);
-        setValue (processor, params::lowEnd, 2.0f);
-        setValue (processor, params::tone, 0.0f);
+        setParam (processor, params::decay, 3.0f);
+        setParam (processor, params::lowEnd, 2.0f);
+        setParam (processor, params::tone, 0.0f);
         frames (*editor, 1);
         check (studio.getTail().getReadoutText().startsWith ("Low 6.00 s, Mid 3.00 s"), "the graph reads out RT60 per band");
-        setValue (processor, params::lowEnd, 1.0f);
+        setParam (processor, params::lowEnd, 1.0f);
         frames (*editor, 1);
 
         // The graph's Decay handle.
@@ -579,13 +529,13 @@ int runUiSelfTest()
                 processor.getState().getParameter (params::decay)->removeListener (&r);
                 check (valueOf (processor, params::decay) > 3.05f, "dragging it right lengthens Decay");
                 check (r.begins == 1 && r.ends == 1, "one host gesture for the drag");
-                setValue (processor, params::decay, 3.0f);
+                setParam (processor, params::decay, 3.0f);
             }
 
-            setValue (processor, params::bypass, 1.0f);
+            setParam (processor, params::bypass, 1.0f);
             frames (*editor, 1);
             check (tailGraph.getShape().bypassed && ! tailGraph.getDecayHandle().has_value(), "bypassed: the graph says so and hides its handles");
-            setValue (processor, params::bypass, 0.0f);
+            setParam (processor, params::bypass, 0.0f);
             frames (*editor, 1);
         }
 

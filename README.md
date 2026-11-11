@@ -13,9 +13,9 @@ from CI, unsigned.
 ```
 CMakeLists.txt      builds every plugin; dependencies (CPM) and shared compile settings live here
 plugins/<name>/     one directory per plugin: source, tests, tools, docs, presets
-common/             code shared by every plugin: UI kit, plugin infrastructure, DSP blocks
-tools/              pluginval.sh and package.sh, shared by all plugins
-cmake/CPM.cmake
+common/             code shared by every plugin: UI kit, two-view editor, presets, DSP blocks (see common/DESIGN.md)
+tools/              pluginval.sh, package.sh and ui_diff.py (pixel comparison of UI snapshots)
+cmake/              CPM and myzel_add_plugin() (MyzelPlugin.cmake)
 ```
 
 ## Building

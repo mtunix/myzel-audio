@@ -5,6 +5,10 @@ screen.
 
 ![Umber](docs/screenshots/02-valve-slam-hot.png)
 
+The studio view: the same controls on one flat screen, with exact values and meters.
+
+![Umber studio view](docs/screenshots/12-studio-fuzz-weight.png)
+
 Formats: VST3, CLAP, LV2, Standalone (Linux first; Windows/macOS planned). Licence: AGPLv3.
 
 **How to use it:** see the [manual](docs/MANUAL.md).

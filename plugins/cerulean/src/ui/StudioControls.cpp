@@ -1,6 +1,7 @@
 #include "ui/StudioControls.h"
 
-#include "ui/Drawing.h"
+#include "common/ui/Drawing.h"
+#include "ui/Theme.h"
 
 namespace cerulean::ui
 {

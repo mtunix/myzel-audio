@@ -1,6 +1,6 @@
-#include "ui/LampButton.h"
+#include "common/ui/LampButton.h"
 
-namespace cerulean::ui
+namespace myzel::ui
 {
 
 namespace
@@ -117,8 +117,10 @@ juce::Rectangle<float> LampButton::ledArea (juce::Rectangle<float> key) const
     if (shape == Shape::compact)
         return juce::Rectangle<float> (3.0f, juce::jmin (10.0f, key.getHeight() - 12.0f)).withCentre ({ key.getX() + 11.0f, key.getCentreY() });
 
+    const auto& look = Theme::look();
     const auto w = juce::jmin (22.0f, key.getWidth() - 24.0f);
-    return juce::Rectangle<float> (w, 3.0f).withCentre ({ key.getCentreX(), key.getY() + juce::jmax (9.0f, key.getHeight() * 0.27f) });
+    const auto y = look.keyLedY > 0.0f ? look.keyLedY : juce::jmax (9.0f, key.getHeight() * 0.27f);
+    return juce::Rectangle<float> (w, 3.0f).withCentre ({ key.getCentreX(), key.getY() + y });
 }
 
 juce::Rectangle<float> LampButton::labelArea (juce::Rectangle<float> key) const
@@ -128,6 +130,9 @@ juce::Rectangle<float> LampButton::labelArea (juce::Rectangle<float> key) const
 
     if (shape == Shape::compact)
         return key.withTrimmedLeft (17.0f).withTrimmedRight (5.0f);
+
+    if (const auto y = Theme::look().keyLabelY; y > 0.0f)
+        return juce::Rectangle<float> (key.getWidth() - 4.0f, 16.0f).withCentre ({ key.getCentreX(), key.getY() + y });
 
     const auto led = ledArea (key);
     const auto top = led.getBottom() + 2.0f;
@@ -239,4 +244,4 @@ void LampButton::renderKey (juce::Graphics& g, juce::Rectangle<float> key) const
     g.strokePath (edge, juce::PathStrokeType (1.2f));
 }
 
-} // namespace cerulean::ui
+} // namespace myzel::ui

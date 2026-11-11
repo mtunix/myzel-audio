@@ -257,6 +257,10 @@ void MainPanel::buildControls()
 
     meter.setBounds (snapped (layout::meter()));
 
+    artwork.grooves.clear();
+    artwork.grooves.push_back ({ layout::leftGrooveX, layout::grooveTop, layout::leftGrooveX, layout::grooveBottom });
+    artwork.grooves.push_back ({ layout::rightGrooveX, layout::grooveTop, layout::rightGrooveX, layout::grooveBottom });
+
     // Recesses the keys sit in.
     artwork.wells.clear();
     artwork.wells.push_back (layout::modelKey (0).getUnion (layout::modelKey (4)).expanded (8.0f));

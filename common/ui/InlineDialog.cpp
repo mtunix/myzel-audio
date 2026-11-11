@@ -1,10 +1,10 @@
-#include "ui/InlineDialog.h"
+#include "common/ui/InlineDialog.h"
 
-#include "ui/Drawing.h"
+#include "common/ui/Drawing.h"
 
 #include <melatonin_blur/melatonin_blur.h>
 
-namespace umber::ui
+namespace myzel::ui
 {
 
 namespace
@@ -14,7 +14,7 @@ namespace
     constexpr float cardHeightWithField = 182.0f;
 }
 
-/** A text key for the dialog (primary = ember lit). */
+/** A text key for the dialog (primary = lit in the accent colour). */
 class InlineDialog::DialogButton final : public juce::Button
 {
 public:
@@ -32,8 +32,8 @@ public:
         const auto& pal = Theme::palette();
         const auto area = getLocalBounds().toFloat().reduced (0.5f).translated (0.0f, down ? 0.6f : 0.0f);
 
-        auto top = primary ? (destructive ? pal.accentDeep : pal.accent.darker (0.15f)) : pal.keyTop;
-        auto bottom = primary ? (destructive ? pal.accentDeep.darker (0.4f) : pal.accentDeep) : pal.keyBottom;
+        auto top = primary ? (destructive ? pal.keyTop : pal.primaryTop) : pal.keyTop;
+        auto bottom = primary ? (destructive ? pal.keyBottom : pal.primaryBottom) : pal.keyBottom;
 
         if (highlighted)
         {
@@ -48,13 +48,13 @@ public:
         g.setColour (juce::Colour (0x30ffffff));
         g.drawRoundedRectangle (area.reduced (0.5f), 3.5f, 0.8f);
 
-        g.setColour (primary ? pal.accentCore : pal.keyText);
+        g.setColour (primary ? (destructive ? pal.danger : pal.accentCore) : pal.keyText);
         g.setFont (drawing::tracked (juce::SharedResourcePointer<Fonts>()->legend (11.5f), 0.12f));
         g.drawText (getButtonText().toUpperCase(), area, juce::Justification::centred, false);
 
         if (hasKeyboardFocus (false))
         {
-            g.setColour (pal.focus);
+            g.setColour (pal.focusOnDark);
             g.drawRoundedRectangle (area.expanded (1.5f), 5.5f, 1.2f);
         }
     }
@@ -191,12 +191,12 @@ void InlineDialog::paint (juce::Graphics& g)
     g.strokePath (cardPath, juce::PathStrokeType (1.0f));
 
     auto text = card.reduced (18.0f, 16.0f);
-    g.setColour (pal.legend);
+    g.setColour (pal.headerLegend);
     g.setFont (drawing::tracked (fonts->legend (13.0f), 0.16f));
     g.drawText (options.title.toUpperCase(), text.removeFromTop (20.0f), juce::Justification::centredLeft, true);
 
     text.removeFromTop (6.0f);
-    g.setColour (error.isNotEmpty() ? pal.accent : pal.legendDim);
+    g.setColour (error.isNotEmpty() ? pal.danger : pal.headerLegendDim);
     g.setFont (fonts->label (12.5f));
     g.drawFittedText (error.isNotEmpty() ? error : options.message, text.removeFromTop (36.0f).toNearestInt(),
                       juce::Justification::topLeft, 2);
@@ -225,4 +225,4 @@ bool InlineDialog::keyPressed (const juce::KeyPress& key)
     return false;
 }
 
-} // namespace umber::ui
+} // namespace myzel::ui

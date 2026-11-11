@@ -1,8 +1,8 @@
 #pragma once
 
-#include "ui/Theme.h"
+#include "common/ui/Theme.h"
 
-namespace umber::ui::drawing
+namespace myzel::ui::drawing
 {
 
 /** Physical pixels per logical unit of the graphics context (editor scale x display scale). */
@@ -66,13 +66,16 @@ void drawScrew (juce::Graphics& g, juce::Point<float> centre, float radius, floa
 /** A well cut into the panel: shadowed upper-left wall, lit lower-right lip. */
 void drawRecess (juce::Graphics& g, juce::Rectangle<float> area, float corner, float depth);
 
+/** An engraved line: dark cut, lit lower-right edge. */
+void drawGroove (juce::Graphics& g, juce::Line<float> line);
+
 /** Soft contact shadow below a raised shape (cast towards the lower right). */
 void drawContactShadow (juce::Graphics& g, const juce::Path& shape, float elevation, float strength = 1.0f);
 
 /** Adds monochrome grain (and horizontal brushing when streak > 0) to an ARGB image in place. */
 void addGrain (juce::Image& image, float amount, float streak, juce::uint32 seed);
 
-/** Generic warm radial glow (additive-looking) used for lamps and the ember bloom. */
+/** Soft radial glow (additive-looking) used for lamps. */
 void fillGlow (juce::Graphics& g, juce::Point<float> centre, float radius, juce::Colour colour, float intensity);
 
 /** Maps a value 0..1 to the knob sweep angle (radians, 0 = 12 o'clock, clockwise). */
@@ -87,4 +90,4 @@ inline juce::Point<float> polar (juce::Point<float> centre, float radius, float 
     return { centre.x + radius * std::sin (angle), centre.y - radius * std::cos (angle) };
 }
 
-} // namespace umber::ui::drawing
+} // namespace myzel::ui::drawing

@@ -1,8 +1,8 @@
-#include "ui/ValueBubble.h"
+#include "common/ui/ValueBubble.h"
 
-#include "ui/Drawing.h"
+#include "common/ui/Drawing.h"
 
-namespace umber::ui
+namespace myzel::ui
 {
 
 namespace
@@ -19,11 +19,11 @@ ValueBubble::ValueBubble()
     setAlwaysOnTop (true);
 }
 
-void ValueBubble::show (juce::Point<float> anchor, const juce::String& newText)
+void ValueBubble::show (juce::Point<float> anchor, const juce::String& newText, float minWidth)
 {
     const auto width = juce::GlyphArrangement::getStringWidth (drawing::tracked (fonts->label (textHeight), 0.02f), newText)
                        + 2.0f * padX;
-    const auto bounds = juce::Rectangle<float> (juce::jmax (46.0f, width), height).withCentre (anchor);
+    const auto bounds = juce::Rectangle<float> (juce::jmax (minWidth, width), height).withCentre (anchor);
 
     if (newText != text || bounds.toNearestInt() != getBounds())
     {
@@ -61,4 +61,4 @@ void ValueBubble::paint (juce::Graphics& g)
     g.drawText (text, area, juce::Justification::centred, false);
 }
 
-} // namespace umber::ui
+} // namespace myzel::ui

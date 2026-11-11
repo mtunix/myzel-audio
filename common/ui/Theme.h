@@ -32,10 +32,11 @@ struct Palette
 
     // Knobs
     juce::Colour skirtLight, skirtDark, capLight, capDark, pointer;
-    juce::Colour tickMajor, tickMinor;
+    juce::Colour tickMajor, tickMinor, tickShadow;
 
     // The accent: lamps and active states only
     juce::Colour accentCore, accent, accentDeep;
+    juce::Colour primaryTop, primaryBottom;   // the primary key of a dialog (Save)
     juce::Colour lensOff, lensOffRim;
 
     // Feedback
@@ -43,6 +44,29 @@ struct Palette
 
     // Caution: Bypass
     juce::Colour caution, cautionDeep;
+};
+
+/**
+    How a plugin's panel is finished: light, grain and ink tuned to its colours (a pale panel
+    needs less light and more vignette than a dark one). Used by the panel artwork and the knobs.
+*/
+struct PanelLook
+{
+    float lightFalloff = 0.10f;               // alpha of the broad top-left light
+    float grain = 0.026f;                     // powder-coat grain amount
+    juce::uint32 grainSeed = 0xc1c0;
+    float vignetteEdge = 0.16f, vignetteMid = 0.03f;
+
+    // Scale ticks: printed ink casts a soft shadow below, an engraved cut shows a dark edge above.
+    juce::Point<float> tickShadowOffset { 0.3f, 0.8f };
+    float tickShadowMajor = 1.4f, tickShadowMinor = 1.0f;
+
+    // The faint ring around a knob while it is hovered or dragged (alpha of the legend colour).
+    float hoverRing = 0.22f, hoverRingDrag = 0.40f;
+
+    // Square keys: centre of the LED and of the label, from the key's top. 0 follows the key's
+    // height (LED at 27 %, label right under it), which suits short keys; tall keys set both.
+    float keyLedY = 0.0f, keyLabelY = 0.0f;
 };
 
 /** Dimensions shared by every plugin, in base (100 %) editor coordinates. */
@@ -91,6 +115,9 @@ struct Theme
 {
     /** The plugin's kit colours. Each plugin defines this in its ui/Theme.cpp. */
     static const Palette& palette() noexcept;
+
+    /** The plugin's panel finish. Each plugin defines this in its ui/Theme.cpp. */
+    static const PanelLook& look() noexcept;
 };
 
 } // namespace myzel::ui

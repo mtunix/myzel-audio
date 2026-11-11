@@ -1,8 +1,8 @@
 #pragma once
 
-#include "ui/Theme.h"
+#include "common/ui/Theme.h"
 
-namespace umber::ui
+namespace myzel::ui
 {
 
 /** Small key on the header rail: a text label or a procedurally drawn icon. */
@@ -15,7 +15,8 @@ public:
         previous,
         next,
         undo,
-        redo
+        redo,
+        settings
     };
 
     HeaderButton (const juce::String& text, Icon icon = Icon::none);
@@ -29,6 +30,13 @@ public:
 
     void setLabel (const juce::String& newText);
 
+    /** Lit in the caution colour instead of the accent: for states that take the sound away (Bypass). */
+    void setCaution (bool shouldUseCaution);
+
+    /** One half of a segmented pair (PANEL | STUDIO): square inner corners. */
+    enum class Segment { none, left, right };
+    void setSegment (Segment s) { segment = s; repaint(); }
+
     void paintButton (juce::Graphics& g, bool highlighted, bool down) override;
 
 private:
@@ -37,9 +45,10 @@ private:
     juce::SharedResourcePointer<Fonts> fonts;
     juce::String text;
     Icon icon;
-    bool showsCaret = false, lit = false;
+    bool showsCaret = false, lit = false, caution = false;
+    Segment segment = Segment::none;
 
     JUCE_DECLARE_NON_COPYABLE_WITH_LEAK_DETECTOR (HeaderButton)
 };
 
-} // namespace umber::ui
+} // namespace myzel::ui

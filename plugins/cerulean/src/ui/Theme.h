@@ -5,8 +5,8 @@
 namespace cerulean::ui
 {
 
-using myzel::ui::Fonts;
-using myzel::ui::Palette;
+// The shared UI kit (theme, knobs, keys, header parts) is used unqualified throughout the UI.
+using namespace myzel::ui;
 
 /**
     Colours of Cerulean's own displays: the tail display and the Advanced drawer. The kit colours

@@ -1,10 +1,10 @@
 #pragma once
 
-#include "ui/Knob.h"
+#include "common/ui/Knob.h"
 
 #include <vector>
 
-namespace cerulean::ui
+namespace myzel::ui
 {
 
 /** Everything the static panel artwork needs to know about the controls sitting on it. */
@@ -23,6 +23,7 @@ struct PanelArtworkSpec
         juce::Rectangle<float> area;
     };
 
+    std::vector<juce::Line<float>> grooves;        // engraved lines between the columns
     std::vector<juce::Rectangle<float>> wells;     // recesses the keys sit in
     std::vector<Legend> legends;                   // small section legends
 };
@@ -37,4 +38,4 @@ void renderPanelArtwork (juce::Graphics& g, juce::Rectangle<float> area, const P
 /** Draws a knob's printed scale (ticks, numerals) and its title. */
 void renderKnobScale (juce::Graphics& g, juce::Point<float> centre, const KnobStyle& style, const Fonts& fonts);
 
-} // namespace cerulean::ui
+} // namespace myzel::ui

@@ -2,13 +2,14 @@
 
 #include "ui/AbCompare.h"
 #include "ui/HeaderBar.h"
-#include "ui/InlineDialog.h"
-#include "ui/Knob.h"
-#include "ui/LampButton.h"
+#include "common/ui/InlineDialog.h"
+#include "common/ui/Knob.h"
+#include "common/ui/LampButton.h"
 #include "ui/NeedleMeter.h"
-#include "ui/PanelArtwork.h"
+#include "common/ui/PanelArtwork.h"
 #include "ui/PresetManager.h"
-#include "ui/ValueBubble.h"
+#include "common/ui/ValueBubble.h"
+#include "ui/Theme.h"
 
 #include <array>
 

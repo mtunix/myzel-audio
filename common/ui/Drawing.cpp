@@ -1,8 +1,8 @@
-#include "ui/Drawing.h"
+#include "common/ui/Drawing.h"
 
 #include <melatonin_blur/melatonin_blur.h>
 
-namespace umber::ui::drawing
+namespace myzel::ui::drawing
 {
 
 juce::Font tracked (juce::Font font, float tracking)
@@ -59,19 +59,31 @@ void drawRecess (juce::Graphics& g, juce::Rectangle<float> area, float corner, f
     juce::Path well;
     well.addRoundedRectangle (area, corner);
 
-    g.setColour (juce::Colour (0x55000000));
+    const auto& pal = Theme::palette();
+
+    g.setGradientFill (juce::ColourGradient (pal.wellFill.darker (0.12f), area.getX(), area.getY(),
+                                             pal.wellFill, area.getX(), area.getBottom(), false));
     g.fillPath (well);
 
-    melatonin::InnerShadow inner (juce::Colour (0xd0000000), juce::roundToInt (depth * 2.2f),
+    melatonin::InnerShadow inner (pal.wellShadow, juce::roundToInt (depth * 2.2f),
                                   { juce::roundToInt (depth * metrics::shadowDx), juce::roundToInt (depth * metrics::shadowDy) });
     inner.render (g, well);
 
-    // The lit lower lip.
+    // The lit lower lip (the panel edge facing the light).
     juce::Path lip;
     lip.addRoundedRectangle (area.expanded (0.6f), corner + 0.6f);
-    g.setGradientFill (juce::ColourGradient (juce::Colour (0x00ffffff), area.getX(), area.getCentreY(),
-                                             juce::Colour (0x2effffff), area.getRight(), area.getBottom(), false));
+    g.setGradientFill (juce::ColourGradient (pal.wellLip.withAlpha (0.0f), area.getX(), area.getCentreY(),
+                                             pal.wellLip, area.getRight(), area.getBottom(), false));
     g.strokePath (lip, juce::PathStrokeType (1.0f));
+}
+
+void drawGroove (juce::Graphics& g, juce::Line<float> line)
+{
+    const auto& pal = Theme::palette();
+    g.setColour (pal.grooveDark);
+    g.drawLine (line, 1.0f);
+    g.setColour (pal.grooveLight);
+    g.drawLine (line.getStartX() + 1.0f, line.getStartY() + 1.0f, line.getEndX() + 1.0f, line.getEndY() + 1.0f, 1.0f);
 }
 
 void drawContactShadow (juce::Graphics& g, const juce::Path& shape, float elevation, float strength)
@@ -137,4 +149,4 @@ void fillGlow (juce::Graphics& g, juce::Point<float> centre, float radius, juce:
     g.fillEllipse (juce::Rectangle<float> (radius * 2.0f, radius * 2.0f).withCentre (centre));
 }
 
-} // namespace umber::ui::drawing
+} // namespace myzel::ui::drawing

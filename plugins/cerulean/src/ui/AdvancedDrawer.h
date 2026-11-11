@@ -1,7 +1,8 @@
 #pragma once
 
-#include "ui/Knob.h"
-#include "ui/LampButton.h"
+#include "common/ui/Knob.h"
+#include "common/ui/LampButton.h"
+#include "ui/Theme.h"
 
 #include <juce_audio_processors/juce_audio_processors.h>
 

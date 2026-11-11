@@ -1,8 +1,8 @@
-#include "ui/HeaderButton.h"
+#include "common/ui/HeaderButton.h"
 
-#include "ui/Drawing.h"
+#include "common/ui/Drawing.h"
 
-namespace umber::ui
+namespace myzel::ui
 {
 
 HeaderButton::HeaderButton (const juce::String& t, Icon i)
@@ -33,6 +33,15 @@ void HeaderButton::setLabel (const juce::String& newText)
     }
 }
 
+void HeaderButton::setCaution (bool shouldUseCaution)
+{
+    if (caution != shouldUseCaution)
+    {
+        caution = shouldUseCaution;
+        repaint();
+    }
+}
+
 void HeaderButton::paintButton (juce::Graphics& g, bool highlighted, bool down)
 {
     const auto& pal = Theme::palette();
@@ -41,13 +50,26 @@ void HeaderButton::paintButton (juce::Graphics& g, bool highlighted, bool down)
     const auto enabled = isEnabled();
 
     // Key: dark rubberised cap on the rail, lit from the top-left.
-    juce::Path key;
-    key.addRoundedRectangle (area.translated (0.0f, down ? 0.6f : 0.0f), corner);
+    const auto pressed = area.translated (0.0f, down ? 0.6f : 0.0f);
+    const auto leftRound = segment != Segment::right, rightRound = segment != Segment::left;
+    juce::Path key, shadow;
+    key.addRoundedRectangle (pressed.getX(), pressed.getY(), pressed.getWidth(), pressed.getHeight(), corner, corner,
+                             leftRound, rightRound, leftRound, rightRound);
+    shadow.addRoundedRectangle (area.getX() + 0.4f, area.getY() + 1.2f, area.getWidth(), area.getHeight(), corner, corner,
+                                leftRound, rightRound, leftRound, rightRound);
 
     g.setColour (juce::Colour (0x70000000));
-    g.fillRoundedRectangle (area.translated (0.4f, 1.2f), corner);
+    g.fillPath (shadow);
 
+    const auto amber = lit && caution;
     auto top = pal.keyTop.darker (0.35f), bottom = pal.keyBottom.darker (0.45f);
+
+    if (amber)
+    {
+        // A warm cap, so a bypassed plugin is obvious from across the room.
+        top = pal.cautionDeep.brighter (0.25f);
+        bottom = pal.cautionDeep;
+    }
 
     if (highlighted && enabled)
     {
@@ -62,7 +84,7 @@ void HeaderButton::paintButton (juce::Graphics& g, bool highlighted, bool down)
                                              juce::Colour (0x00ffffff), area.getX(), area.getY() + 8.0f, false));
     g.strokePath (key, juce::PathStrokeType (0.9f));
 
-    auto ink = lit ? pal.displayText : pal.keyText;
+    auto ink = amber ? pal.caution.brighter (0.5f) : (lit ? pal.displayText : pal.keyText);
 
     if (! enabled)
         ink = ink.withMultipliedAlpha (0.32f);
@@ -71,10 +93,14 @@ void HeaderButton::paintButton (juce::Graphics& g, bool highlighted, bool down)
 
     if (lit)
     {
-        // A thin amber bar under the legend.
-        g.setColour (pal.accent.withAlpha (0.9f));
-        g.fillRoundedRectangle (juce::Rectangle<float> (area.getWidth() * 0.45f, 1.6f)
-                                    .withCentre ({ area.getCentreX(), area.getBottom() - 3.0f }), 0.8f);
+        // A thin bar under the legend: accent when on, caution for caution states.
+        const auto bar = juce::Rectangle<float> (area.getWidth() * (amber ? 0.62f : 0.45f), 1.6f)
+                             .withCentre ({ area.getCentreX(), area.getBottom() - 3.0f });
+        g.setColour ((amber ? pal.caution : pal.accent).withAlpha (0.9f));
+        g.fillRoundedRectangle (bar, 0.8f);
+
+        if (amber)
+            drawing::fillGlow (g, bar.getCentre(), bar.getWidth() * 0.6f, pal.caution, 0.35f);
     }
 
     auto content = area.reduced (6.0f, 0.0f);
@@ -103,7 +129,7 @@ void HeaderButton::paintButton (juce::Graphics& g, bool highlighted, bool down)
 
     if (hasKeyboardFocus (false))
     {
-        g.setColour (pal.focus.withAlpha (0.9f));
+        g.setColour (pal.focusOnDark.withAlpha (0.9f));
         g.drawRoundedRectangle (area.expanded (1.5f), corner + 1.5f, 1.2f);
     }
 }
@@ -143,10 +169,26 @@ void HeaderButton::drawIcon (juce::Graphics& g, juce::Rectangle<float> area, juc
             break;
         }
 
+        case Icon::settings:
+        {
+            // A small gear: a ring with eight teeth.
+            const auto r = 4.2f;
+            g.drawEllipse (juce::Rectangle<float> (2.0f * r, 2.0f * r).withCentre (c), 1.5f);
+
+            for (int i = 0; i < 8; ++i)
+            {
+                const auto a = juce::MathConstants<float>::twoPi * (float) i / 8.0f;
+                const auto p0 = drawing::polar (c, r + 0.6f, a), p1 = drawing::polar (c, r + 2.8f, a);
+                g.drawLine ({ p0, p1 }, 2.0f);
+            }
+
+            break;
+        }
+
         case Icon::none:
         default:
             break;
     }
 }
 
-} // namespace umber::ui
+} // namespace myzel::ui

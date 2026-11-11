@@ -1,11 +1,11 @@
 #pragma once
 
-#include "ui/Drawing.h"
+#include "common/ui/Drawing.h"
 
-namespace cerulean::ui
+namespace myzel::ui
 {
 
-/** The ice-blue read-out window in the header showing the preset; clicking opens the preset menu. */
+/** The read-out window in the header showing the preset; clicking opens the preset menu. */
 class PresetDisplay final : public juce::Button
 {
 public:
@@ -31,4 +31,4 @@ private:
     JUCE_DECLARE_NON_COPYABLE_WITH_LEAK_DETECTOR (PresetDisplay)
 };
 
-} // namespace cerulean::ui
+} // namespace myzel::ui

@@ -1,13 +1,12 @@
 #pragma once
 
-#include "ui/Drawing.h"
+#include "common/ui/Drawing.h"
 
-namespace umber::ui
+namespace myzel::ui
 {
 
 /**
-    A console-style key with a thin amber LED bar. Used for the model selector, Slam, Weight
-    and Auto.
+    A console-style key with a thin LED bar in the accent colour, for selectors and switches.
 
     The LED fades towards the toggle state (~80 ms) when tick() is called by the editor's
     frame clock. The key face is cached; only the LED and the label are drawn per frame.
@@ -18,7 +17,8 @@ public:
     enum class Shape
     {
         square,     // horizontal LED above the label
-        wide        // vertical LED left of the label
+        wide,       // vertical LED left of the label
+        compact     // small key, short vertical LED left of a small label (SYNC)
     };
 
     LampButton (const juce::String& label, Shape shape);
@@ -28,8 +28,22 @@ public:
 
     void setKeyBounds (juce::Rectangle<float> keyBounds);
 
-    /** Weight with Low Cut off: the LED is shown dimmed because the control has no effect. */
+    /** The LED and label are shown dimmed because the control has no effect right now. */
     void setDimmed (bool shouldBeDimmed);
+
+    /**
+        Momentary keys (e.g. a hold-to-freeze key) report press and release through onPress
+        instead of toggling. The click that follows a mouse press is swallowed: see
+        takeMomentaryClick(). Keyboard and accessibility clicks still arrive as onClick.
+    */
+    void setMomentary (bool shouldBeMomentary);
+    bool isMomentary() const noexcept { return momentary; }
+    std::function<void (bool isDown)> onPress;
+
+    /** True (once) if the current click is the release of a momentary mouse press. */
+    bool takeMomentaryClick() noexcept { return std::exchange (pressedMomentarily, false); }
+
+    void setLabel (const juce::String& newLabel);
 
     /** Advances the LED fade; returns true while something is still moving. */
     bool tick (float dtSeconds);
@@ -39,6 +53,7 @@ public:
 
     void paintButton (juce::Graphics& g, bool highlighted, bool down) override;
     void resized() override;
+    void buttonStateChanged() override;
 
 private:
     void renderKey (juce::Graphics& g, juce::Rectangle<float> key) const;
@@ -51,6 +66,7 @@ private:
     juce::String label;
     Shape shape;
     bool dimmed = false;
+    bool momentary = false, momentaryDown = false, pressedMomentarily = false;
 
     float level = 0.0f;      // smoothed LED level 0..1
     float shownLevel = -1.0f;
@@ -60,4 +76,4 @@ private:
     JUCE_DECLARE_NON_COPYABLE_WITH_LEAK_DETECTOR (LampButton)
 };
 
-} // namespace umber::ui
+} // namespace myzel::ui

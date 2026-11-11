@@ -1,13 +1,13 @@
 #pragma once
 
-#include "ui/Drawing.h"
-#include "ui/ValueBubble.h"
+#include "common/ui/Drawing.h"
+#include "common/ui/ValueBubble.h"
 
 #include <juce_audio_processors/juce_audio_processors.h>
 
 #include <vector>
 
-namespace umber::ui
+namespace myzel::ui
 {
 
 /** A labelled position on a knob's printed scale (position is the normalised parameter value). */
@@ -22,12 +22,15 @@ struct KnobStyle
 {
     juce::String title;
     float diameter = 76.0f;
-    bool hero = false;          // Drive: larger cap, finer knurling, major/minor ticks
+    bool hero = false;          // the main knob: larger cap, finer knurling, major/minor ticks
     bool centreDetent = false;  // Tone: sticky at 12 o'clock
     int ticks = 11;             // evenly spaced scale ticks (0 = none)
+    std::vector<float> tickPositions;   // explicit ticks instead (e.g. a log scale); minor where not marked
     std::vector<ScaleMark> marks;
     float dragPixelsForFullRange = 260.0f;
     int steps = 0;              // > 1: a rotary switch with this many positions (wheel/arrows move one step)
+    float legendOffset = 0.0f;  // centre -> printed title distance (0 = the panel default for the size)
+    juce::String badge;         // a small boxed letter printed before the title (e.g. Param A/B)
 };
 
 /**
@@ -47,12 +50,33 @@ public:
     ~Knob() override;
 
     const KnobStyle& getStyle() const noexcept     { return style; }
-    juce::RangedAudioParameter& getParameter() noexcept { return parameter; }
+    juce::RangedAudioParameter& getParameter() const noexcept { return *parameter; }
+
+    /**
+        Binds the knob to another parameter (e.g. Pre-delay ms <-> note value when Sync is on).
+        Any open gesture is closed first. The artwork is kept; only the behaviour changes.
+    */
+    void rebind (juce::RangedAudioParameter& newParameter, KnobStyle newStyle);
+
+    /** Changes the style (legend, marks, detent) but keeps the binding. */
+    void setStyle (KnobStyle newStyle);
+
+    /** Overrides the value text (read-out, accessibility). Receives the normalised value. */
+    void setValueToText (std::function<juce::String (float value01)> fn);
+
+    /** Re-reads the text (e.g. after a mode change relabels the value). */
+    void refreshValueText();
+
+    /** Point of the title relative to the knob centre, as printed on the panel. */
+    static float defaultLegendOffset (const KnobStyle& s) noexcept;
 
     void setValueBubble (ValueBubble* bubble) noexcept { valueBubble = bubble; }
 
-    /** Where the value read-out goes (the printed title), in parent coordinates. */
+    /** The printed title, in parent coordinates. */
     juce::Point<float> getLegendAnchor() const;
+
+    /** Where a large knob's value read-out goes (above the knob), in parent coordinates. */
+    juce::Point<float> getValueAnchor() const;
 
     /** Test hook: show the hover state as if the mouse were over the knob. */
     void setHoverForSnapshot (bool shouldHover);
@@ -93,6 +117,7 @@ private:
     void updateBubble();
 
     float radius() const noexcept { return style.diameter * 0.5f; }
+    bool isSmall() const noexcept { return style.diameter < 56.0f; }
     juce::Point<float> centre() const noexcept { return getLocalBounds().toFloat().getCentre(); }
 
     void renderBody (juce::Graphics& g, juce::Rectangle<float> area) const;
@@ -100,10 +125,11 @@ private:
     void drawKnurling (juce::Graphics& g, float angle) const;
     void drawPointer (juce::Graphics& g, float angle) const;
 
-    juce::RangedAudioParameter& parameter;
+    juce::RangedAudioParameter* parameter;
     juce::UndoManager* undoManager;
     KnobStyle style;
-    juce::ParameterAttachment attachment;
+    std::unique_ptr<juce::ParameterAttachment> attachment;
+    std::function<juce::String (float)> valueToText;
 
     ValueBubble* valueBubble = nullptr;
     std::unique_ptr<juce::TextEditor> textEntry;
@@ -119,4 +145,4 @@ private:
     JUCE_DECLARE_NON_COPYABLE_WITH_LEAK_DETECTOR (Knob)
 };
 
-} // namespace umber::ui
+} // namespace myzel::ui

@@ -1,6 +1,6 @@
-#include "ui/PanelArtwork.h"
+#include "common/ui/PanelArtwork.h"
 
-namespace umber::ui
+namespace myzel::ui
 {
 
 namespace
@@ -8,6 +8,7 @@ namespace
     void renderGround (juce::Graphics& g, juce::Rectangle<float> area, float scale)
     {
         const auto& pal = Theme::palette();
+        const auto& look = Theme::look();
 
         // Render the ground into a physical-resolution image so the grain is per device pixel.
         juce::Image ground (juce::Image::ARGB,
@@ -24,33 +25,31 @@ namespace
             sg.fillRect (local);
 
             // Broad light falloff from the top-left light.
-            juce::ColourGradient falloff (pal.panelGrain.withAlpha (0.035f), local.getX(), local.getY(),
+            juce::ColourGradient falloff (pal.panelGrain.withAlpha (look.lightFalloff), local.getX(), local.getY(),
                                           pal.panelGrain.withAlpha (0.0f), local.getWidth() * 0.65f, local.getHeight() * 0.9f, true);
             sg.setGradientFill (falloff);
             sg.fillRect (local);
         }
 
         // Fine matte powder-coat texture: grain only, no brushing.
-        drawing::addGrain (ground, 0.022f, 0.0f, 0x5c0c);
+        drawing::addGrain (ground, look.grain, 0.0f, look.grainSeed);
         g.drawImageTransformed (ground, juce::AffineTransform::scale (1.0f / scale).translated (area.getX(), area.getY()));
     }
 
     void renderVignette (juce::Graphics& g, juce::Rectangle<float> area)
     {
         const auto& pal = Theme::palette();
+        const auto& look = Theme::look();
         juce::ColourGradient v (pal.panelVignette.withAlpha (0.0f), area.getCentreX(), area.getCentreY() - 20.0f,
-                                pal.panelVignette.withAlpha (0.22f), area.getX() - 30.0f, area.getBottom() + 40.0f, true);
-        v.addColour (0.6, pal.panelVignette.withAlpha (0.05f));
+                                pal.panelVignette.withAlpha (look.vignetteEdge), area.getX() - 30.0f, area.getBottom() + 40.0f, true);
+        v.addColour (0.6, pal.panelVignette.withAlpha (look.vignetteMid));
         g.setGradientFill (v);
         g.fillRect (area);
     }
 
     void renderGroove (juce::Graphics& g, juce::Line<float> line)
     {
-        g.setColour (juce::Colour (0x80000000));
-        g.drawLine (line, 1.0f);
-        g.setColour (Theme::palette().legendLight.withMultipliedAlpha (2.2f));
-        g.drawLine (line.getStartX() + 1.0f, line.getStartY() + 1.0f, line.getEndX() + 1.0f, line.getEndY() + 1.0f, 1.0f);
+        drawing::drawGroove (g, line);
     }
 }
 
@@ -60,20 +59,41 @@ void renderKnobScale (juce::Graphics& g, juce::Point<float> c, const KnobStyle& 
     const auto r = style.diameter * 0.5f;
     const auto tickInner = r + (style.hero ? 8.0f : 6.0f);
 
-    // Evenly spaced ticks (major ticks every other one on the hero scale).
-    for (int i = 0; i < style.ticks; ++i)
+    auto drawTick = [&] (float t, bool major)
     {
-        const auto t = style.ticks > 1 ? (float) i / (float) (style.ticks - 1) : 0.0f;
         const auto a = drawing::knobAngle (t);
-        const auto major = ! style.hero || (i % 2 == 0);
         const auto len = style.hero ? (major ? 8.0f : 4.5f) : 4.5f;
         const auto p0 = drawing::polar (c, tickInner, a);
         const auto p1 = drawing::polar (c, tickInner + len, a);
 
-        g.setColour (juce::Colour (0x60000000));
-        g.drawLine ({ p0.translated (0.0f, -0.6f), p1.translated (0.0f, -0.6f) }, major ? 1.6f : 1.2f);
+        const auto& look = Theme::look();
+        g.setColour (pal.tickShadow);
+        g.drawLine ({ p0 + look.tickShadowOffset, p1 + look.tickShadowOffset }, major ? look.tickShadowMajor : look.tickShadowMinor);
         g.setColour (major ? pal.tickMajor : pal.tickMinor);
         g.drawLine ({ p0, p1 }, major ? (style.hero ? 1.6f : 1.3f) : 1.0f);
+    };
+
+    if (! style.tickPositions.empty())
+    {
+        // Explicit ticks (e.g. a log scale): major where a mark is printed, minor elsewhere.
+        for (const auto t : style.tickPositions)
+        {
+            auto major = ! style.hero;
+
+            for (const auto& m : style.marks)
+                major = major || std::abs (m.position - t) < 1.0e-3f;
+
+            drawTick (t, major);
+        }
+    }
+    else
+    {
+        // Evenly spaced ticks (major ticks every other one on the hero scale).
+        for (int i = 0; i < style.ticks; ++i)
+        {
+            const auto t = style.ticks > 1 ? (float) i / (float) (style.ticks - 1) : 0.0f;
+            drawTick (t, ! style.hero || (i % 2 == 0));
+        }
     }
 
     // Labelled positions.
@@ -92,7 +112,13 @@ void renderKnobScale (juce::Graphics& g, juce::Point<float> c, const KnobStyle& 
         juce::Rectangle<float> box;
         auto just = juce::Justification::centred;
 
-        if (style.hero || std::abs (s) < 0.35f)
+        if (! style.hero && std::cos (a) < -0.5f)
+        {
+            // End labels below the knob sit centred under their tick, so neighbouring knobs'
+            // labels never run into each other.
+            box = juce::Rectangle<float> (w, h).withCentre (drawing::polar (c, textRadius + 5.0f, a));
+        }
+        else if (style.hero || std::abs (s) < 0.35f)
             box = juce::Rectangle<float> (w, h).withCentre (p);
         else if (s < 0.0f)
         {
@@ -109,11 +135,31 @@ void renderKnobScale (juce::Graphics& g, juce::Point<float> c, const KnobStyle& 
     }
 
     // Title.
-    const auto titleFont = drawing::tracked (fonts.legend (style.hero ? 14.0f : metrics::legendSize),
-                                             style.hero ? 0.30f : metrics::legendTracking);
-    const auto titleY = c.y + r + (style.hero ? 38.0f : 22.0f);
-    drawing::drawLegend (g, style.title, titleFont, juce::Rectangle<float> (180.0f, 20.0f).withCentre ({ c.x, titleY }),
-                         juce::Justification::centred, pal.legend);
+    if (style.title.isNotEmpty())
+    {
+        const auto titleFont = drawing::tracked (fonts.legend (style.hero ? 14.0f : metrics::legendSize),
+                                                 style.hero ? 0.30f : metrics::legendTracking);
+        const auto titleY = c.y + Knob::defaultLegendOffset (style);
+        auto titleX = c.x;
+
+        if (style.badge.isNotEmpty())
+        {
+            // A boxed letter before the title (e.g. Param A / B), the pair centred under the knob.
+            constexpr float box = 13.0f, gap = 6.0f;
+            const auto tw = juce::GlyphArrangement::getStringWidth (titleFont, style.title);
+            titleX = c.x + (box + gap) * 0.5f;
+            const auto badge = juce::Rectangle<float> (box, box).withCentre ({ titleX - tw * 0.5f - gap - box * 0.5f, titleY });
+            g.setColour (pal.legendLight);
+            g.drawRoundedRectangle (badge.translated (0.0f, 0.8f), 2.5f, 1.0f);
+            g.setColour (pal.legendDim);
+            g.drawRoundedRectangle (badge, 2.5f, 1.0f);
+            g.setFont (fonts.legend (9.0f));
+            g.drawText (style.badge, badge.translated (0.2f, 0.0f), juce::Justification::centred, false);
+        }
+
+        drawing::drawLegend (g, style.title, titleFont, juce::Rectangle<float> (180.0f, 20.0f).withCentre ({ titleX, titleY }),
+                             juce::Justification::centred, pal.legend);
+    }
 }
 
 void renderPanelArtwork (juce::Graphics& g, juce::Rectangle<float> area, const PanelArtworkSpec& spec,
@@ -129,8 +175,8 @@ void renderPanelArtwork (juce::Graphics& g, juce::Rectangle<float> area, const P
     g.drawHorizontalLine ((int) area.getY(), area.getX(), area.getRight());
 
     // Column grooves.
-    renderGroove (g, { layout::leftGrooveX, area.getY() + 30.0f, layout::leftGrooveX, 440.0f });
-    renderGroove (g, { layout::rightGrooveX, area.getY() + 30.0f, layout::rightGrooveX, 440.0f });
+    for (const auto& groove : spec.grooves)
+        renderGroove (g, groove);
 
     for (const auto& well : spec.wells)
         drawing::drawRecess (g, well, 7.0f, 3.0f);
@@ -159,4 +205,4 @@ void renderPanelArtwork (juce::Graphics& g, juce::Rectangle<float> area, const P
     drawing::drawScrew (g, { area.getRight() - inset, area.getBottom() - inset }, 5.0f, -0.4f);
 }
 
-} // namespace umber::ui
+} // namespace myzel::ui

@@ -1,6 +1,7 @@
 #pragma once
 
-#include "ui/Drawing.h"
+#include "common/ui/Drawing.h"
+#include "ui/Theme.h"
 #include "ui/VuBallistics.h"
 
 namespace umber::ui

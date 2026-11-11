@@ -1,6 +1,6 @@
-#include "ui/Knob.h"
+#include "common/ui/Knob.h"
 
-namespace umber::ui
+namespace myzel::ui
 {
 
 namespace
@@ -48,29 +48,77 @@ namespace
 
 //==============================================================================
 Knob::Knob (juce::RangedAudioParameter& p, juce::UndoManager* um, KnobStyle s)
-    : parameter (p),
+    : parameter (&p),
       undoManager (um),
-      style (std::move (s)),
-      attachment (p, [this] (float v) { valueChanged (v); }, um)
+      style (std::move (s))
 {
     setWantsKeyboardFocus (true);
     setMouseClickGrabsKeyboardFocus (true);
     setTitle (style.title);
-    setDescription (parameter.getName (64));
     setMouseCursor (juce::MouseCursor::PointingHandCursor);
-    attachment.sendInitialUpdate();
+    rebind (p, style);
 }
 
 Knob::~Knob()
 {
     if (dragging || inWheelGesture)
-        attachment.endGesture();
+        attachment->endGesture();
+}
+
+void Knob::rebind (juce::RangedAudioParameter& newParameter, KnobStyle newStyle)
+{
+    if (attachment != nullptr)
+    {
+        if (dragging || inWheelGesture)
+        {
+            stopTimer();
+            attachment->endGesture();
+        }
+
+        dragging = inWheelGesture = false;
+        textEntry.reset();
+    }
+
+    parameter = &newParameter;
+    style = std::move (newStyle);
+    setTitle (style.title);
+    setDescription (parameter->getName (64));
+    value01 = -1.0f;
+    attachment = std::make_unique<juce::ParameterAttachment> (newParameter, [this] (float v) { valueChanged (v); }, undoManager);
+    attachment->sendInitialUpdate();
+}
+
+void Knob::setStyle (KnobStyle newStyle)
+{
+    style = std::move (newStyle);
+    setTitle (style.title);
+    repaint();
+}
+
+void Knob::setValueToText (std::function<juce::String (float)> fn)
+{
+    valueToText = std::move (fn);
+    refreshValueText();
+}
+
+void Knob::refreshValueText()
+{
+    if (valueBubble != nullptr && (hovering || dragging))
+        updateBubble();
+}
+
+float Knob::defaultLegendOffset (const KnobStyle& s) noexcept
+{
+    if (s.legendOffset > 0.0f)
+        return s.legendOffset;
+
+    return s.hero ? s.diameter * 0.5f + 38.0f : s.diameter * 0.5f + 22.0f;
 }
 
 //==============================================================================
 void Knob::valueChanged (float denormalised)
 {
-    const auto v = parameter.convertTo0to1 (denormalised);
+    const auto v = parameter->convertTo0to1 (denormalised);
 
     if (std::abs (v - value01) > 1.0e-6f)
     {
@@ -84,19 +132,24 @@ void Knob::valueChanged (float denormalised)
 
 juce::String Knob::getValueText() const
 {
-    return parameter.getText (value01, 32);
+    return valueToText != nullptr ? valueToText (value01) : parameter->getText (value01, 32);
 }
 
 void Knob::setNormalisedValueAsGesture (float newValue01)
 {
     finishWheelGesture();
-    attachment.setValueAsCompleteGesture (parameter.convertFrom0to1 (juce::jlimit (0.0f, 1.0f, newValue01)));
+    attachment->setValueAsCompleteGesture (parameter->convertFrom0to1 (juce::jlimit (0.0f, 1.0f, newValue01)));
 }
 
 juce::Point<float> Knob::getLegendAnchor() const
 {
-    const auto offset = style.hero ? radius() + 38.0f : radius() + 22.0f;
-    return getBounds().toFloat().getCentre().translated (0.0f, offset);
+    return getBounds().toFloat().getCentre().translated (0.0f, defaultLegendOffset (style));
+}
+
+juce::Point<float> Knob::getValueAnchor() const
+{
+    // Just above the knob, over the top scale mark.
+    return getBounds().toFloat().getCentre().translated (0.0f, -(radius() + (style.hero ? 30.0f : 15.0f)));
 }
 
 void Knob::setHoverForSnapshot (bool shouldHover)
@@ -112,7 +165,11 @@ void Knob::updateBubble()
         return;
 
     if (hovering || dragging || textEntry != nullptr)
-        valueBubble->show (getLegendAnchor(), getValueText());
+    {
+        // Drawer knobs: over their printed value. Panel knobs: over the top of the scale, so the
+        // name under the knob stays readable.
+        valueBubble->show (isSmall() ? getLegendAnchor() : getValueAnchor(), getValueText(), 46.0f);
+    }
     else
         valueBubble->hide();
 }
@@ -151,12 +208,12 @@ float Knob::valueFromRaw (float raw) const noexcept
 
 void Knob::beginEdit()
 {
-    attachment.beginGesture();
+    attachment->beginGesture();
 }
 
 void Knob::endEdit()
 {
-    attachment.endGesture();
+    attachment->endGesture();
 }
 
 void Knob::finishWheelGesture()
@@ -173,13 +230,13 @@ void Knob::finishWheelGesture()
 void Knob::setFromDrag (float newRaw)
 {
     dragRaw = juce::jlimit (0.0f, 1.0f, newRaw);
-    attachment.setValueAsPartOfGesture (parameter.convertFrom0to1 (valueFromRaw (dragRaw)));
+    attachment->setValueAsPartOfGesture (parameter->convertFrom0to1 (valueFromRaw (dragRaw)));
 }
 
 void Knob::nudge (float amount)
 {
     finishWheelGesture();
-    attachment.setValueAsCompleteGesture (parameter.convertFrom0to1 (valueFromRaw (rawFromValue (value01) + amount)));
+    attachment->setValueAsCompleteGesture (parameter->convertFrom0to1 (valueFromRaw (rawFromValue (value01) + amount)));
 }
 
 //==============================================================================
@@ -253,7 +310,7 @@ void Knob::mouseDoubleClick (const juce::MouseEvent& e)
         return;
 
     finishWheelGesture();
-    attachment.setValueAsCompleteGesture (parameter.convertFrom0to1 (parameter.getDefaultValue()));
+    attachment->setValueAsCompleteGesture (parameter->convertFrom0to1 (parameter->getDefaultValue()));
 }
 
 void Knob::mouseWheelMove (const juce::MouseEvent& e, const juce::MouseWheelDetails& wheel)
@@ -322,19 +379,19 @@ bool Knob::keyPressed (const juce::KeyPress& key)
 
     if (code == juce::KeyPress::homeKey)
     {
-        attachment.setValueAsCompleteGesture (parameter.convertFrom0to1 (0.0f));
+        attachment->setValueAsCompleteGesture (parameter->convertFrom0to1 (0.0f));
         return true;
     }
 
     if (code == juce::KeyPress::endKey)
     {
-        attachment.setValueAsCompleteGesture (parameter.convertFrom0to1 (1.0f));
+        attachment->setValueAsCompleteGesture (parameter->convertFrom0to1 (1.0f));
         return true;
     }
 
     if (code == juce::KeyPress::deleteKey || code == juce::KeyPress::backspaceKey)
     {
-        attachment.setValueAsCompleteGesture (parameter.convertFrom0to1 (parameter.getDefaultValue()));
+        attachment->setValueAsCompleteGesture (parameter->convertFrom0to1 (parameter->getDefaultValue()));
         return true;
     }
 
@@ -393,7 +450,7 @@ void Knob::showTextEntry()
         const auto text = safeThis->textEntry->getText().trim();
 
         if (text.isNotEmpty())
-            safeThis->setNormalisedValueAsGesture (safeThis->parameter.getValueForText (text));
+            safeThis->setNormalisedValueAsGesture (safeThis->parameter->getValueForText (text));
 
         juce::MessageManager::callAsync ([safeThis]
         {
@@ -447,14 +504,14 @@ void Knob::paint (juce::Graphics& g)
     {
         g.setColour (juce::Colours::white.withAlpha (dragging ? 0.06f : 0.035f));
         g.fillEllipse (juce::Rectangle<float> (r * 1.6f, r * 1.6f).withCentre (c));
-        g.setColour (pal.legend.withAlpha (dragging ? 0.30f : 0.16f));
+        g.setColour (pal.legend.withAlpha (dragging ? Theme::look().hoverRingDrag : Theme::look().hoverRing));
         g.drawEllipse (juce::Rectangle<float> (r * 2.0f + 5.0f, r * 2.0f + 5.0f).withCentre (c), 1.0f);
     }
 
     if (keyboardFocused && hasKeyboardFocus (true))
     {
-        g.setColour (pal.focus.withAlpha (0.9f));
-        g.drawEllipse (juce::Rectangle<float> (r * 2.0f + 9.0f, r * 2.0f + 9.0f).withCentre (c), 1.6f);
+        g.setColour (pal.focus);
+        g.drawEllipse (juce::Rectangle<float> (r * 2.0f + 9.0f, r * 2.0f + 9.0f).withCentre (c), 1.8f);
     }
 }
 
@@ -467,7 +524,7 @@ void Knob::renderBody (juce::Graphics& g, juce::Rectangle<float> area) const
 
     juce::Path outline;
     outline.addEllipse (disc);
-    drawing::drawContactShadow (g, outline, style.hero ? 9.0f : 5.5f);
+    drawing::drawContactShadow (g, outline, style.hero ? 9.0f : (isSmall() ? 3.5f : 5.5f));
 
     // Knurled grip band: a black bakelite cylinder lit from the top-left.
     g.setGradientFill (juce::ColourGradient (pal.skirtLight.brighter (0.25f), disc.getX() + r * 0.3f, disc.getY() + r * 0.3f,
@@ -565,7 +622,7 @@ void Knob::drawKnurling (juce::Graphics& g, float angle) const
 {
     const auto c = centre();
     const auto r = radius();
-    const auto ridges = style.hero ? 64 : 40;
+    const auto ridges = style.hero ? 64 : (isSmall() ? 28 : 40);
     const auto inner = r * 0.84f, outer = r * 0.985f;
     const auto width = juce::jmax (0.8f, r * (style.hero ? 0.022f : 0.032f));
 
@@ -596,7 +653,7 @@ void Knob::drawPointer (juce::Graphics& g, float angle) const
 
     const auto start = r * (style.hero ? 0.56f : 0.46f);
     const auto end = r * 0.76f;
-    const auto width = juce::jmax (2.2f, r * (style.hero ? 0.05f : 0.075f));
+    const auto width = juce::jmax (isSmall() ? 1.8f : 2.2f, r * (style.hero ? 0.05f : 0.075f));
 
     const auto p0 = drawing::polar (c, start, angle);
     const auto p1 = drawing::polar (c, end, angle);
@@ -625,4 +682,4 @@ std::unique_ptr<juce::AccessibilityHandler> Knob::createAccessibilityHandler()
     return std::make_unique<KnobAccessibilityHandler> (*this);
 }
 
-} // namespace umber::ui
+} // namespace myzel::ui

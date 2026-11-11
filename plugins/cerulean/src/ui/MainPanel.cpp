@@ -384,6 +384,10 @@ void MainPanel::buildControls()
                 "Sync: Echo's repeat time as a note value. The Echo Time knob then picks the note.");
     echoSyncKey.setVisible (false);   // only with Echo selected (updateMeanings)
 
+    artwork.grooves.clear();
+    artwork.grooves.push_back ({ layout::leftGrooveX, layout::grooveTop, layout::leftGrooveX, layout::grooveBottom });
+    artwork.grooves.push_back ({ layout::rightGrooveX, layout::grooveTop, layout::rightGrooveX, layout::grooveBottom });
+
     // Recesses the keys sit in.
     artwork.wells.clear();
     artwork.wells.push_back (layout::algorithmKey (0).getUnion (layout::algorithmKey (9)).expanded (8.0f));

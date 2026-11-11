@@ -1,6 +1,7 @@
 #pragma once
 
-#include "ui/Knob.h"
+#include "common/ui/Knob.h"
+#include "ui/Theme.h"
 
 namespace cerulean::ui
 {

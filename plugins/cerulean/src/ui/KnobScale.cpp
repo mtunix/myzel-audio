@@ -1,6 +1,7 @@
 #include "ui/KnobScale.h"
 
-#include "ui/PanelArtwork.h"
+#include "common/ui/PanelArtwork.h"
+#include "ui/Theme.h"
 
 namespace cerulean::ui
 {

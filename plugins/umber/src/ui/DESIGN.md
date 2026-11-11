@@ -92,7 +92,7 @@ The header name is 12.5 px with +0.26 tracking. Values and menus use Medium 12.5
 | Alt-, Ctrl-/Cmd- or right-click / Return | type a value (parsed by the parameter's own text function) | — |
 | Wheel | ±6 % per notch. One host gesture per burst (closed after 350 ms). | — |
 | Arrows / PgUp / PgDn / Home / End | step 2 % / 10 % / min / max | Space/Return toggles |
-| Hover | shows the value in place of the legend, plus a faint off-white ring | brighter key face |
+| Hover | shows the value above the knob (over the top of its scale, so the name stays readable), plus a faint ring | brighter key face |
 
 - Tone, Emphasis and Bias have a **centre detent**: dragging through 12 o'clock sticks at the
   centre for a short distance.
@@ -163,19 +163,18 @@ UI state keys (`UiState.h`, never rename): `scale`, `meterMode`, `presetName`, `
 
 | File | Role |
 |---|---|
-| `Theme` | palette, metrics, layout grid, fonts |
-| `Drawing` | cached layers, legends, screws, recesses, shadows, grain, glow |
-| `PanelArtwork` | the static front panel |
-| `Knob` | rotary control and its accessibility |
-| `LampButton` | LED keys (model, Slam, Weight, Auto) |
+| `Theme` | Umber's colours (kit palette, VU meter extras), panel finish, layout grid |
 | `NeedleMeter`, `VuBallistics` | VU meter |
-| `ValueBubble` | in-place value read-out |
-| `HeaderBar`, `HeaderButton`, `PresetDisplay` | header rail |
+| `HeaderBar` | header rail |
 | `PresetManager`, `FactoryPresets`, `AbCompare` | preset and compare logic |
 | `InlineDialog` | in-editor save/rename/delete prompts |
 | `UmberLookAndFeel` | popup menus, tooltips, text fields |
 | `MainPanel` | composition, frame clock |
 | `UmberEditor` | scaling host |
+
+From the shared kit (`common/ui/`): `Drawing` (cached layers, legends, screws, recesses, shadows,
+grain, glow), `PanelArtwork` (the static front panel), `Knob`, `LampButton`, `ValueBubble`,
+`HeaderButton`, `PresetDisplay`, `InlineDialog`.
 
 ## Snapshot tool
 

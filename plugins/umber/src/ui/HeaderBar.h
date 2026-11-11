@@ -1,9 +1,10 @@
 #pragma once
 
 #include "ui/AbCompare.h"
-#include "ui/HeaderButton.h"
-#include "ui/InlineDialog.h"
-#include "ui/PresetDisplay.h"
+#include "common/ui/HeaderButton.h"
+#include "common/ui/InlineDialog.h"
+#include "common/ui/PresetDisplay.h"
+#include "ui/Theme.h"
 #include "ui/PresetManager.h"
 
 namespace umber

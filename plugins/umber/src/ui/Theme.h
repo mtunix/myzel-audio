@@ -5,8 +5,8 @@
 namespace umber::ui
 {
 
-using myzel::ui::Fonts;
-using myzel::ui::Palette;
+// The shared UI kit (theme, knobs, keys, header parts) is used unqualified throughout the UI.
+using namespace myzel::ui;
 
 /**
     Colours of Umber's own displays: the VU meter. The kit colours (a matte dark umber panel with
@@ -39,6 +39,7 @@ namespace layout
     // Columns: left shaping (x 28..428), centre drive (444..772), right meter/output (788..1060),
     // separated by grooves at x 436 and 780.
     inline constexpr float leftGrooveX = 436.0f, rightGrooveX = 780.0f;
+    inline constexpr float grooveTop = 80.0f, grooveBottom = 440.0f;
     inline constexpr float centreX = 608.0f;
 
     inline R header()        { return { 0.0f, 0.0f, (float) metrics::baseWidth, metrics::headerHeight }; }

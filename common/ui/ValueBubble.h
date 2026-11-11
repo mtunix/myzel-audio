@@ -1,8 +1,8 @@
 #pragma once
 
-#include "ui/Theme.h"
+#include "common/ui/Theme.h"
 
-namespace cerulean::ui
+namespace myzel::ui
 {
 
 /**
@@ -29,4 +29,4 @@ private:
     JUCE_DECLARE_NON_COPYABLE_WITH_LEAK_DETECTOR (ValueBubble)
 };
 
-} // namespace cerulean::ui
+} // namespace myzel::ui

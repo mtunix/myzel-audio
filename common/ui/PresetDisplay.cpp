@@ -1,6 +1,6 @@
-#include "ui/PresetDisplay.h"
+#include "common/ui/PresetDisplay.h"
 
-namespace cerulean::ui
+namespace myzel::ui
 {
 
 PresetDisplay::PresetDisplay()
@@ -105,7 +105,7 @@ void PresetDisplay::paintButton (juce::Graphics& g, bool highlighted, bool)
     g.setColour (highlighted ? pal.displayText.brighter (0.15f) : pal.displayText);
     g.drawText (name, textArea.withTrimmedRight (dotSpace), juce::Justification::centredLeft, true);
 
-    // Unsaved changes: a small lit ice dot after the name.
+    // Unsaved changes: a small lit accent dot after the name.
     if (modified)
     {
         const auto shownWidth = juce::jmin (nameWidth, textArea.getWidth() - dotSpace);
@@ -122,4 +122,4 @@ void PresetDisplay::paintButton (juce::Graphics& g, bool highlighted, bool)
     }
 }
 
-} // namespace cerulean::ui
+} // namespace myzel::ui

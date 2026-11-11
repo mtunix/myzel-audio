@@ -270,19 +270,13 @@ UI state keys (`UiState.h`, never rename): `scale`, `advancedOpen`, `presetName`
 
 | File | Role |
 |---|---|
-| `Theme` | palette, metrics, layout grid, fonts |
-| `Drawing` | cached layers, legends, screws, recesses, grooves, shadows, grain, glow |
-| `PanelArtwork` | the static front panel, knob scales and titles |
-| `Knob` | rotary control (re-bindable, custom read-out) and its accessibility |
+| `Theme` | Cerulean's colours (kit palette, tail display and drawer extras, studio palette), panel finish, layout grid |
 | `KnobScale` | crossfading legend for knobs whose meaning changes (Pre-delay, Param A/B) |
-| `LampButton` | LED keys (algorithms, Freeze incl. momentary, Duck, Wet, Sync, Trails) |
 | `TailModel`, `TailDisplay` | the decay picture and the live wet level |
 | `AdvancedDrawer`, `AdvancedTab` | the Advanced deck below the panel, and ADVANCED on the bottom edge |
-| `ValueBubble` | in-place value read-out |
 | `LockBadge` | the padlock after MIX while the mix lock is on (both views) |
-| `HeaderBar`, `HeaderButton`, `PresetDisplay` | header rail |
+| `HeaderBar` | header rail |
 | `PresetManager`, `FactoryPresets`, `AbCompare` | preset and compare logic |
-| `InlineDialog` | in-editor save/rename/delete prompts |
 | `CeruleanLookAndFeel` | popup menus, tooltips, text fields |
 | `PanelController` | the editor's model, shared by both views: presets, A/B, parameter meanings (`Meanings`), value texts, tail shape, the stored view |
 | `ViewMode` | `panel` / `studio`, and the default-view preference (`Cerulean.settings`) |
@@ -294,6 +288,11 @@ UI state keys (`UiState.h`, never rename): `scale`, `advancedOpen`, `presetName`
 | `StudioMeters` | input / wet / output meters and duck gain reduction |
 | `StudioPanel` | the studio view: composition, frame clock, meaning changes |
 | `CeruleanEditor` | scaling host; owns the `PanelController` and swaps the views |
+
+From the shared kit (`common/ui/`): `Drawing` (cached layers, legends, screws, recesses, grooves,
+shadows, grain, glow), `PanelArtwork` (the static front panel, knob scales and titles), `Knob`
+(re-bindable, custom read-out), `LampButton` (incl. momentary keys), `ValueBubble`, `HeaderButton`,
+`PresetDisplay`, `InlineDialog`.
 
 ## Two views
 

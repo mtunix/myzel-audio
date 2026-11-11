@@ -43,9 +43,9 @@ namespace
         p.tickMinor       = C (0x80e3d8c9);
 
         // The only accent: amber, used for lamps and active states.
-        p.accentCore       = C (0xffffe2b8);
-        p.accent           = C (0xffffa040);
-        p.accentDeep       = C (0xffc8601c);
+        p.accentCore      = C (0xffffe2b8);
+        p.accent          = C (0xffffa040);
+        p.accentDeep      = C (0xffc8601c);
         p.lensOff         = C (0xff2a1a10);
         p.lensOffRim      = C (0xff0f0a07);
 
@@ -53,6 +53,22 @@ namespace
         p.bubbleFill      = C (0xf01a120d);
         p.bubbleEdge      = C (0x40ffffff);
         p.overlayDim      = C (0x9a0a0604);
+
+        // Engraved grooves (a dark cut with a faint lit edge) and flat dark wells.
+        p.grooveDark      = C (0x80000000);
+        p.grooveLight     = C (0x16ffffff);
+        p.wellFill        = C (0x55000000);
+        p.wellShadow      = C (0xd0000000);
+        p.wellLip         = C (0x2effffff);
+        p.tickShadow      = C (0x60000000);
+
+        // The header and its dialogs use the panel's ink; a lit amber key is the primary action.
+        p.headerLegend    = p.legend;
+        p.headerLegendDim = p.legendDim;
+        p.focusOnDark     = p.focus;
+        p.danger          = p.accent;
+        p.primaryTop      = p.accent.darker (0.15f);
+        p.primaryBottom   = p.accentDeep;
         return p;
     }
 
@@ -67,6 +83,24 @@ namespace
         p.needle          = C (0xff1a1714);
         p.meterBezel      = C (0xff1a120d);
         return p;
+    }
+
+    PanelLook makeLook()
+    {
+        PanelLook l;
+        l.lightFalloff     = 0.035f;
+        l.grain            = 0.022f;
+        l.grainSeed        = 0x5c0c;
+        l.vignetteEdge     = 0.22f;
+        l.vignetteMid      = 0.05f;
+        l.tickShadowOffset = { 0.0f, -0.6f };   // engraved: the cut's dark upper edge
+        l.tickShadowMajor  = 1.6f;
+        l.tickShadowMinor  = 1.2f;
+        l.hoverRing        = 0.16f;
+        l.hoverRingDrag    = 0.30f;
+        l.keyLedY          = 16.0f;   // tall (58 px) keys: the label sits low, under a gap
+        l.keyLabelY        = 38.0f;
+        return l;
     }
 }
 
@@ -83,4 +117,10 @@ const myzel::ui::Palette& myzel::ui::Theme::palette() noexcept
 {
     static const Palette palette = umber::ui::makePalette();
     return palette;
+}
+
+const myzel::ui::PanelLook& myzel::ui::Theme::look() noexcept
+{
+    static const PanelLook look = umber::ui::makeLook();
+    return look;
 }

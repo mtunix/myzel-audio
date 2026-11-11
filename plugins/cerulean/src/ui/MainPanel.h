@@ -2,14 +2,15 @@
 
 #include "ui/AdvancedDrawer.h"
 #include "ui/EditorView.h"
-#include "ui/Knob.h"
+#include "common/ui/Knob.h"
 #include "ui/KnobScale.h"
-#include "ui/LampButton.h"
+#include "common/ui/LampButton.h"
 #include "ui/LockBadge.h"
-#include "ui/PanelArtwork.h"
+#include "common/ui/PanelArtwork.h"
 #include "ui/PanelController.h"
 #include "ui/TailDisplay.h"
-#include "ui/ValueBubble.h"
+#include "common/ui/ValueBubble.h"
+#include "ui/Theme.h"
 
 #include <array>
 

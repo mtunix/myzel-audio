@@ -55,9 +55,9 @@ namespace
         p.tickMinor       = C (0x99c3d6e6);
 
         // The only accent: ice blue, for lamps and active states.
-        p.accentCore         = C (0xffeefaff);
-        p.accent             = C (0xff8fd6ff);
-        p.accentDeep         = C (0xff2f8fd0);
+        p.accentCore      = C (0xffeefaff);
+        p.accent          = C (0xff8fd6ff);
+        p.accentDeep      = C (0xff2f8fd0);
         p.lensOff         = C (0xff111b26);
         p.lensOffRim      = C (0xff070c12);
 
@@ -69,6 +69,10 @@ namespace
         p.danger          = C (0xffff9d8f);   // destructive dialog actions and errors only
         p.caution         = C (0xfff0b45a);   // Bypass: amber, never used for "on"
         p.cautionDeep     = C (0xff4a3a26);
+
+        p.tickShadow      = p.legendLight;
+        p.primaryTop      = p.accentDeep;
+        p.primaryBottom   = p.accentDeep.darker (0.35f);
         return p;
     }
 
@@ -91,6 +95,22 @@ namespace
         p.drawerValue     = C (0xfff4f9fc);
         return p;
     }
+
+    PanelLook makeLook()
+    {
+        PanelLook l;
+        l.lightFalloff     = 0.10f;
+        l.grain            = 0.026f;
+        l.grainSeed        = 0xc1c0;
+        l.vignetteEdge     = 0.16f;
+        l.vignetteMid      = 0.03f;
+        l.tickShadowOffset = { 0.3f, 0.8f };    // printed ink: a soft shadow below
+        l.tickShadowMajor  = 1.4f;
+        l.tickShadowMinor  = 1.0f;
+        l.hoverRing        = 0.22f;
+        l.hoverRingDrag    = 0.40f;
+        return l;
+    }
 }
 
 const Extras& Theme::extras() noexcept
@@ -106,50 +126,50 @@ namespace
         StudioPalette p;
 
         // Flat deep navy: cards a step lighter than the ground, hairline edges.
-        p.background    = C (0xff0b131d);
-        p.card          = C (0xff111c29);
-        p.cardEdge      = C (0xff1f2f42);
-        p.inset         = C (0xff09111a);
-        p.insetEdge     = C (0xff1c2b3c);
-        p.hover         = C (0xff182739);
+        p.background      = C (0xff0b131d);
+        p.card            = C (0xff111c29);
+        p.cardEdge        = C (0xff1f2f42);
+        p.inset           = C (0xff09111a);
+        p.insetEdge       = C (0xff1c2b3c);
+        p.hover           = C (0xff182739);
 
         // Text on a card: text 14:1, textDim 7.1:1, title 5.9:1, textFaint 5.3:1 (all >= WCAG AA).
-        p.text          = C (0xffe4e9ee);
-        p.textDim       = C (0xff98a9ba);
-        p.textFaint     = C (0xff7f91a4);
-        p.title         = C (0xff8899ac);
+        p.text            = C (0xffe4e9ee);
+        p.textDim         = C (0xff98a9ba);
+        p.textFaint       = C (0xff7f91a4);
+        p.title           = C (0xff8899ac);
 
-        p.track         = C (0xff203044);
-        p.trackFill     = C (0xff2f8fd0);
-        p.trackFillEdge = C (0xff8fd6ff);
-        p.marker        = C (0xff4f6378);
-        p.chipOff       = C (0xff1d2b3b);
-        p.chipOffText   = C (0xff98a9ba);
+        p.track           = C (0xff203044);
+        p.trackFill       = C (0xff2f8fd0);
+        p.trackFillEdge   = C (0xff8fd6ff);
+        p.marker          = C (0xff4f6378);
+        p.chipOff         = C (0xff1d2b3b);
+        p.chipOffText     = C (0xff98a9ba);
 
         // The accent: the panel's ice blue.
-        p.accent        = C (0xff8fd6ff);
-        p.accentDeep    = C (0xff1f73ad);   // lit chips: white text 5.1:1
-        p.accentSoft    = C (0x332f8fd0);
-        p.accentText    = C (0xff0b1620);
+        p.accent          = C (0xff8fd6ff);
+        p.accentDeep      = C (0xff1f73ad);   // lit chips: white text 5.1:1
+        p.accentSoft      = C (0x332f8fd0);
+        p.accentText      = C (0xff0b1620);
 
         // Graph: three bands with distinct hue *and* line style; ice is the mid band (the Decay setting).
-        p.grid          = C (0x1fa9c8e6);
-        p.gridText      = C (0xff7b8c9f);
-        p.bandLow       = C (0xffe2a65c);
-        p.bandMid       = C (0xff8fd6ff);
-        p.bandHigh      = C (0xffc3a6ff);
-        p.early         = C (0x99b9cfe2);
-        p.liveFill      = C (0x553f9be6);
-        p.liveLine      = C (0xcc9fd8ff);
+        p.grid            = C (0x1fa9c8e6);
+        p.gridText        = C (0xff7b8c9f);
+        p.bandLow         = C (0xffe2a65c);
+        p.bandMid         = C (0xff8fd6ff);
+        p.bandHigh        = C (0xffc3a6ff);
+        p.early           = C (0x99b9cfe2);
+        p.liveFill        = C (0x553f9be6);
+        p.liveLine        = C (0xcc9fd8ff);
 
-        p.meterBack     = C (0xff08101a);
-        p.meterFill     = C (0xff5fb6ea);
-        p.meterHot      = C (0xffe8c46a);
-        p.meterClip     = C (0xffff7a6b);
-        p.meterPeak     = C (0xffd9eefc);
-        p.reduction     = C (0xffe2a65c);
-        p.caution       = C (0xfff0b45a);   // Bypass badge and dimmed wet meter
-        p.cautionDeep   = C (0xff4a3a26);
+        p.meterBack       = C (0xff08101a);
+        p.meterFill       = C (0xff5fb6ea);
+        p.meterHot        = C (0xffe8c46a);
+        p.meterClip       = C (0xffff7a6b);
+        p.meterPeak       = C (0xffd9eefc);
+        p.reduction       = C (0xffe2a65c);
+        p.caution         = C (0xfff0b45a);   // Bypass badge and dimmed wet meter
+        p.cautionDeep     = C (0xff4a3a26);
         return p;
     }
 }
@@ -167,4 +187,10 @@ const myzel::ui::Palette& myzel::ui::Theme::palette() noexcept
 {
     static const Palette palette = cerulean::ui::makePalette();
     return palette;
+}
+
+const myzel::ui::PanelLook& myzel::ui::Theme::look() noexcept
+{
+    static const PanelLook look = cerulean::ui::makeLook();
+    return look;
 }

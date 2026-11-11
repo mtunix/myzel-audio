@@ -83,4 +83,4 @@ build/plugins/umber/tools/UmberCalibrate_artefacts/Release/UmberCalibrate   # re
 ## Licence
 
 AGPLv3. See [LICENSE](../../LICENSE). Built with [JUCE](https://juce.com) under its AGPLv3 option. The
-bundled Inter font is under the SIL Open Font License (see `src/ui/assets/`).
+bundled Inter font is under the SIL Open Font License (see `common/ui/assets/fonts/`).

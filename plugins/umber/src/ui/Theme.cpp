@@ -1,6 +1,6 @@
 #include "ui/Theme.h"
 
-#include <UmberAssets.h>
+#include <MyzelAssets.h>
 
 namespace umber::ui
 {
@@ -78,12 +78,12 @@ const Palette& Theme::palette() noexcept
 
 //==============================================================================
 Fonts::Fonts()
-    : medium   (juce::Typeface::createSystemTypefaceFor (UmberAssets::InterMedium_otf,
-                                                         (size_t) UmberAssets::InterMedium_otfSize)),
-      semiBold (juce::Typeface::createSystemTypefaceFor (UmberAssets::InterSemiBold_otf,
-                                                         (size_t) UmberAssets::InterSemiBold_otfSize)),
-      black    (juce::Typeface::createSystemTypefaceFor (UmberAssets::InterDisplayBlack_otf,
-                                                         (size_t) UmberAssets::InterDisplayBlack_otfSize))
+    : medium   (juce::Typeface::createSystemTypefaceFor (MyzelAssets::InterMedium_otf,
+                                                         (size_t) MyzelAssets::InterMedium_otfSize)),
+      semiBold (juce::Typeface::createSystemTypefaceFor (MyzelAssets::InterSemiBold_otf,
+                                                         (size_t) MyzelAssets::InterSemiBold_otfSize)),
+      black    (juce::Typeface::createSystemTypefaceFor (MyzelAssets::InterDisplayBlack_otf,
+                                                         (size_t) MyzelAssets::InterDisplayBlack_otfSize))
 {
 }
 

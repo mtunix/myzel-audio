@@ -4,7 +4,7 @@
 
 #include <vector>
 
-namespace cerulean
+namespace myzel::plugin
 {
 
 /**
@@ -48,4 +48,4 @@ private:
     JUCE_DECLARE_NON_COPYABLE_WITH_LEAK_DETECTOR (ParameterUndoRecorder)
 };
 
-} // namespace cerulean
+} // namespace myzel::plugin

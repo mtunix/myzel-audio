@@ -1,6 +1,6 @@
-#include "plugin/ParameterUndo.h"
+#include "common/plugin/ParameterUndo.h"
 
-namespace cerulean
+namespace myzel::plugin
 {
 
 class ParameterUndoRecorder::ParameterChange final : public juce::UndoableAction
@@ -94,4 +94,4 @@ void ParameterUndoRecorder::apply (int index, float normalisedValue)
     parameter->endChangeGesture();
 }
 
-} // namespace cerulean
+} // namespace myzel::plugin

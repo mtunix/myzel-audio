@@ -18,30 +18,24 @@ target_sources(UmberDsp INTERFACE ${UMBER_DSP_SOURCES})
 target_include_directories(UmberDsp INTERFACE ${CMAKE_CURRENT_SOURCE_DIR}/src)
 target_link_libraries(UmberDsp INTERFACE
     UmberJuceConfig
+    MyzelDsp
     juce::juce_dsp
     chowdsp::chowdsp_wdf)
 
 # Shared plugin code (processor + DSP + UI) ------------------------------------
-# UI-owned hook: src/ui/ui.cmake may define a UmberUiAssets target
-# (e.g. juce_add_binary_data for fonts), which is linked automatically.
-include(${CMAKE_CURRENT_SOURCE_DIR}/src/ui/ui.cmake OPTIONAL)
-
 file(GLOB_RECURSE UMBER_UI_SOURCES CONFIGURE_DEPENDS ${CMAKE_CURRENT_SOURCE_DIR}/src/ui/*.cpp)
 
 add_library(UmberShared INTERFACE)
 target_sources(UmberShared INTERFACE
     src/plugin/Parameters.cpp
-    src/plugin/ParameterUndo.cpp
     src/plugin/PluginProcessor.cpp
     ${UMBER_UI_SOURCES})
 target_link_libraries(UmberShared INTERFACE
     UmberDsp
+    MyzelPlugin
+    MyzelUiAssets
     juce::juce_audio_utils
     melatonin_blur)
-
-if(TARGET UmberUiAssets)
-    target_link_libraries(UmberShared INTERFACE UmberUiAssets)
-endif()
 
 # Plugin ----------------------------------------------------------------------
 juce_add_plugin(Umber

@@ -24,6 +24,7 @@ target_sources(CeruleanDsp INTERFACE ${CERULEAN_DSP_SOURCES})
 target_include_directories(CeruleanDsp INTERFACE ${CMAKE_CURRENT_SOURCE_DIR}/src)
 target_link_libraries(CeruleanDsp INTERFACE
     CeruleanJuceConfig
+    MyzelDsp
     juce::juce_dsp)
 
 if(CERULEAN_ONLY_HALL)
@@ -31,26 +32,19 @@ if(CERULEAN_ONLY_HALL)
 endif()
 
 # Shared plugin code (processor + DSP + UI) ------------------------------------
-# UI-owned hook: src/ui/ui.cmake may define a CeruleanUiAssets target
-# (e.g. juce_add_binary_data for fonts), which is linked automatically.
-include(${CMAKE_CURRENT_SOURCE_DIR}/src/ui/ui.cmake OPTIONAL)
-
 file(GLOB_RECURSE CERULEAN_UI_SOURCES CONFIGURE_DEPENDS ${CMAKE_CURRENT_SOURCE_DIR}/src/ui/*.cpp)
 
 add_library(CeruleanShared INTERFACE)
 target_sources(CeruleanShared INTERFACE
     src/plugin/Parameters.cpp
-    src/plugin/ParameterUndo.cpp
     src/plugin/PluginProcessor.cpp
     ${CERULEAN_UI_SOURCES})
 target_link_libraries(CeruleanShared INTERFACE
     CeruleanDsp
+    MyzelPlugin
+    MyzelUiAssets
     juce::juce_audio_utils
     melatonin_blur)
-
-if(TARGET CeruleanUiAssets)
-    target_link_libraries(CeruleanShared INTERFACE CeruleanUiAssets)
-endif()
 
 # Plugin ----------------------------------------------------------------------
 juce_add_plugin(Cerulean

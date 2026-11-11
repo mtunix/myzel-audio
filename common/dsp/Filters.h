@@ -4,7 +4,7 @@
 #include <cmath>
 #include <numbers>
 
-namespace cerulean::dsp
+namespace myzel::dsp
 {
 
 /**
@@ -159,4 +159,4 @@ private:
     double G = 0.0, s = 0.0, high = 1.0, low = 1.0;
 };
 
-} // namespace cerulean::dsp
+} // namespace myzel::dsp

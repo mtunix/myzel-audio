@@ -1,7 +1,7 @@
 #pragma once
 
 #include "dsp/chain/ReverbChain.h"
-#include "plugin/ParameterUndo.h"
+#include "common/plugin/ParameterUndo.h"
 #include "plugin/Parameters.h"
 
 #include <juce_audio_processors/juce_audio_processors.h>
@@ -146,7 +146,7 @@ private:
     juce::UndoManager undoManager;
     juce::AudioProcessorValueTreeState apvts;
     ParameterRefs params;
-    ParameterUndoRecorder undoRecorder { *this, undoManager, { params::bypass, params::freeze, params::bpm } };
+    myzel::plugin::ParameterUndoRecorder undoRecorder { *this, undoManager, { params::bypass, params::freeze, params::bpm } };
     dsp::ReverbChain chain;
     MeterValues meters;
     std::atomic<uint32_t> presetGeneration { 0 };

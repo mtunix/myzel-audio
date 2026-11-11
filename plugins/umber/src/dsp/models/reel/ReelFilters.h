@@ -11,7 +11,7 @@ namespace umber::dsp::reel
 /**
     Linear building blocks for the Reel record / playback networks (double precision).
 
-    These mirror the shared TPT filters in dsp/common/Filters.h but additionally expose
+    These mirror the shared TPT filters in common/dsp/Filters.h but additionally expose
     (a) their exact digital frequency response, used to normalise the model's small-signal
     gain analytically, and (b) a cheap denormal flush, so the model stays fast during long
     silences even when the host does not enable flush-to-zero.

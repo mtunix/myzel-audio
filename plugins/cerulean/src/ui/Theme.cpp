@@ -1,7 +1,7 @@
 #include "ui/Theme.h"
 #include "ui/StudioTheme.h"
 
-#include <CeruleanAssets.h>
+#include <MyzelAssets.h>
 
 namespace cerulean::ui
 {
@@ -166,12 +166,12 @@ const StudioPalette& Theme::studio() noexcept
 
 //==============================================================================
 Fonts::Fonts()
-    : medium   (juce::Typeface::createSystemTypefaceFor (CeruleanAssets::InterMedium_otf,
-                                                         (size_t) CeruleanAssets::InterMedium_otfSize)),
-      semiBold (juce::Typeface::createSystemTypefaceFor (CeruleanAssets::InterSemiBold_otf,
-                                                         (size_t) CeruleanAssets::InterSemiBold_otfSize)),
-      black    (juce::Typeface::createSystemTypefaceFor (CeruleanAssets::InterDisplayBlack_otf,
-                                                         (size_t) CeruleanAssets::InterDisplayBlack_otfSize))
+    : medium   (juce::Typeface::createSystemTypefaceFor (MyzelAssets::InterMedium_otf,
+                                                         (size_t) MyzelAssets::InterMedium_otfSize)),
+      semiBold (juce::Typeface::createSystemTypefaceFor (MyzelAssets::InterSemiBold_otf,
+                                                         (size_t) MyzelAssets::InterSemiBold_otfSize)),
+      black    (juce::Typeface::createSystemTypefaceFor (MyzelAssets::InterDisplayBlack_otf,
+                                                         (size_t) MyzelAssets::InterDisplayBlack_otfSize))
 {
 }
 

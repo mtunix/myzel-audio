@@ -1,7 +1,7 @@
 # Umber UI design
 
 Everything on screen is drawn in code (`src/ui`). No bitmap art is used. The only bundled asset is
-the Inter typeface (SIL OFL 1.1, `assets/fonts/OFL.txt`).
+the Inter typeface (SIL OFL 1.1, `common/ui/assets/fonts/OFL.txt`).
 
 ![Umber](../../docs/screenshots/02-valve-slam-hot.png)
 

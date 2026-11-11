@@ -1,13 +1,18 @@
 #include "dsp/chain/SaturatorChain.h"
 
 #include "dsp/chain/AutoGain.h"
-#include "dsp/common/Filters.h"
+#include "common/dsp/Filters.h"
 #include "dsp/models/ModelFactory.h"
 
 #include <juce_dsp/juce_dsp.h>
 
 namespace umber::dsp
 {
+
+using myzel::dsp::DcBlocker;
+using myzel::dsp::EmphasisShelf;
+using myzel::dsp::TiltEq;
+using myzel::dsp::TptSvf;
 
 namespace
 {

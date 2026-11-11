@@ -13,6 +13,7 @@ from CI, unsigned.
 ```
 CMakeLists.txt      builds every plugin; dependencies (CPM) and shared compile settings live here
 plugins/<name>/     one directory per plugin: source, tests, tools, docs, presets
+common/             code shared by every plugin: UI kit, plugin infrastructure, DSP blocks
 tools/              pluginval.sh and package.sh, shared by all plugins
 cmake/CPM.cmake
 ```

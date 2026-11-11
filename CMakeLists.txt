@@ -105,6 +105,9 @@ if(MYZEL_ENABLE_LTO)
     target_link_libraries(MyzelJuceConfig INTERFACE juce::juce_recommended_lto_flags)
 endif()
 
+# Shared code -----------------------------------------------------------------
+add_subdirectory(common)
+
 # Plugins ---------------------------------------------------------------------
 foreach(plugin IN LISTS MYZEL_PLUGINS)
     add_subdirectory(plugins/${plugin})

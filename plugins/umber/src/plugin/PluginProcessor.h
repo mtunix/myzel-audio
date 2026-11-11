@@ -1,7 +1,7 @@
 #pragma once
 
 #include "dsp/chain/SaturatorChain.h"
-#include "plugin/ParameterUndo.h"
+#include "common/plugin/ParameterUndo.h"
 #include "plugin/Parameters.h"
 
 #include <juce_audio_processors/juce_audio_processors.h>
@@ -89,7 +89,7 @@ private:
     juce::UndoManager undoManager;
     juce::AudioProcessorValueTreeState apvts;
     ParameterRefs params;
-    ParameterUndoRecorder undoRecorder { *this, undoManager, { params::bypass, params::delta } };
+    myzel::plugin::ParameterUndoRecorder undoRecorder { *this, undoManager, { params::bypass, params::delta } };
     dsp::SaturatorChain chain;
     MeterValues meters;
 

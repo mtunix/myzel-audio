@@ -2,6 +2,7 @@
 
 #include "dsp/chain/ReverbChain.h"
 #include "common/plugin/ParameterUndo.h"
+#include "common/plugin/PresetManager.h"
 #include "plugin/Parameters.h"
 
 #include <juce_audio_processors/juce_audio_processors.h>
@@ -9,11 +10,6 @@
 #include <atomic>
 #include <memory>
 #include <vector>
-
-namespace cerulean::ui
-{
-class PresetManager;
-}
 
 namespace cerulean
 {
@@ -42,6 +38,7 @@ struct MeterValues
 };
 
 class CeruleanProcessor final : public juce::AudioProcessor,
+                                public myzel::plugin::PresetHost,
                                 private juce::AsyncUpdater
 {
 public:
@@ -95,34 +92,37 @@ public:
 
     juce::AudioProcessorParameter* getBypassParameter() const override { return params.bypass; }
 
-    juce::AudioProcessorValueTreeState& getState() noexcept { return apvts; }
+    juce::AudioProcessorValueTreeState& getState() noexcept override { return apvts; }
     MeterValues& getMeters() noexcept { return meters; }
 
     /** Factory and user presets (message thread only). Lives here so host program changes
         work while the editor is closed. */
-    ui::PresetManager& getPresets() noexcept { return *presets; }
+    myzel::plugin::PresetManager& getPresets() noexcept { return *presets; }
 
     /** Called by the preset manager when the current preset changes: moves the host program. */
-    void currentPresetChanged (const juce::String& name, bool isUser);
+    void currentPresetChanged (const juce::String& name, bool isUser) override;
 
     /** Called by the preset manager when the mix lock changes (programs read it off-thread). */
-    void mixLockChanged (bool isLocked) noexcept { mixLocked.store (isLocked, std::memory_order_relaxed); }
+    void mixLockChanged (bool isLocked) override { mixLocked.store (isLocked, std::memory_order_relaxed); }
 
     /** Carries out requests that arrived off the message thread (program changes) right now
         instead of on the next message loop turn. Tests. */
     void processPendingRequests() { handleUpdateNowIfNeeded(); }
 
     /** Undo history of user edits only (see ParameterUndoRecorder). Message thread only. */
-    juce::UndoManager& getUndoManager() noexcept { return undoManager; }
+    juce::UndoManager& getUndoManager() noexcept override { return undoManager; }
 
     /** Non-parameter UI state (e.g. editor scale) persisted with the session. */
-    juce::ValueTree getUiState() { return apvts.state.getOrCreateChildWithName ("UI", nullptr); }
+    juce::ValueTree getUiState() override { return apvts.state.getOrCreateChildWithName ("UI", nullptr); }
 
     /**
         Call after a preset (or A/B slot) has been applied: the audio thread then moves the input
         to a fresh engine instance and lets the old sound ring out (Trails), like a pedal.
     */
     void notifyPresetLoaded() noexcept { presetGeneration.fetch_add (1, std::memory_order_release); }
+
+    /** Like a pedal: the new sound starts in a fresh engine and the old one rings out (Trails). */
+    void presetApplied() override { notifyPresetLoaded(); }
 
     /** The current chain settings as the audio thread would read them (tests, tools). */
     dsp::ChainSettings readSettings (double hostBpm = 0.0) const noexcept;
@@ -151,7 +151,7 @@ private:
     MeterValues meters;
     std::atomic<uint32_t> presetGeneration { 0 };
 
-    std::unique_ptr<ui::PresetManager> presets;
+    std::unique_ptr<myzel::plugin::PresetManager> presets;
     std::vector<Program> programs;              // fixed at construction (read from any thread)
     std::vector<juce::RangedAudioParameter*> soundParams;
     std::atomic<int> currentProgram { 0 };

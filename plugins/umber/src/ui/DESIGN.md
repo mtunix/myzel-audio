@@ -166,7 +166,7 @@ UI state keys (`UiState.h`, never rename): `scale`, `meterMode`, `presetName`, `
 | `Theme` | Umber's colours (kit palette, VU meter extras), panel finish, layout grid |
 | `NeedleMeter`, `VuBallistics` | VU meter |
 | `HeaderBar` | header rail |
-| `PresetManager`, `FactoryPresets`, `AbCompare` | preset and compare logic |
+| `FactoryPresets` | the factory presets and Umber's preset format (`presetFormat()`); the preset and A/B logic is shared (`common/plugin/`: `PresetManager`, `AbCompare`) |
 | `InlineDialog` | in-editor save/rename/delete prompts |
 | `UmberLookAndFeel` | popup menus, tooltips, text fields |
 | `MainPanel` | composition, frame clock |

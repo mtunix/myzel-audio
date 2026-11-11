@@ -1,5 +1,7 @@
 #include "ui/FactoryPresets.h"
 
+#include "plugin/Parameters.h"
+
 namespace cerulean::ui
 {
 
@@ -144,6 +146,53 @@ namespace
 std::span<const FactoryPreset> factoryPresets()
 {
     return presets;
+}
+
+myzel::plugin::PresetFormat presetFormat()
+{
+    myzel::plugin::PresetFormat format;
+    format.pluginName = "Cerulean";
+    format.presetType = "CeruleanPreset";
+    format.version = 1;
+    format.parameterIds = params::soundParameterIds();
+    format.lockableIds = { params::mix, params::wetOnly };
+
+    for (const auto& p : factoryPresets())
+    {
+        auto flag = [] (bool b) { return b ? 1.0f : 0.0f; };
+
+        myzel::plugin::FactorySnapshot s { p.name, p.category, {} };
+        s.values.set (params::algorithm, p.algorithm);
+        s.values.set (params::decay, p.decay);
+        s.values.set (params::preDelay, p.preDelay);
+        s.values.set (params::size, p.size);
+        s.values.set (params::mod, p.mod);
+        s.values.set (params::tone, p.tone);
+        s.values.set (params::paramA, p.paramA);
+        s.values.set (params::paramB, p.paramB);
+        s.values.set (params::mix, p.mix);
+        s.values.set (params::output, p.output);
+        s.values.set (params::duck, flag (p.duck));
+        s.values.set (params::wetOnly, flag (p.wetOnly));
+
+        s.values.set (params::lowEnd, p.lowEnd);
+        s.values.set (params::diffusion, p.diffusion);
+        s.values.set (params::modRate, p.modRate);
+        s.values.set (params::width, p.width);
+        s.values.set (params::inLowCut, p.inLowCut);
+        s.values.set (params::inHighCut, p.inHighCut);
+        s.values.set (params::duckAmount, p.duckAmount);
+        s.values.set (params::duckThreshold, p.duckThreshold);
+        s.values.set (params::duckRelease, p.duckRelease);
+        s.values.set (params::preDelaySync, flag (p.preDelaySync));
+        s.values.set (params::preDelayNote, p.preDelayNote);
+        s.values.set (params::echoSync, flag (p.echoSync));
+        s.values.set (params::echoNote, p.echoNote);
+        s.values.set (params::trails, flag (p.trails));
+        format.factory.push_back (std::move (s));
+    }
+
+    return format;
 }
 
 } // namespace cerulean::ui

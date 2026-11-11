@@ -1,5 +1,8 @@
 #pragma once
 
+#include "common/plugin/AbCompare.h"
+#include "common/plugin/PresetManager.h"
+
 #include <juce_core/juce_core.h>
 
 #include <span>
@@ -29,5 +32,11 @@ struct FactoryPreset
 
 /** The built-in presets, compiled into the binary (no external files needed). */
 std::span<const FactoryPreset> factoryPresets();
+
+/** This plugin's presets: parameter list, file format and the factory presets as snapshots. */
+myzel::plugin::PresetFormat presetFormat();
+
+using myzel::plugin::AbCompare;
+using myzel::plugin::PresetManager;
 
 } // namespace umber::ui

@@ -43,7 +43,7 @@ namespace
 
 MainPanel::MainPanel (UmberProcessor& p)
     : processor (p),
-      presets (p),
+      presets (p, presetFormat()),
       ab (p, presets),
       header (p, presets, ab, dialog),
       vblank (this, [this] (double t) { animateFrame (t); })

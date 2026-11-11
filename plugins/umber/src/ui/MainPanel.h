@@ -1,13 +1,12 @@
 #pragma once
 
-#include "ui/AbCompare.h"
+#include "ui/FactoryPresets.h"
 #include "ui/HeaderBar.h"
 #include "common/ui/InlineDialog.h"
 #include "common/ui/Knob.h"
 #include "common/ui/LampButton.h"
 #include "ui/NeedleMeter.h"
 #include "common/ui/PanelArtwork.h"
-#include "ui/PresetManager.h"
 #include "common/ui/ValueBubble.h"
 #include "ui/Theme.h"
 

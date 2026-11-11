@@ -6,7 +6,7 @@
 
 #include "plugin/PluginProcessor.h"
 #include "ui/CeruleanEditor.h"
-#include "ui/PresetManager.h"
+#include "ui/FactoryPresets.h"
 #include "ui/UiState.h"
 
 #include "SelfTest.h"

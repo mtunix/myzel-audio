@@ -1,7 +1,7 @@
 #include "plugin/PluginProcessor.h"
 
 #include "dsp/Mappings.h"
-#include "ui/PresetManager.h"
+#include "ui/FactoryPresets.h"
 
 #if __has_include("ui/CeruleanEditor.h")
  #include "ui/CeruleanEditor.h"
@@ -37,7 +37,7 @@ CeruleanProcessor::CeruleanProcessor()
                           .withOutput ("Output", juce::AudioChannelSet::stereo(), true)),
       apvts (*this, nullptr, stateTreeType, params::createLayout()), // undo: see ParameterUndoRecorder
       params (apvts),
-      presets (std::make_unique<ui::PresetManager> (*this))
+      presets (std::make_unique<myzel::plugin::PresetManager> (*this, ui::presetFormat()))
 {
     // LV2 writes the program names into the bundle at build time: the builder's own user
     // presets must not end up there.

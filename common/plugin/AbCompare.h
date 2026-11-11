@@ -1,8 +1,8 @@
 #pragma once
 
-#include "ui/PresetManager.h"
+#include "common/plugin/PresetManager.h"
 
-namespace umber::ui
+namespace myzel::plugin
 {
 
 /**
@@ -15,7 +15,7 @@ namespace umber::ui
 class AbCompare
 {
 public:
-    AbCompare (UmberProcessor& processor, PresetManager& presets);
+    AbCompare (PresetHost& host, PresetManager& presets);
 
     int getActiveSlot() const;
     void selectSlot (int slot);
@@ -27,10 +27,10 @@ private:
     juce::ValueTree slotTree (int slot) const;
     void storeInto (int slot);
 
-    UmberProcessor& processor;
+    PresetHost& host;
     PresetManager& presets;
 
     JUCE_DECLARE_NON_COPYABLE_WITH_LEAK_DETECTOR (AbCompare)
 };
 
-} // namespace umber::ui
+} // namespace myzel::plugin

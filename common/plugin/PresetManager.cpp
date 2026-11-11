@@ -1,19 +1,21 @@
-#include "ui/PresetManager.h"
+#include "common/plugin/PresetManager.h"
 
-#include "plugin/PluginProcessor.h"
-#include "ui/FactoryPresets.h"
-#include "ui/UiState.h"
+#include "common/plugin/UiState.h"
 
-namespace umber::ui
+namespace myzel::plugin
 {
 
 namespace
 {
-    const juce::Identifier presetType { "UmberPreset" };
     const juce::Identifier nameId { "name" };
     const juce::Identifier categoryId { "category" };
     const juce::Identifier versionId { "presetVersion" };
-    constexpr int presetVersion = 2;   // 2: adds stereoMode, emphasis, bias
+
+    juce::File& directoryOverride()
+    {
+        static juce::File dir;
+        return dir;
+    }
 
     /** Normalised value a snapshot asks for. Parameters a (older) snapshot does not mention go
         to their defaults, so loading it never keeps a stray value from the current sound. */
@@ -22,58 +24,51 @@ namespace
         return snapshot.hasProperty (key) ? p.convertTo0to1 ((float) snapshot.getProperty (key))
                                           : p.getDefaultValue();
     }
-
-    juce::ValueTree snapshotFromFactory (const FactoryPreset& p)
-    {
-        juce::ValueTree t (presetType);
-        t.setProperty (nameId, p.name, nullptr);
-        t.setProperty (categoryId, p.category, nullptr);
-        t.setProperty (params::drive, p.drive, nullptr);
-        t.setProperty (params::model, p.model, nullptr);
-        t.setProperty (params::slam, p.slam ? 1.0f : 0.0f, nullptr);
-        t.setProperty (params::tone, p.tone, nullptr);
-        t.setProperty (params::lowCut, p.lowCutHz, nullptr);
-        t.setProperty (params::weight, p.weight ? 1.0f : 0.0f, nullptr);
-        t.setProperty (params::highCut, p.highCutHz, nullptr);
-        t.setProperty (params::autoGain, p.autoGain ? 1.0f : 0.0f, nullptr);
-        t.setProperty (params::mix, p.mix, nullptr);
-        t.setProperty (params::output, p.outputDb, nullptr);
-        t.setProperty (params::stereoMode, p.stereoMode, nullptr);
-        t.setProperty (params::emphasis, p.emphasis, nullptr);
-        t.setProperty (params::bias, p.bias, nullptr);
-        return t;
-    }
 }
 
-PresetManager::PresetManager (UmberProcessor& p)
-    : processor (p)
+PresetManager::PresetManager (PresetHost& h, PresetFormat f)
+    : host (h),
+      format (std::move (f))
 {
     scanUserPresets();
 }
 
-const juce::StringArray& PresetManager::parameterIds()
+juce::ValueTree PresetManager::snapshotFromFactory (const FactorySnapshot& preset) const
 {
-    static const juce::StringArray ids { params::drive, params::model, params::slam, params::tone, params::lowCut,
-                                         params::weight, params::highCut, params::autoGain, params::mix, params::output,
-                                         params::stereoMode, params::emphasis, params::bias };
-    return ids;
+    juce::ValueTree t (format.presetType);
+    t.setProperty (nameId, preset.name, nullptr);
+    t.setProperty (categoryId, preset.category, nullptr);
+    t.setProperty (versionId, format.version, nullptr);
+
+    for (const auto& v : preset.values)
+        t.setProperty (v.name, v.value, nullptr);
+
+    return t;
 }
 
-juce::File PresetManager::getUserPresetDirectory()
+juce::File PresetManager::getUserPresetDirectory() const
 {
+    if (directoryOverride() != juce::File())
+        return directoryOverride();
+
     return juce::File::getSpecialLocation (juce::File::userApplicationDataDirectory)
         .getChildFile ("Myzel Audio")
-        .getChildFile ("Umber")
+        .getChildFile (format.pluginName)
         .getChildFile ("Presets");
 }
 
-juce::ValueTree PresetManager::readPresetFile (const juce::File& file)
+void PresetManager::setUserPresetDirectoryOverride (const juce::File& directory)
+{
+    directoryOverride() = directory;
+}
+
+juce::ValueTree PresetManager::readPresetFile (const juce::File& file) const
 {
     if (auto xml = juce::XmlDocument::parse (file))
     {
         auto tree = juce::ValueTree::fromXml (*xml);
 
-        if (tree.hasType (presetType))
+        if (tree.hasType (format.presetType))
             return tree;
     }
 
@@ -84,10 +79,8 @@ void PresetManager::scanUserPresets()
 {
     entries.clear();
 
-    for (const auto& f : factoryPresets())
+    for (const auto& f : format.factory)
         entries.push_back ({ f.name, f.category, true, {}, snapshotFromFactory (f) });
-
-    numFactory = (int) entries.size();
 
     std::vector<Entry> user;
     const auto dir = getUserPresetDirectory();
@@ -118,9 +111,9 @@ void PresetManager::scanUserPresets()
 
 juce::ValueTree PresetManager::capture() const
 {
-    auto& apvts = processor.getState();
-    juce::ValueTree t (presetType);
-    t.setProperty (versionId, presetVersion, nullptr);
+    auto& apvts = host.getState();
+    juce::ValueTree t (format.presetType);
+    t.setProperty (versionId, format.version, nullptr);
 
     for (const auto& id : parameterIds())
         if (auto* p = apvts.getParameter (id))
@@ -131,12 +124,15 @@ juce::ValueTree PresetManager::capture() const
 
 void PresetManager::apply (const juce::ValueTree& snapshot, const juce::String& undoName)
 {
-    auto& apvts = processor.getState();
-    processor.getUndoManager().beginNewTransaction (undoName);
+    auto& apvts = host.getState();
+    host.getUndoManager().beginNewTransaction (undoName);
 
     for (const auto& id : parameterIds())
     {
         const juce::Identifier key (id);
+
+        if (isLockedParameter (id))
+            continue;
 
         if (auto* p = apvts.getParameter (id))
         {
@@ -150,6 +146,8 @@ void PresetManager::apply (const juce::ValueTree& snapshot, const juce::String& 
             }
         }
     }
+
+    host.presetApplied();
 }
 
 void PresetManager::load (int index)
@@ -188,7 +186,7 @@ int PresetManager::getCurrentIndex() const
 
 juce::String PresetManager::getCurrentName() const
 {
-    return processor.getUiState().getProperty (uistate::presetName, entries.empty() ? juce::String() : entries.front().name);
+    return host.getUiState().getProperty (uistate::presetName, entries.empty() ? juce::String() : entries.front().name);
 }
 
 juce::String PresetManager::getCurrentCategory() const
@@ -199,15 +197,34 @@ juce::String PresetManager::getCurrentCategory() const
 
 bool PresetManager::isCurrentUserPreset() const
 {
-    return processor.getUiState().getProperty (uistate::presetUser, false);
+    return host.getUiState().getProperty (uistate::presetUser, false);
 }
 
 void PresetManager::setCurrent (const juce::String& name, bool isUser)
 {
-    auto ui = processor.getUiState();
+    auto ui = host.getUiState();
     ui.setProperty (uistate::presetName, name, nullptr);
     ui.setProperty (uistate::presetUser, isUser, nullptr);
+
+    host.currentPresetChanged (name, isUser);
     notify();
+}
+
+bool PresetManager::isMixLocked() const
+{
+    return canLockMix() && (bool) host.getUiState().getProperty (uistate::mixLock, false);
+}
+
+void PresetManager::setMixLocked (bool shouldLock)
+{
+    host.getUiState().setProperty (uistate::mixLock, shouldLock, nullptr);
+    host.mixLockChanged (shouldLock);
+    notify();
+}
+
+bool PresetManager::isLockedParameter (const juce::String& parameterId) const
+{
+    return format.lockableIds.contains (parameterId) && isMixLocked();
 }
 
 bool PresetManager::isModified() const
@@ -218,11 +235,14 @@ bool PresetManager::isModified() const
         return true;
 
     const auto& values = entries[(size_t) index].values;
-    auto& apvts = processor.getState();
+    auto& apvts = host.getState();
 
     for (const auto& id : parameterIds())
     {
         const juce::Identifier key (id);
+
+        if (isLockedParameter (id))
+            continue;
 
         if (auto* p = apvts.getParameter (id))
             if (std::abs (targetFor (values, key, *p) - p->getValue()) > 0.002f)
@@ -336,4 +356,4 @@ void PresetManager::notify()
         onChange();
 }
 
-} // namespace umber::ui
+} // namespace myzel::plugin

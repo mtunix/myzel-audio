@@ -2,6 +2,7 @@
 
 #include "dsp/chain/SaturatorChain.h"
 #include "common/plugin/ParameterUndo.h"
+#include "common/plugin/PresetManager.h"
 #include "plugin/Parameters.h"
 
 #include <juce_audio_processors/juce_audio_processors.h>
@@ -32,7 +33,8 @@ struct MeterValues
 };
 
 class UmberProcessor final : public juce::AudioProcessor,
-                                private juce::AsyncUpdater
+                             public myzel::plugin::PresetHost,
+                             private juce::AsyncUpdater
 {
 public:
     UmberProcessor();
@@ -71,13 +73,13 @@ public:
 
     juce::AudioProcessorParameter* getBypassParameter() const override { return params.bypass; }
 
-    juce::AudioProcessorValueTreeState& getState() noexcept { return apvts; }
+    juce::AudioProcessorValueTreeState& getState() noexcept override { return apvts; }
     MeterValues& getMeters() noexcept { return meters; }
     /** Undo history of user edits only (see ParameterUndoRecorder). Message thread only. */
-    juce::UndoManager& getUndoManager() noexcept { return undoManager; }
+    juce::UndoManager& getUndoManager() noexcept override { return undoManager; }
 
     /** Non-parameter UI state (e.g. editor scale) persisted with the session. */
-    juce::ValueTree getUiState() { return apvts.state.getOrCreateChildWithName ("UI", nullptr); }
+    juce::ValueTree getUiState() override { return apvts.state.getOrCreateChildWithName ("UI", nullptr); }
 
     /** Bumped whenever the saved-state format changes, so old sessions can be migrated. */
     static constexpr int stateVersion = 1;

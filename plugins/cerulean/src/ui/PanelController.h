@@ -1,8 +1,7 @@
 #pragma once
 
 #include "plugin/Parameters.h"
-#include "ui/AbCompare.h"
-#include "ui/PresetManager.h"
+#include "ui/FactoryPresets.h"
 #include "ui/TailModel.h"
 #include "ui/ViewMode.h"
 

@@ -275,7 +275,7 @@ void HeaderBar::showPresetMenu()
             self.promptDelete (current);
         else if (result == revealId)
         {
-            const auto dir = PresetManager::getUserPresetDirectory();
+            const auto dir = self.presets.getUserPresetDirectory();
             dir.createDirectory();
             dir.startAsProcess();
         }

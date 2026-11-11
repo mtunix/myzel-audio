@@ -1,30 +1,29 @@
-#include "ui/AbCompare.h"
+#include "common/plugin/AbCompare.h"
 
-#include "plugin/PluginProcessor.h"
-#include "ui/UiState.h"
+#include "common/plugin/UiState.h"
 
-namespace cerulean::ui
+namespace myzel::plugin
 {
 
-AbCompare::AbCompare (CeruleanProcessor& p, PresetManager& pm)
-    : processor (p),
+AbCompare::AbCompare (PresetHost& h, PresetManager& pm)
+    : host (h),
       presets (pm)
 {
 }
 
 int AbCompare::getActiveSlot() const
 {
-    return juce::jlimit (0, 1, (int) processor.getUiState().getProperty (uistate::abActive, 0));
+    return juce::jlimit (0, 1, (int) host.getUiState().getProperty (uistate::abActive, 0));
 }
 
 juce::ValueTree AbCompare::slotTree (int slot) const
 {
-    return processor.getUiState().getChildWithName (slot == 0 ? uistate::abSlot0 : uistate::abSlot1);
+    return host.getUiState().getChildWithName (slot == 0 ? uistate::abSlot0 : uistate::abSlot1);
 }
 
 void AbCompare::storeInto (int slot)
 {
-    auto ui = processor.getUiState();
+    auto ui = host.getUiState();
     const auto& id = slot == 0 ? uistate::abSlot0 : uistate::abSlot1;
 
     auto snapshot = presets.capture();
@@ -62,7 +61,7 @@ void AbCompare::selectSlot (int slot)
         storeInto (slot);
     }
 
-    processor.getUiState().setProperty (uistate::abActive, slot, nullptr);
+    host.getUiState().setProperty (uistate::abActive, slot, nullptr);
 
     if (onChange != nullptr)
         onChange();
@@ -76,4 +75,4 @@ void AbCompare::copyActiveToOther()
         onChange();
 }
 
-} // namespace cerulean::ui
+} // namespace myzel::plugin

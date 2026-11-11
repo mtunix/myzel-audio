@@ -1,11 +1,10 @@
 #pragma once
 
-#include "ui/AbCompare.h"
+#include "ui/FactoryPresets.h"
 #include "common/ui/HeaderButton.h"
 #include "common/ui/InlineDialog.h"
 #include "common/ui/PresetDisplay.h"
 #include "ui/Theme.h"
-#include "ui/PresetManager.h"
 #include "ui/ViewMode.h"
 
 namespace cerulean

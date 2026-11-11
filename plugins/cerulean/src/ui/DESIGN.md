@@ -276,7 +276,7 @@ UI state keys (`UiState.h`, never rename): `scale`, `advancedOpen`, `presetName`
 | `AdvancedDrawer`, `AdvancedTab` | the Advanced deck below the panel, and ADVANCED on the bottom edge |
 | `LockBadge` | the padlock after MIX while the mix lock is on (both views) |
 | `HeaderBar` | header rail |
-| `PresetManager`, `FactoryPresets`, `AbCompare` | preset and compare logic |
+| `FactoryPresets` | the factory presets and Cerulean's preset format (`presetFormat()`); the preset and A/B logic is shared (`common/plugin/`: `PresetManager`, `AbCompare`) |
 | `CeruleanLookAndFeel` | popup menus, tooltips, text fields |
 | `PanelController` | the editor's model, shared by both views: presets, A/B, parameter meanings (`Meanings`), value texts, tail shape, the stored view |
 | `ViewMode` | `panel` / `studio`, and the default-view preference (`Cerulean.settings`) |

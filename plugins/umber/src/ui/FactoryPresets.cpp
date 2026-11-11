@@ -1,5 +1,7 @@
 #include "ui/FactoryPresets.h"
 
+#include "plugin/Parameters.h"
+
 namespace umber::ui
 {
 
@@ -62,6 +64,39 @@ namespace
 std::span<const FactoryPreset> factoryPresets()
 {
     return presets;
+}
+
+myzel::plugin::PresetFormat presetFormat()
+{
+    myzel::plugin::PresetFormat format;
+    format.pluginName = "Umber";
+    format.presetType = "UmberPreset";
+    format.version = 2;   // 2: adds stereoMode, emphasis, bias
+    format.parameterIds = { params::drive, params::model, params::slam, params::tone, params::lowCut,
+                            params::weight, params::highCut, params::autoGain, params::mix, params::output,
+                            params::stereoMode, params::emphasis, params::bias };
+    format.lockableIds = { params::mix };
+
+    for (const auto& p : factoryPresets())
+    {
+        myzel::plugin::FactorySnapshot s { p.name, p.category, {} };
+        s.values.set (params::drive, p.drive);
+        s.values.set (params::model, p.model);
+        s.values.set (params::slam, p.slam ? 1.0f : 0.0f);
+        s.values.set (params::tone, p.tone);
+        s.values.set (params::lowCut, p.lowCutHz);
+        s.values.set (params::weight, p.weight ? 1.0f : 0.0f);
+        s.values.set (params::highCut, p.highCutHz);
+        s.values.set (params::autoGain, p.autoGain ? 1.0f : 0.0f);
+        s.values.set (params::mix, p.mix);
+        s.values.set (params::output, p.outputDb);
+        s.values.set (params::stereoMode, p.stereoMode);
+        s.values.set (params::emphasis, p.emphasis);
+        s.values.set (params::bias, p.bias);
+        format.factory.push_back (std::move (s));
+    }
+
+    return format;
 }
 
 } // namespace umber::ui

@@ -5,9 +5,7 @@
 */
 
 #include "plugin/PluginProcessor.h"
-#include "ui/AbCompare.h"
 #include "ui/FactoryPresets.h"
-#include "ui/PresetManager.h"
 
 #include <catch2/catch_message.hpp>
 #include <catch2/catch_test_macros.hpp>
@@ -117,7 +115,7 @@ TEST_CASE ("Presets: Init is the parameter defaults, and every sound parameter i
     const juce::ScopedJuceInitialiser_GUI juce;
     ScratchPresetFolder scratch;
     CeruleanProcessor p;
-    ui::PresetManager pm (p);
+    ui::PresetManager pm (p, ui::presetFormat());
 
     const auto init = indexOf (pm, "Init");
     REQUIRE (init == 0);
@@ -152,7 +150,7 @@ TEST_CASE ("Presets: every factory preset loads and renders sanely", "[presets]"
     constexpr int block = 256;
 
     CeruleanProcessor reference;
-    ui::PresetManager referencePresets (reference);
+    ui::PresetManager referencePresets (reference, ui::presetFormat());
     const auto count = (int) referencePresets.getEntries().size();
 
     for (int i = 0; i < count; ++i)
@@ -160,7 +158,7 @@ TEST_CASE ("Presets: every factory preset loads and renders sanely", "[presets]"
         CeruleanProcessor p;
         p.setPlayConfigDetails (2, 2, rate, block);
         p.prepareToPlay (rate, block);
-        ui::PresetManager pm (p);
+        ui::PresetManager pm (p, ui::presetFormat());
         const auto& entry = pm.getEntries()[(size_t) i];
         INFO (entry.name);
 
@@ -203,7 +201,7 @@ TEST_CASE ("Presets: loading is one undo step and starts a fresh engine (trails)
     const juce::ScopedJuceInitialiser_GUI juce;
     ScratchPresetFolder scratch;
     CeruleanProcessor p;
-    ui::PresetManager pm (p);
+    ui::PresetManager pm (p, ui::presetFormat());
     auto& um = p.getUndoManager();
     um.clearUndoHistory();
 
@@ -225,7 +223,7 @@ TEST_CASE ("Presets: A/B switching recalls each slot and starts a fresh engine",
     const juce::ScopedJuceInitialiser_GUI juce;
     ScratchPresetFolder scratch;
     CeruleanProcessor p;
-    ui::PresetManager pm (p);
+    ui::PresetManager pm (p, ui::presetFormat());
     ui::AbCompare ab (p, pm);
 
     set (p, params::decay, 2.0f);
@@ -249,7 +247,7 @@ TEST_CASE ("Presets: user presets round-trip through XML files", "[presets]")
     const juce::ScopedJuceInitialiser_GUI juce;
     ScratchPresetFolder scratch;
     CeruleanProcessor p;
-    ui::PresetManager pm (p);
+    ui::PresetManager pm (p, ui::presetFormat());
 
     set (p, params::algorithm, (float) (int) Algorithm::plate);
     set (p, params::decay, 4.5f);
@@ -265,7 +263,7 @@ TEST_CASE ("Presets: user presets round-trip through XML files", "[presets]")
     pm.load (0);
     CHECK (juce::roundToInt (plain (p, params::algorithm)) == (int) Algorithm::hall);
 
-    ui::PresetManager fresh (p);   // rescans the folder
+    ui::PresetManager fresh (p, ui::presetFormat());   // rescans the folder
     const auto index = indexOf (fresh, "My Plate");
     REQUIRE (index >= 0);
     CHECK_FALSE (fresh.getEntries()[(size_t) index].isFactory);

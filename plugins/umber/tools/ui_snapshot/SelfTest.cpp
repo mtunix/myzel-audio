@@ -137,7 +137,7 @@ int runUiSelfTest()
 
     std::printf ("Presets\n");
     {
-        ui::PresetManager presets (processor);
+        ui::PresetManager presets (processor, ui::presetFormat());
         check (presets.getEntries().size() >= 20, "at least 20 factory presets");
 
         const auto& entries = presets.getEntries();
@@ -171,7 +171,7 @@ int runUiSelfTest()
 
     std::printf ("A/B compare\n");
     {
-        ui::PresetManager presets (processor);
+        ui::PresetManager presets (processor, ui::presetFormat());
         ui::AbCompare ab (processor, presets);
         auto* p = processor.getState().getParameter (params::drive);
 

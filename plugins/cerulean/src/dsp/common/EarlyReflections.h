@@ -45,8 +45,11 @@ public:
                 const auto pos = ((float) k + 0.2f + 0.6f * rng.uniform()) / (float) TapsPerChannel;
                 const auto shaped = std::pow (pos, 1.4f);
                 t.ms = s.firstMs + (s.lastMs - s.firstMs) * shaped;
-                t.gain = std::exp (-s.decayShape * shaped) * (0.65f + 0.35f * rng.uniform())
-                       * (rng.uniform() < 0.5f ? -1.0f : 1.0f);
+                // One draw per statement: operand order is unspecified, and compilers differ.
+                const auto spread = rng.uniform();
+                const auto polarity = rng.uniform();
+                t.gain = std::exp (-s.decayShape * shaped) * (0.65f + 0.35f * spread)
+                       * (polarity < 0.5f ? -1.0f : 1.0f);
                 t.cross = rng.uniform() < s.crossAmount;
             }
 

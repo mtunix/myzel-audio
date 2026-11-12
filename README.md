@@ -7,6 +7,7 @@ from CI, unsigned.
 |---|---|
 | [![Cerulean](plugins/cerulean/docs/screenshots/01-default.png)](plugins/cerulean) | **[Cerulean](plugins/cerulean)**: a creative reverb. Ten algorithms, from honest rooms and plates to huge modulated clouds, shimmering halos, swells, blooms, voices and tape echoes. [Manual](plugins/cerulean/docs/MANUAL.md) |
 | [![Umber](plugins/umber/docs/screenshots/02-valve-slam-hot.png)](plugins/umber) | **[Umber](plugins/umber)**: an analog-modelled saturator. Five circuit-level models on one screen. [Manual](plugins/umber/docs/MANUAL.md) |
+| [![Mulberry](plugins/mulberry/docs/screenshots/02-loop-three-heads.png)](plugins/mulberry) | **[Mulberry](plugins/mulberry)**: an echo. Six delay machines modelled from their medium: clean memory, an early rack unit, a bucket-brigade chip, an oil-can drum, a tape loop and a studio deck. [Manual](plugins/mulberry/docs/MANUAL.md) |
 
 ## Repository layout
 

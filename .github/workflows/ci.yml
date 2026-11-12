@@ -21,7 +21,7 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        plugin: [cerulean, umber]
+        plugin: [cerulean, mulberry, umber]
     env:
       CPM_SOURCE_CACHE: ${{ github.workspace }}/.cache/CPM
     steps:
@@ -75,7 +75,7 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        plugin: [cerulean, umber]
+        plugin: [cerulean, mulberry, umber]
     env:
       CPM_SOURCE_CACHE: ${{ github.workspace }}/.cache/CPM
     steps:
@@ -104,7 +104,7 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        plugin: [cerulean, umber]
+        plugin: [cerulean, mulberry, umber]
     env:
       CPM_SOURCE_CACHE: ${{ github.workspace }}/.cache/CPM
     steps:

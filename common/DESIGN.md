@@ -1,8 +1,9 @@
 # Shared code (`common/`)
 
-Everything both plugins use: the UI kit, the two-view editor, presets and A/B, session state, a
-few DSP blocks and the test helpers. A plugin keeps only what is its own: DSP, parameters,
-layout, colours, its displays (Umber's VU meter, Cerulean's tail display) and its texts.
+Everything the plugins share: the UI kit, the two-view editor, presets and A/B, session state,
+DSP blocks and the test helpers. A plugin keeps only what is its own: DSP, parameters,
+layout, colours, its displays (Umber's VU meter, Cerulean's tail display, Mulberry's echo map)
+and its texts.
 
 Includes read `common/<area>/<File>.h`. Namespaces: `myzel::ui`, `myzel::plugin`, `myzel::dsp`,
 `myzel::testing`. Each plugin's `ui/Theme.h` imports `myzel::ui`, so plugin UI code uses the
@@ -15,7 +16,7 @@ own JUCE configuration, exactly like its own sources, so JUCE is never linked tw
 
 | Target | Contents |
 |---|---|
-| `MyzelDsp` | `dsp/`: header-only blocks (TPT filters) |
+| `MyzelDsp` | `dsp/`: header-only DSP blocks (below) |
 | `MyzelPlugin` | `plugin/`: undo, presets, A/B, UI state keys, session state |
 | `MyzelUiAssets` | the Inter typeface (SIL OFL 1.1, `ui/assets/fonts/OFL.txt`) |
 | `MyzelUi` | `ui/`: theme, widgets, header, two-view editor, studio controls |
@@ -24,6 +25,19 @@ own JUCE configuration, exactly like its own sources, so JUCE is never linked tw
 folder into `<Name>JuceConfig`, `<Name>Dsp`, `<Name>Shared` and the plugin (VST3, LV2, CLAP,
 Standalone) with the vendor IDs from the root `CMakeLists.txt`, and adds its `tools/` and
 `tests/`. A plugin's `CMakeLists.txt` is its `project()` plus one call.
+
+## DSP blocks
+
+Header-only, no JUCE, namespace `myzel::dsp`. A block moves here from a plugin when a second
+plugin needs it; a move never changes a sibling's sound (its golden files stay bit-identical).
+
+| File | Contents | Used by |
+|---|---|---|
+| `Filters` | double TPT filters: SVF, one-pole, DC blocker, tilt, emphasis shelf | Umber, Mulberry |
+| `Blocks` | float blocks: delay line (linear, cubic Lagrange), Schroeder allpass and allpass chain, one-pole and SVF, LFOs (sine, smooth random), smoothers and glides, envelope follower, PRNG | Cerulean, Mulberry |
+| `GrainVoice` | one voice of the granular pitch shifter (WSOLA-aligned grains, power-normalised) | Cerulean (Halo), Mulberry (Clean's Shift) |
+| `JilesAtherton` | the Jiles–Atherton tape core, RK4 in field space (validated in Umber's `models/reel/NOTES.md`) | Umber (Reel); Mulberry (Loop, Reel) uses its equations, parameters and Langevin function with its own 8x solver (`TapeCore`) |
+| `AnalyticFilters` | linear sections with exact responses: TPT one-pole and SVF, bilinear shelf with an exact inverse | Umber (Reel), Mulberry (Loop, Reel) |
 
 ## Theme: one kit, each plugin's colours
 
@@ -118,8 +132,8 @@ Each plugin's `tools/ui_snapshot` is a snapshot renderer and an editor self-test
 | `UiTestKit` | `check`, mouse events and drags, gesture recorder, parameter helpers, `saveSnapshot` |
 | `ScratchSession` | redirects every file written for the user (user presets, the default-view setting) to a fresh temp folder, and deletes it afterwards. Create it before any processor: the `PresetManager` scans its folder when it is built |
 | `SnapshotTool` | the tool's `main()` (`runSnapshotTool`): arguments, `--selftest` (exit 1 on a failure), the 8× `--leakcheck`, scenes and timing, all in a scratch session. The plugin brings its scenes, meter seeding and self-test |
-| `EditorSelfTest` | the checks of shared editor code, which both self-tests run (`runEditorChecks`): user presets land in the scratch folder, A/B, the mix lock, and the two views (switching, header keys, session and default view, following a restored session) |
+| `EditorSelfTest` | the checks of shared editor code, which every self-test runs (`runEditorChecks`): user presets land in the scratch folder, A/B, the mix lock, and the two views (switching, header keys, session and default view, following a restored session) |
 
-Checks of a plugin's own UI stay in its `SelfTest.cpp`. CI runs both self-tests on Linux.
+Checks of a plugin's own UI stay in its `SelfTest.cpp`. CI runs every self-test on Linux.
 `tools/ui_diff.py` renders a plugin's snapshots and compares them pixel by pixel with a recorded
-baseline: run it before and after any change to shared UI code, for **both** plugins.
+baseline: run it before and after any change to shared UI code, for **every** plugin.

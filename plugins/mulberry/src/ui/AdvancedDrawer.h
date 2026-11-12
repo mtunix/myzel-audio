@@ -1,0 +1,88 @@
+#pragma once
+
+#include "common/ui/Knob.h"
+#include "common/ui/LampButton.h"
+#include "ui/Theme.h"
+
+#include <juce_audio_processors/juce_audio_processors.h>
+
+#include <vector>
+
+namespace mulberry
+{
+class MulberryProcessor;
+}
+
+namespace mulberry::ui
+{
+
+/**
+    The Advanced deck: the hidden parameters on a lower section of the instrument, below the
+    panel. Opening it grows the editor by layout::deckHeight; nothing on the panel is covered.
+    The ADVANCED tab that opens and closes it is the panel's (engraved on the bottom edge).
+
+    One row of small knobs and a key in labelled groups, each with its value printed underneath:
+
+        TIME: Groove, Feel | STEREO: Width, Cross-feed, Pan rule | MOTION: Wobble rate, shape |
+        MACHINE: Noise, Trails | DUCK: Amount, Threshold, Release | TEMPO: BPM | HOLD: Mode
+
+    Sync, Tap and Hold are on the panel itself (under Time).
+
+    The artwork is cached; values are polled on the panel's frame clock while it is open and
+    repainted only when their text changes. BPM is greyed out while the host provides a tempo.
+*/
+class AdvancedDrawer final : public juce::Component
+{
+public:
+    AdvancedDrawer (MulberryProcessor& processor, ValueBubble& bubble);
+    ~AdvancedDrawer() override;
+
+    void setOpen (bool shouldBeOpen);
+    bool isOpen() const noexcept { return targetOpen; }
+
+    /** Frame clock: value read-outs and LEDs (while open). Returns true while an LED fades. */
+    bool tick (float dtSeconds);
+
+    /** Test hooks. */
+    Knob* findKnob (const juce::String& parameterId) const;
+    LampButton* findKey (const juce::String& parameterId) const;
+    juce::String getValueTextFor (const juce::String& parameterId) const;
+
+    void resized() override;
+
+private:
+    class Tray;
+    struct Cell;
+
+    void refreshValues (bool force);
+
+    MulberryProcessor& processor;
+    std::unique_ptr<Tray> tray;
+    bool targetOpen = false;
+
+    JUCE_DECLARE_NON_COPYABLE_WITH_LEAK_DETECTOR (AdvancedDrawer)
+};
+
+//==============================================================================
+/**
+    ADVANCED, engraved on the instrument's bottom edge (the panel's while the deck is closed, the
+    deck's while it is open): legend, a small LED and a chevron between engraved rules. Click,
+    Space or Return toggles the deck.
+*/
+class AdvancedTab final : public juce::Button
+{
+public:
+    AdvancedTab();
+
+    void setOpenState (bool isOpen);
+
+    void paintButton (juce::Graphics& g, bool highlighted, bool down) override;
+
+private:
+    juce::SharedResourcePointer<Fonts> fonts;
+    bool open = false;
+
+    JUCE_DECLARE_NON_COPYABLE_WITH_LEAK_DETECTOR (AdvancedTab)
+};
+
+} // namespace mulberry::ui

@@ -85,6 +85,41 @@ UMBER_UPDATE_GOLDEN=1 build/plugins/umber/tests/UmberTests "[golden]"   # re-rec
 build/plugins/umber/tools/UmberCalibrate_artefacts/Release/UmberCalibrate   # regenerate Auto gain tables
 ```
 
+## References
+
+Every circuit model is our own implementation, built on published research. Each model's
+`NOTES.md` says which parts come from where.
+
+- D. T. Yeh, J. S. Abel, J. O. Smith, *Automated physical modeling of nonlinear audio circuits for
+  real-time audio effects — Part I* (IEEE TASLP 18(4), 2010): the nodal DK method, in Class A,
+  Valve and Fuzz.
+- M. Holters, U. Zölzer, *A generalized method for the derivation of non-linear state-space models
+  from circuit schematics* (EUSIPCO 2015): the nodal DK method.
+- A. Fettweis, *Wave digital filters: theory and practice* (Proc. IEEE 74, 1986): Desk's
+  transformers.
+- K. J. Werner, *Virtual analog modeling of audio circuitry using wave digital filters* (PhD
+  thesis, Stanford 2016) and K. J. Werner, J. O. Smith, J. S. Abel, *Wave digital filter adaptors
+  for arbitrary topologies and multiport linear elements* (DAFx 2015): Desk's transformers.
+- K. J. Werner et al., *Resolving wave digital filters with multiple/multiport nonlinearities*
+  (DAFx 2015): the choice of solver for Valve and Fuzz.
+- N. Koren, *Improved vacuum tube models for SPICE simulations* (Glass Audio 8(5), 1996): the
+  triode and pentode models in Reel, Valve and Fuzz.
+- K. Dempwolf, U. Zölzer, *A physically-motivated triode model for circuit simulations*
+  (DAFx 2011): grid current.
+- J. J. Ebers, J. L. Moll, *Large-signal behavior of junction transistors* (Proc. IRE 42(12),
+  1954): Class A's transistors.
+- D. C. Jiles, D. L. Atherton, *Theory of ferromagnetic hysteresis* (J. Magn. Magn. Mater. 61,
+  1986): tape and transformer cores in Reel and Desk.
+- J. Chowdhury, *Real-time physical modelling for analog tape machines* (DAFx 2019): the
+  Jiles–Atherton solver form in Reel and Desk.
+- M. Holters, U. Zölzer, *Circuit simulation with inductors and transformers based on the
+  Jiles–Atherton model of magnetization* (DAFx 2016): Desk's transformer cores.
+- V. Zavalishin, *The Art of VA Filter Design* (Native Instruments, 2012) and A. Simper, *Linear
+  trapezoidal integrated SVF* (Cytomic, 2013): the filters.
+
+ChowTapeModel (J. Chowdhury, GPLv3) was read for its hysteresis approach. Umber's implementation
+is independent.
+
 ## Licence
 
 AGPLv3. See [LICENSE](../../LICENSE). Built with [JUCE](https://juce.com) under its AGPLv3 option. The

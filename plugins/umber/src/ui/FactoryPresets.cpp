@@ -38,7 +38,7 @@ namespace
         { "Vocal Edge",         "Vocals",       4.0f, valve,  false,  0.5f, 90.0f,  false, 16000.0f, true, 100.0f, 0.0f, 0,  4.0f,  5.0f },
 
         { "Amp In A Box",       "Guitar & Keys", 7.0f, valve, false,  1.5f, 80.0f,  false, 7000.0f, true, 100.0f,  0.0f },
-        { "Rhodes Bark",        "Guitar & Keys", 5.0f, classA, false, 1.0f, off,    false, 12000.0f, true, 100.0f, 0.0f },
+        { "E-Piano Bark",       "Guitar & Keys", 5.0f, classA, false, 1.0f, off,    false, 12000.0f, true, 100.0f, 0.0f },
         { "Synth Fuzz Lead",    "Guitar & Keys", 8.0f, fuzz,  true,  -1.0f, off,    false, 6000.0f, true, 100.0f,  0.0f },
         { "Cold Amp Sputter",   "Guitar & Keys", 7.0f, fuzz,  false,  1.0f, 90.0f,  false, 7000.0f, true, 100.0f,  0.0f, 0,  0.0f, -9.0f },
         { "Piano Glow",         "Guitar & Keys", 3.5f, desk,  false,  0.0f, off,    false, open,    true, 100.0f,  0.0f, 0, -2.0f,  5.0f },

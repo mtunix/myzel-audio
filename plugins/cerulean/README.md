@@ -100,6 +100,46 @@ build/plugins/cerulean/tools/CeruleanMeasure hall --wav /tmp        # ... and wr
 CERULEAN_UPDATE_GOLDEN=1 build/plugins/cerulean/tests/CeruleanTests "[golden]"   # re-record after an intended sound change
 ```
 
+## References
+
+Every algorithm is our own implementation, built on published research. Each algorithm's
+`NOTES.md` says which parts come from where.
+
+- J.-M. Jot, A. Chaigne, *Digital delay networks for designing artificial reverberators*
+  (AES 1991): feedback delay networks with per-band decay, in every algorithm.
+- J. Dattorro, *Effect Design Part 1: Reverberator and Other Filters* (JAES 1997): the Plate tank,
+  allpass diffusion in Hall, Echo and Nimbus.
+- J. Dattorro, *Effect Design Part 2: Delay-Line Modulation and Chorus* (JAES 1997): Echo's
+  modulated delay reads.
+- J. B. Allen, D. A. Berkley, *Image method for efficiently simulating small-room acoustics*
+  (JASA 1979): Room's early reflections.
+- A. Lindau, L. Kosanke, S. Weinzierl, *Perceptual evaluation of model- and signal-based predictors
+  of the mixing time in binaural room impulse responses* (JAES 2012): Room's mixing time.
+- S. J. Schlecht, E. A. P. Habets, *Time-varying feedback matrices in feedback delay networks and
+  their application in artificial reverberation* (JASA 2015): Room's modulation.
+- V. Välimäki, J. Parker, J. S. Abel, *Parametric Spring Reverberation Effect* (JAES 2010): Spring.
+- J. S. Abel, D. P. Berners, S. Costello, J. O. Smith, *Spring Reverb Emulation Using Dispersive
+  Allpass Filters in a Waveguide Structure* (AES 2006): Spring.
+- J. Parker, S. Bilbao, *Spring Reverberation: A Physical Perspective* (DAFx 2009): Spring's
+  dispersion.
+- J. Parker, *Efficient Dispersion Generation Structures for Spring Reverb Emulation*
+  (EURASIP 2011): Spring's dispersion.
+- J. Parker, V. Zavalishin, E. Le Bihan, *Reducing the Aliasing of Nonlinear Waveshaping Using
+  Continuous-Time Convolution* (DAFx 2016): Spring's drive.
+- W. Verhelst, M. Roelands, *An overlap-add technique based on waveform similarity (WSOLA)*
+  (ICASSP 1993): Halo's pitch shifter.
+- G. E. Peterson, H. L. Barney, *Control methods used in a study of the vowels* (JASA 1952) and
+  J. Sundberg, *The Science of the Singing Voice* (1987): Choir's formants.
+- A. Simper, *Linear trapezoidal integrated SVF* (Cytomic, 2013): the filters.
+- J. S. Abel, P. Huang, *A Simple, Robust Measure of Reverberation Echo Density* (AES 2006): the
+  echo-density measurement in the quality gates.
+
+Read for ideas; no code taken:
+
+- G. Luff, *Let's Write a Reverb* (ADC 2021): diffusers and Hadamard mixing.
+- CloudSeed (V. Erlingsson, MIT): diffusers inside each delay line's feedback, in Nimbus.
+- S. Costello, Valhalla DSP blog: notes on shimmer and bloom reverbs, for Halo and Billow.
+
 ## Licence
 
 AGPLv3. See [LICENSE](../../LICENSE). Built with [JUCE](https://juce.com) under its AGPLv3 option. The

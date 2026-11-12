@@ -36,7 +36,7 @@ foreach(algorithm room hall plate spring nimbus halo rise billow choir echo)
 
     set(target CeruleanTests_${algorithm})
     add_executable(${target} ${algorithm_tests} ${algorithm_sources} ${CERULEAN_DSP_COMMON_SOURCES})
-    target_include_directories(${target} PRIVATE ${PROJECT_SOURCE_DIR}/src ${CMAKE_CURRENT_SOURCE_DIR})
+    target_include_directories(${target} PRIVATE ${PROJECT_SOURCE_DIR}/src ${CMAKE_CURRENT_SOURCE_DIR} ${CMAKE_SOURCE_DIR})
     target_link_libraries(${target} PRIVATE
         juce::juce_recommended_config_flags
         juce::juce_recommended_warning_flags

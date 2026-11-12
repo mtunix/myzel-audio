@@ -8,7 +8,7 @@ if(CERULEAN_MEASURE_SOURCES)
     if(CERULEAN_ONLY_HALL)
         target_compile_definitions(CeruleanMeasure PRIVATE CERULEAN_ONLY_HALL=1)
     endif()
-    target_include_directories(CeruleanMeasure PRIVATE ${PROJECT_SOURCE_DIR}/src)
+    target_include_directories(CeruleanMeasure PRIVATE ${PROJECT_SOURCE_DIR}/src ${CMAKE_SOURCE_DIR})
     target_link_libraries(CeruleanMeasure PRIVATE
         juce::juce_recommended_config_flags
         juce::juce_recommended_warning_flags)

@@ -1,6 +1,6 @@
 // Component-level tests for the Reel model: the Jiles–Atherton tape core and the record amp.
 
-#include "dsp/models/reel/ReelHysteresis.h"
+#include "common/dsp/JilesAtherton.h"
 #include "dsp/models/reel/ReelRecordAmp.h"
 
 #include <catch2/catch_message.hpp>
@@ -13,7 +13,7 @@
 #include <vector>
 
 using umber::dsp::reel::RecordAmpCurve;
-using umber::dsp::reel::TapeHysteresis;
+using myzel::dsp::TapeHysteresis;
 using umber::dsp::reel::TriodeStage;
 
 namespace

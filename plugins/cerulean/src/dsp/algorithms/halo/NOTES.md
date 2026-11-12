@@ -22,7 +22,7 @@ this algorithm introduced) so the shifters sit between the line outputs and the 
 The shifted path's high cut follows Tone below flat (5.2 kHz down to ~2.8 kHz at fully dark):
 a darker shimmer, and the high band's decay stays dark with the climb feeding it.
 
-### The shifter (`GrainShifter.h`)
+### The shifter (`GrainShifter.h`, its grain voice in `common/dsp/GrainVoice.h`)
 
 - Delay-line granular shifter: grains of 85 ms (+-10 %) start every ~28 ms (+-25 %), about three
   overlap. Window `(1 - x^2)^2` (Hann-like, zero slope at the ends). Read with the shared cubic
@@ -138,8 +138,9 @@ legitimate high partials as "clicks" (static +12 at Amount 0.5: -32 dB, +7: -58 
 
 - (Done at integration: `Fdn<N>` now has the `read()` / `write()` insert point.)
 - `LinearRamp`: an option to land exactly on the target at the end of the ramp (`ExactRamp`).
-- PLAN.md lists a granular pitch shifter as a shared block: `GrainShifter.h` (aligned grains,
-  correlation-aware normalisation) is ready to move to `src/dsp/common`.
+- (Done 2026-11-11: the grain voice, with its aligned grains and correlation-aware normalisation,
+  is shared as `common/dsp/GrainVoice.h`; Mulberry's Clean uses it for Shift. `GrainShifter.h`
+  keeps the two-voice wrapper and its band limits.)
 
 ## References
 

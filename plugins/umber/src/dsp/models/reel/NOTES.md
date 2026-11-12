@@ -9,8 +9,8 @@ because this is a saturator and not a tape emulator.
 |---|---|
 | `ReelModel.{h,cpp}` | Wiring, calibration and constants (`CircuitModel` implementation) |
 | `ReelRecordAmp.{h,cpp}` | Triode record amp: circuit equations, offline NR solver, shared Hermite table |
-| `ReelHysteresis.h` | Jiles–Atherton tape core, field-space RK4 solver |
-| `ReelFilters.h` | TPT and bilinear linear sections with exact responses and denormal flushing |
+| `common/dsp/JilesAtherton.h` | Jiles–Atherton tape core, field-space RK4 solver (shared with Mulberry's tape machines) |
+| `common/dsp/AnalyticFilters.h` | TPT and bilinear linear sections with exact responses and denormal flushing (shared) |
 | `tests/models/reel/` | Conformance, character, component, report and dump tests, plus the Python reference |
 
 ## Signal flow

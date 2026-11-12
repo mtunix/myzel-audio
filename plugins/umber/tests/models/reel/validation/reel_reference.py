@@ -29,7 +29,7 @@ import numpy as np
 from scipy.integrate import solve_ivp
 from scipy.optimize import brentq
 
-# ---- tape parameters (must match ReelHysteresis.h) -------------------------------------------
+# ---- tape parameters (must match common/dsp/JilesAtherton.h) -------------------------------------------
 ALPHA, K, C = 0.01, 0.5, 0.9
 
 

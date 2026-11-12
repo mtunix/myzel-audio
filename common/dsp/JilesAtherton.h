@@ -3,11 +3,11 @@
 #include <algorithm>
 #include <cmath>
 
-namespace umber::dsp::reel
+namespace myzel::dsp
 {
 
 /**
-    Jiles–Atherton magnetic hysteresis of the tape coating, in normalised units
+    Jiles–Atherton magnetic hysteresis of a tape coating (Umber's Reel, Mulberry's tape machines), in normalised units
     (m = M / Ms, h = H / a, so the anhysteretic curve is the Langevin function of
     q = h + alpha * m).
 
@@ -58,6 +58,10 @@ public:
         m = 0.0;
         hPrev = 0.0;
     }
+
+    /** New loop parameters (e.g. a bias control); the magnetisation carries on. */
+    void setParameters (Parameters p) noexcept { params = p; }
+    const Parameters& getParameters() const noexcept { return params; }
 
     /** Advances to field h (normalised) and returns the normalised magnetisation. */
     double process (double h) noexcept
@@ -169,4 +173,4 @@ private:
     double m = 0.0, hPrev = 0.0;
 };
 
-} // namespace umber::dsp::reel
+} // namespace myzel::dsp

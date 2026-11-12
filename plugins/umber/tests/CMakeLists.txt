@@ -30,7 +30,7 @@ foreach(model reel desk classa valve fuzz)
 
     set(target UmberTests_${model})
     add_executable(${target} ${model_tests} ${model_sources} ${UMBER_DSP_COMMON_SOURCES})
-    target_include_directories(${target} PRIVATE ${PROJECT_SOURCE_DIR}/src ${CMAKE_CURRENT_SOURCE_DIR})
+    target_include_directories(${target} PRIVATE ${PROJECT_SOURCE_DIR}/src ${CMAKE_CURRENT_SOURCE_DIR} ${CMAKE_SOURCE_DIR})
     target_link_libraries(${target} PRIVATE
         UmberJuceConfig
         juce::juce_dsp

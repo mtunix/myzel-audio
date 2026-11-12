@@ -5,11 +5,12 @@
 #include <complex>
 #include <numbers>
 
-namespace umber::dsp::reel
+namespace myzel::dsp::analytic
 {
 
 /**
-    Linear building blocks for the Reel record / playback networks (double precision).
+    Linear sections with exact responses (double precision): record / playback networks of the
+    tape models (Umber's Reel, Mulberry's Loop and Reel).
 
     These mirror the shared TPT filters in common/dsp/Filters.h but additionally expose
     (a) their exact digital frequency response, used to normalise the model's small-signal
@@ -196,4 +197,4 @@ private:
     double b0 = 1.0, b1 = 0.0, a1 = 0.0, z1 = 0.0;
 };
 
-} // namespace umber::dsp::reel
+} // namespace myzel::dsp::analytic

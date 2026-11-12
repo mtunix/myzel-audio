@@ -7,7 +7,7 @@
 //   triode.csv                  record-amp table vs input volts
 //   eq_<rate>.csv               low-level (-50 dBFS) gain of the whole model vs frequency
 
-#include "dsp/models/reel/ReelHysteresis.h"
+#include "common/dsp/JilesAtherton.h"
 #include "dsp/models/reel/ReelModel.h"
 #include "dsp/models/reel/ReelRecordAmp.h"
 #include "support/SignalAnalysis.h"
@@ -37,7 +37,7 @@ TEST_CASE ("Reel: dump validation data", "[reel][.dump]")
                 auto* f = std::fopen (name, "w");
                 REQUIRE (f != nullptr);
 
-                dsp::reel::TapeHysteresis tape;
+                myzel::dsp::TapeHysteresis tape;
                 const int n = (int) std::round (4.0 * rate / freq);
                 for (int i = 0; i <= n; ++i)
                 {

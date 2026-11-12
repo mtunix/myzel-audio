@@ -17,13 +17,13 @@ void ReelModel::prepare (double oversampledRate)
     sampleRate = oversampledRate;
     amp = &reel::RecordAmpCurve::instance(); // built once, shared by all instances
 
-    coupling.setG (reel::prewarpedG (couplingHz, sampleRate));
+    coupling.setG (myzel::dsp::analytic::prewarpedG (couplingHz, sampleRate));
     preEmphasis.design (emphasisZeroHz, emphasisPoleHz, sampleRate);
     deEmphasis.designInverse (preEmphasis);
-    rolloff.setG (reel::prewarpedG (rolloffHz, sampleRate), rolloffQ);
-    bump.setG (reel::prewarpedG (bumpHz, sampleRate), bumpQ);
+    rolloff.setG (myzel::dsp::analytic::prewarpedG (rolloffHz, sampleRate), rolloffQ);
+    bump.setG (myzel::dsp::analytic::prewarpedG (bumpHz, sampleRate), bumpQ);
     bumpGain = (std::pow (10.0, bumpDb / 20.0) - 1.0) * bump.damping();
-    gapLoss.setG (reel::matchedG (gapLossHz, gapLossMatchHz, sampleRate));
+    gapLoss.setG (myzel::dsp::analytic::matchedG (gapLossHz, gapLossMatchHz, sampleRate));
 
     // analytic small-signal gain at 1 kHz -> make-up gain for exact unity
     constexpr double f = 1000.0;

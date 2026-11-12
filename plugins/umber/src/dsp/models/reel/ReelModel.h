@@ -1,9 +1,9 @@
 #pragma once
 
+#include "common/dsp/AnalyticFilters.h"
+#include "common/dsp/JilesAtherton.h"
 #include "dsp/common/BiasRamp.h"
 #include "dsp/common/CircuitModel.h"
-#include "dsp/models/reel/ReelFilters.h"
-#include "dsp/models/reel/ReelHysteresis.h"
 
 namespace umber::dsp
 {
@@ -24,7 +24,7 @@ namespace reel { class RecordAmpCurve; }
     - Record EQ: NAB-style 50 us high-frequency pre-emphasis (limited at 24 kHz by the amp's
       bandwidth). Pre-emphasised highs reach saturation first, so HF compresses as drive rises.
     - Record head: soft core saturation limits the write field (also bounds the solver's work).
-    - Tape: Jiles-Atherton hysteresis with bias-linearised parameters (ReelHysteresis.h).
+    - Tape: Jiles-Atherton hysteresis with bias-linearised parameters (common/dsp/JilesAtherton.h).
     - Playback: exact inverse de-emphasis (flat at low level), LF roll-off and head bump, and the
       gap / head-to-tape spacing loss.
 
@@ -73,11 +73,11 @@ private:
 
     void applyBiasVolts (double volts) noexcept;
 
-    reel::OnePole coupling;
-    reel::ShelfSection preEmphasis, deEmphasis;
-    reel::TapeHysteresis tape;
-    reel::Svf rolloff, bump;
-    reel::OnePole gapLoss;
+    myzel::dsp::analytic::OnePole coupling;
+    myzel::dsp::analytic::ShelfSection preEmphasis, deEmphasis;
+    myzel::dsp::TapeHysteresis tape;
+    myzel::dsp::analytic::Svf rolloff, bump;
+    myzel::dsp::analytic::OnePole gapLoss;
 };
 
 } // namespace umber::dsp

@@ -93,7 +93,7 @@ void DeskModel::process (float* samples, int numSamples) noexcept
     for (int i = 1; i < numSamples; ++i)
     {
         double v3 = v2, v1 = source (i);
-        desk::TransformerStage::processPair (outputStage, v3, inputStage, v1);
+        myzel::dsp::TransformerStage::processPair (outputStage, v3, inputStage, v1);
         samples[i - 1] = (float) (makeup * v3);
 
         if (bias.isMoving())

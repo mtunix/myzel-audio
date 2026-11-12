@@ -1,12 +1,17 @@
 #pragma once
 
+#include "common/dsp/FloatCompare.h"
+
 #include <algorithm>
 #include <array>
+#include <bit>
 #include <cmath>
+#include <cstdint>
 #include <memory>
+#include <mutex>
 #include <vector>
 
-namespace umber::dsp::desk
+namespace myzel::dsp
 {
 
 /**
@@ -106,7 +111,23 @@ public:
     }
 
     /** Shared table for (L, un); call off the audio thread. */
-    static std::shared_ptr<const LineAmpCurve> get (double L, double un);
+    static std::shared_ptr<const LineAmpCurve> get (double L, double un)
+    {
+        // Tiny cache: every instance with the same loop shares one table (normally exactly one).
+        static std::mutex lock;
+        static std::vector<std::shared_ptr<const LineAmpCurve>> cache;
+
+        const std::scoped_lock guard (lock);
+
+        const auto same = [] (double x, double y) { return std::bit_cast<std::uint64_t> (x) == std::bit_cast<std::uint64_t> (y); };
+
+        for (const auto& c : cache)
+            if (same (c->loopGain, L) && same (c->negSwing, un))
+                return c;
+
+        cache.push_back (std::make_shared<const LineAmpCurve> (L, un));
+        return cache.back();
+    }
 
     /** s(w): table inside +-range; beyond it a second table in z = range / |w| (the far field,
         where s approaches the rails smoothly in 1/w), so no runtime iteration is ever needed. */
@@ -211,12 +232,12 @@ public:
     void setInputOffset (double volts) noexcept
     {
         offset = volts;
-        offsetOutput = volts != 0.0 ? staticTransfer (volts) : 0.0;
+        offsetOutput = ! isExactly (volts, 0.0) ? staticTransfer (volts) : 0.0;
     }
 
     double process (double x) noexcept
     {
-        const double target = offset != 0.0 ? staticTransfer (x + offset) - offsetOutput : staticTransfer (x);
+        const double target = ! isExactly (offset, 0.0) ? staticTransfer (x + offset) - offsetOutput : staticTransfer (x);
 
         // smooth rate limit on the per-sample step
         const double step = (target - y) / slewStep;
@@ -253,4 +274,4 @@ private:
     double offset = 0.0, offsetOutput = 0.0;
 };
 
-} // namespace umber::dsp::desk
+} // namespace myzel::dsp

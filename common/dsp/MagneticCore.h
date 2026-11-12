@@ -4,11 +4,13 @@
 #include <array>
 #include <cmath>
 
-namespace umber::dsp::desk
+namespace myzel::dsp
 {
 
 /**
-    Jiles–Atherton ferromagnetic core material (SI units: A/m, dimensionless).
+    Jiles–Atherton ferromagnetic core material (SI units: A/m, dimensionless), for the iron of
+    transformers and inductors (TransformerStage). A tape coating's normalised model with its
+    own solver is TapeHysteresis (JilesAtherton.h).
 
     Ms     saturation magnetisation (A/m) — B_sat ~ mu0 * Ms
     a      anhysteretic shape field (A/m) — larger = softer knee, lower permeability
@@ -16,8 +18,8 @@ namespace umber::dsp::desk
     c      reversible fraction (0..1) — larger = thinner loop, more "elastic" core
     alpha  inter-domain coupling (mean field)
 
-    The parameter sets keep 2 * alpha * Ms < (1 - c) * k, so the irreversible denominator never
-    crosses zero (it is clamped anyway).
+    Choose 2 * alpha * Ms < (1 - c) * k, so the irreversible denominator never crosses zero
+    (it is clamped anyway).
 */
 struct JaMaterial
 {
@@ -181,4 +183,4 @@ private:
     const LangevinTable* langevin = nullptr;
 };
 
-} // namespace umber::dsp::desk
+} // namespace myzel::dsp

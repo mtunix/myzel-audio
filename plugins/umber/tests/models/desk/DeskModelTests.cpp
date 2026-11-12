@@ -66,9 +66,9 @@ test::HarmonicResult measureSettled (dsp::CircuitModel& model, double rate, doub
     through 0, peak |B|} measured over the last period. */
 struct LoopFeatures { double remanence, coercivity, peakB; };
 
-LoopFeatures measureLoop (const dsp::desk::TransformerParams& params, double freq, double volts, double rate)
+LoopFeatures measureLoop (const myzel::dsp::TransformerParams& params, double freq, double volts, double rate)
 {
-    dsp::desk::TransformerStage stage;
+    myzel::dsp::TransformerStage stage;
     stage.setParams (params);
     stage.prepare (rate);
 

@@ -188,3 +188,56 @@ TEST_CASE ("ValveModel: harmonic signature is independent of the oversampled rat
     CHECK (std::abs (db (low.thd / high.thd)) < 0.5);
     CHECK (std::abs (db (low.harmonics[0] / high.harmonics[0])) < 0.5);
 }
+
+TEST_CASE ("ValveModel: the shared triode stage takes its values from the caller", "[valve]")
+{
+    using myzel::dsp::tubes::TriodeStage;
+
+    auto prepared = [] (const myzel::dsp::tubes::TriodeStageComponents& c)
+    {
+        TriodeStage stage;
+        stage.prepare (c, rate);
+        return stage;
+    };
+
+    const auto standard = prepared (ValveModel::standardComponents());
+    const double gainDb = db (std::abs (standard.smallSignalGain (1000.0)));
+
+    // Umber's values give Umber's stage (valve/NOTES.md: Vgk -1.218 V, Vpk 171.4 V, 35.4 dB).
+    INFO ("standard: Vgk " << standard.quiescentGridCathodeVolts() << " V, Vpk "
+          << standard.quiescentPlateCathodeVolts() << " V, " << gainDb << " dB");
+    CHECK (std::abs (standard.quiescentGridCathodeVolts() + 1.218) < 0.005);
+    CHECK (std::abs (standard.quiescentPlateCathodeVolts() - 171.4) < 0.5);
+    CHECK (std::abs (gainDb - 35.4) < 0.1);
+
+    // A larger cathode resistor biases colder and raises the plate.
+    auto cold = ValveModel::standardComponents();
+    cold.cathodeResistor = 3.3e3;
+    const auto colder = prepared (cold);
+    INFO ("Rk 3k3: Vgk " << colder.quiescentGridCathodeVolts() << " V, Vpk " << colder.quiescentPlateCathodeVolts() << " V");
+    CHECK (colder.quiescentGridCathodeVolts() < standard.quiescentGridCathodeVolts() - 0.3);
+    CHECK (colder.quiescentPlateCathodeVolts() > standard.quiescentPlateCathodeVolts() + 10.0);
+
+    // A low-mu triode (Koren's 12AU7) in the same circuit has far less gain.
+    auto lowMu = ValveModel::standardComponents();
+    lowMu.tube = { .mu = 21.5, .ex = 1.3, .kg1 = 1180.0, .kp = 84.0, .kvb = 300.0, .grid = {} };
+    const double lowMuDb = db (std::abs (prepared (lowMu).smallSignalGain (1000.0)));
+    INFO ("12AU7: " << lowMuDb << " dB");
+    CHECK (lowMuDb < gainDb - 8.0);
+    CHECK (lowMuDb > 15.0);
+
+    // The same tube set field by field: the stage binds its tables to the new exponent.
+    auto fieldwise = ValveModel::standardComponents();
+    fieldwise.tube.mu  = 21.5;
+    fieldwise.tube.ex  = 1.3;
+    fieldwise.tube.kg1 = 1180.0;
+    fieldwise.tube.kp  = 84.0;
+    CHECK (prepared (fieldwise).smallSignalGain (1000.0) == prepared (lowMu).smallSignalGain (1000.0));
+
+    // A value left out is NaN, never a silent zero.
+    CHECK (ValveModel::standardComponents().complete());
+    CHECK_FALSE (myzel::dsp::tubes::TriodeStageComponents {}.complete());
+    auto missing = ValveModel::standardComponents();
+    missing.cathodeCap = myzel::dsp::tubes::TriodeStageComponents::unset;
+    CHECK_FALSE (missing.complete());
+}

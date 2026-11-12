@@ -34,7 +34,7 @@ def build_dump(name, header, cls, source):
     src = out.with_suffix(".cpp")
     src.write_text(DUMP_SOURCE)
     cxx = os.environ.get("CXX", "c++")
-    subprocess.run([cxx, "-std=c++20", "-O2", "-DNDEBUG", "-I", str(ROOT / "src"),
+    subprocess.run([cxx, "-std=c++20", "-O2", "-DNDEBUG", "-I", str(ROOT / "src"), "-I", str(ROOT.parents[1]),
                     '-DMODEL_HEADER="%s"' % header, "-DMODEL=umber::dsp::%s" % cls,
                     str(src), str(ROOT / source), "-o", str(out)], check=True)
     return str(out)

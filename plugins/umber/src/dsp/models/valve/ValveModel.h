@@ -1,12 +1,10 @@
 #pragma once
 
+#include "common/dsp/TriodeStage.h"
 #include "dsp/common/BiasRamp.h"
 #include "dsp/common/CircuitModel.h"
-#include "dsp/common/tubes/KorenTriode.h"
-#include "dsp/common/tubes/NodalCircuit.h"
 
 #include <algorithm>
-#include <array>
 
 namespace umber::dsp
 {
@@ -32,10 +30,11 @@ namespace umber::dsp
                                            gnd
     @endcode
 
-    The triode is Koren's model plus a grid-cathode conduction law (tubes::KorenTriode). The
-    circuit becomes a discrete nonlinear state-space system (tubes::NodalCircuit: the DK method,
-    equivalent to a WDF with an R-type root) and the two tube ports (Vgk, Vpk) are solved with
-    Newton-Raphson every sample. Everything the stage is known for falls out of the circuit:
+    The stage is the shared common-cathode triode (myzel::dsp::tubes::TriodeStage) with the
+    values above: Koren's triode model plus a grid-cathode conduction law, the circuit as a
+    discrete nonlinear state-space system (the nodal DK method, equivalent to a WDF with an
+    R-type root) and the two tube ports (Vgk, Vpk) solved with Newton-Raphson every sample.
+    Everything the stage is known for falls out of the circuit:
 
       - 2nd-harmonic-dominant curvature of the triode at moderate level,
       - grid conduction on positive peaks charges Cin through Rs, so the bias walks negative
@@ -71,35 +70,17 @@ public:
     void setBias (double amount) noexcept override { bias.setTarget (std::clamp (amount, -1.0, 1.0) * kBiasRangeVolts); }
     static constexpr double kBiasRangeVolts = 1.3;
 
+    /** The voiced circuit drawn above (values and reasons: valve/NOTES.md). */
+    static myzel::dsp::tubes::TriodeStageComponents standardComponents();
+
     /** Diagnostics for tests: Newton evaluations used by the last sample, and port voltages. */
-    int lastIterations() const noexcept { return circuit.lastIterations(); }
-    double gridCathodeVolts() const noexcept { return circuit.portVoltages()[0]; }
-    double quiescentGridCathodeVolts() const noexcept { return circuit.operatingPointVoltages()[0]; }
-    double quiescentPlateCathodeVolts() const noexcept { return circuit.operatingPointVoltages()[1]; }
+    int lastIterations() const noexcept { return stage.lastIterations(); }
+    double gridCathodeVolts() const noexcept { return stage.gridCathodeVolts(); }
+    double quiescentGridCathodeVolts() const noexcept { return stage.quiescentGridCathodeVolts(); }
+    double quiescentPlateCathodeVolts() const noexcept { return stage.quiescentPlateCathodeVolts(); }
 
 private:
-    struct Triode
-    {
-        tubes::KorenTriode tube;
-
-        /** Non-zero pattern of dI/dV: grid current depends on Vgk only. */
-        static constexpr std::array<std::array<bool, 2>, 2> jacobianPattern { { { true, false }, { true, true } } };
-
-        void operator() (const std::array<double, 2>& v, std::array<double, 2>& i,
-                         std::array<std::array<double, 2>, 2>& j) const noexcept
-        {
-            const auto r = tube.evaluate (v[0], v[1]);
-            i = { r.ig, r.ip };
-            j = { { { r.dIgDvgk, 0.0 }, { r.dIpDvgk, r.dIpDvpk } } };
-        }
-
-        void limit (const std::array<double, 2>& previous, std::array<double, 2>& next) const noexcept
-        {
-            next[1] = tubes::KorenTriode::limitPlate (previous[1], next[1]);
-        }
-    };
-
-    tubes::NodalCircuit<6, 2, Triode> circuit;
+    myzel::dsp::tubes::TriodeStage stage;
     double makeup = 1.0;
     BiasRamp bias;   // volts on the bias supply; kept across prepare()
 };

@@ -32,7 +32,7 @@ void FuzzModel::process (float* samples, int numSamples) noexcept
         if (bias.isMoving())
             circuit.setBiasVolts (bias.next());
 
-        const double u = tubes::softLimit (kInputVolts * (double) samples[n], kSourceKneeVolts, kSourceMaxVolts);
+        const double u = myzel::dsp::tubes::softLimit (kInputVolts * (double) samples[n], kSourceKneeVolts, kSourceMaxVolts);
         samples[n] = (float) (makeup * circuit.process (u));
     }
 

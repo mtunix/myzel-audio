@@ -1,4 +1,4 @@
-#include "dsp/common/Oversampler2x.h"
+#include "common/dsp/Oversampler2x.h"
 #include "dsp/common/TapeHeads.h"
 #include "dsp/common/TapeLosses.h"
 #include "dsp/common/Transport.h"
@@ -15,7 +15,7 @@ using namespace mulberry::dsp;
 
 TEST_CASE ("Blocks: the 2x oversampler never gains, is flat in band and reports its delay", "[blocks]")
 {
-    Oversampler2x os;
+    myzel::dsp::Oversampler2x os;
     double worstGain = -100.0, flat = 0.0;
     for (double f = 0.0005; f < 0.5; f += 0.0005)
     {

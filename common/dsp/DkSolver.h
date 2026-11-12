@@ -1,5 +1,7 @@
 #pragma once
 
+#include "common/dsp/FloatCompare.h"
+
 #include <algorithm>
 #include <array>
 #include <cmath>
@@ -7,7 +9,7 @@
 #include <cstddef>
 #include <numbers>
 
-namespace umber::dsp::classa
+namespace myzel::dsp
 {
 
 /**
@@ -356,7 +358,7 @@ public:
     */
     void setBiasCurrent (double amps) noexcept
     {
-        if (amps == biasAmps)
+        if (isExactly (amps, biasAmps))
             return;
 
         biasAmps = amps;
@@ -406,7 +408,7 @@ public:
             // reset with Bias set does not glide from the nominal point. Exact at 0.
             interpolateRest (biasAmps, restAtBias);
 
-            if (biasAmps != 0.0)
+            if (! isExactly (biasAmps, 0.0))
             {
                 x = restAtBias.x;
                 vPrev = restAtBias.v;
@@ -1065,7 +1067,7 @@ private:
         const auto& c = biasGrid[i2];
         const auto& d = biasGrid[i3];
 
-        if (t == 0.0)
+        if (isExactly (t, 0.0))
         {
             out = b;
             return;
@@ -1186,4 +1188,4 @@ private:
     int iterationsUsed = 0;
 };
 
-} // namespace umber::dsp::classa
+} // namespace myzel::dsp

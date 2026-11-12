@@ -30,8 +30,8 @@ DUMP_CPP = r"""// Dumps raw circuit data for the Python reference comparison.
 using namespace umber;
 int main (int argc, char** argv)
 {
-    dsp::classa::Components c;
-    dsp::classa::ClassACircuit circuit;
+    const auto c = dsp::ClassAModel::standardComponents();
+    myzel::dsp::ClassACircuit circuit;
     if (! std::strcmp (argv[1], "dc"))
     {
         circuit.prepare (192000.0, c);
@@ -68,11 +68,11 @@ REPO = os.path.abspath(os.path.join(os.path.dirname(__file__), "../../../../..")
 HARNESS = os.path.join(tempfile.gettempdir(), "classa_dump")
 with open(HARNESS + ".cpp", "w") as f:
     f.write(DUMP_CPP)
-subprocess.run(["g++", "-std=c++20", "-O2", "-I" + os.path.join(REPO, "src"), "-o", HARNESS, HARNESS + ".cpp",
-                os.path.join(REPO, "src/dsp/models/classa/ClassACircuit.cpp"),
+subprocess.run(["g++", "-std=c++20", "-O2", "-I" + os.path.join(REPO, "src"), "-I" + os.path.join(REPO, "../.."),
+                "-o", HARNESS, HARNESS + ".cpp",
                 os.path.join(REPO, "src/dsp/models/classa/ClassAModel.cpp")], check=True)
 
-# --- component values (must match classa::Components defaults) ---
+# --- component values (must match ClassAModel::standardComponents) ---
 Vcc = 24.0; Rs = 600.0; Cin = 4.7e-6; R1 = 47e3; R2 = 6.8e3; Rbb = 120.0
 Re1 = 22.0; Re2 = 1e3; Ce = 1000e-6; Rc = 5.6e3; Ccb = 33e-12
 Re3 = 1.5e3; Cout = 100e-6; Rw = 40.0; Lm = 4.0; RL = 600.0; PhiS = 0.016; Knee = 0.3

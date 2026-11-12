@@ -1,8 +1,8 @@
 #pragma once
 
 #include "common/dsp/GrainVoice.h"
+#include "common/dsp/Oversampler2x.h"
 #include "dsp/common/Interpolators.h"
-#include "dsp/common/Oversampler2x.h"
 #include "dsp/common/Modulation.h"
 #include "dsp/machines/Machine.h"
 
@@ -105,9 +105,9 @@ public:
             return inner.downsample (delayed, clip (u0) - u0);
         }
 
-        LinearPhaseHalfBand<14> outer { 90.0 };
-        LinearPhaseHalfBand<8> mid { 95.0 };
-        LinearPhaseHalfBand<4> inner { 90.0 };
+        myzel::dsp::LinearPhaseHalfBand<14> outer { 90.0 };
+        myzel::dsp::LinearPhaseHalfBand<8> mid { 95.0 };
+        myzel::dsp::LinearPhaseHalfBand<4> inner { 90.0 };
         double align = 0.0;
     };
 

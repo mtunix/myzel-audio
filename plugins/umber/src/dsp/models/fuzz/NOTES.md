@@ -48,7 +48,7 @@ reservoir sag cap (the screen RC carries the sag).
 ## Tube models
 
 * Driver: Koren 12AX7 + smooth grid diode — see `valve/NOTES.md`.
-* EL84 (`src/dsp/common/tubes/KorenPentode.h`): Koren's pentode equations
+* EL84 (`src/dsp/common/KorenPentode.h`): Koren's pentode equations
   `E1 = Vg2k/Kp · ln(1 + exp(Kp(1/µ + Vg1k/Vg2k)))`, `Ik = 2E1^Ex/Kg1`, `Ip = Ik·atan(Vpk/Kvb)`.
   Koren publishes no EL84 set, so it was fitted (µ = 19 = µg1g2, Ex = 1.35, Kp = 200 as for his
   pentodes; Kg1, Kg2 solved) to the Philips datasheet class-A point Va = Vg2 = 250 V,
@@ -66,7 +66,7 @@ reservoir sag cap (the screen RC carries the sag).
 
 ## Solver
 
-Same nodal DK solver as Valve (`NodalCircuit.h`; see `valve/NOTES.md` for the method, the
+Same nodal DK solver as Valve (`common/dsp/NodalCircuit.h`; see `valve/NOTES.md` for the method, the
 references and why it was preferred over a hand-built R-type WDF), here with **five coupled
 nonlinear ports** (Vgk1, Vpk1, Vg1k2, Vg2k2, Vpk2) and 7 states including the transformer's
 inductance. Specifics:

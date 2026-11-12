@@ -6,7 +6,7 @@
 #include <numbers>
 #include <vector>
 
-namespace mulberry::dsp
+namespace myzel::dsp
 {
 
 /**
@@ -17,7 +17,8 @@ namespace mulberry::dsp
 
     For in-loop nonlinear stages: process one host sample, get two oversampled samples, process
     them, bring two back. The low-frequency group delay of the up/down pair is latencySamples()
-    (host samples), which the tape machines take off their head distances.
+    (host samples), for the caller's latency report (Mulberry's tape machines take it off their
+    head distances).
 */
 template <int numCoefficients>
     requires (numCoefficients % 2 == 0)
@@ -321,4 +322,4 @@ private:
     int upIndex = 0, downIndex = 0;
 };
 
-} // namespace mulberry::dsp
+} // namespace myzel::dsp

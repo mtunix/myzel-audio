@@ -1,17 +1,18 @@
 #pragma once
 
-#include "dsp/models/desk/JilesAtherton.h"
+#include "common/dsp/MagneticCore.h"
 
 #include <cmath>
 #include <complex>
 #include <numbers>
 
-namespace umber::dsp::desk
+namespace myzel::dsp
 {
 
 /**
-    Component values of one audio transformer and its terminations, referred to the primary
-    (both Desk transformers are 1:1, so no turns-ratio scaling is needed).
+    Component values of one audio transformer and its terminations, referred to the primary.
+    For a 1:n transformer, scale the secondary's elements (R2, Cw, RL) to the primary
+    (R / n², C · n²) and multiply the output voltage by n; 1:1 needs neither.
 
         Vs ──[ R1 ]──[ Cc ]──┬──[ Lleak ]──[ R2 ]──┬────────┬──── out
                              │                     │        │
@@ -244,4 +245,4 @@ private:
     double zCc = 0.0, zLl = 0.0, zCw = 0.0;
 };
 
-} // namespace umber::dsp::desk
+} // namespace myzel::dsp

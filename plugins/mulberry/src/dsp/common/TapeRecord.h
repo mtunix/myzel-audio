@@ -1,9 +1,9 @@
 #pragma once
 
 #include "common/dsp/AnalyticFilters.h"
+#include "common/dsp/Oversampler2x.h"
 #include "dsp/common/TapeCore.h"
 #include "dsp/common/Modulation.h"
-#include "dsp/common/Oversampler2x.h"
 #include "dsp/common/TapeLosses.h"
 
 #include <array>
@@ -282,7 +282,7 @@ public:
     }
 
 private:
-    using Oversampling = OversamplerCascade<8>;
+    using Oversampling = myzel::dsp::OversamplerCascade<8>;
 
     static bool sameVoicing (const Voicing& a, const Voicing& b) noexcept
     {

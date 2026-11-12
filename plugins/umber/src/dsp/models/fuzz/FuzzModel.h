@@ -1,10 +1,10 @@
 #pragma once
 
+#include "common/dsp/KorenTriode.h"
+#include "common/dsp/NodalCircuit.h"
 #include "dsp/common/BiasRamp.h"
 #include "dsp/common/CircuitModel.h"
-#include "dsp/common/tubes/KorenPentode.h"
-#include "dsp/common/tubes/KorenTriode.h"
-#include "dsp/common/tubes/NodalCircuit.h"
+#include "dsp/common/KorenPentode.h"
 
 #include <algorithm>
 #include <array>
@@ -15,9 +15,9 @@ namespace umber::dsp
 namespace fuzz
 {
     /** The circuit drawn in FuzzModel.h. Component values and their reasons: fuzz/NOTES.md. */
-    constexpr tubes::Netlist makeNetlist()
+    constexpr myzel::dsp::tubes::Netlist makeNetlist()
     {
-        tubes::Netlist n;
+        myzel::dsp::tubes::Netlist n;
 
         const int in       = n.node();
         const int leak1    = n.node();
@@ -150,11 +150,11 @@ public:
 private:
     struct Tubes
     {
-        tubes::KorenTriode driver;
-        tubes::KorenPentode output;
+        myzel::dsp::tubes::KorenTriode driver;
+        KorenPentode output;
 
         /** Structural zeros of the netlist's matrices, skipped in the per-sample products. */
-        static constexpr auto structure = tubes::analyseStructure<7, 5> (fuzz::makeNetlist());
+        static constexpr auto structure = myzel::dsp::tubes::analyseStructure<7, 5> (fuzz::makeNetlist());
 
         /** Non-zero pattern of dI/dV: two independent tubes, grid currents depend on Vgk only. */
         static constexpr std::array<std::array<bool, 5>, 5> jacobianPattern { { { true,  false, false, false, false },
@@ -179,12 +179,12 @@ private:
 
         void limit (const std::array<double, 5>& previous, std::array<double, 5>& next) const noexcept
         {
-            next[1] = tubes::KorenTriode::limitPlate (previous[1], next[1]);
-            next[4] = tubes::KorenPentode::limitPlate (previous[4], next[4]);
+            next[1] = myzel::dsp::tubes::KorenTriode::limitPlate (previous[1], next[1]);
+            next[4] = KorenPentode::limitPlate (previous[4], next[4]);
         }
     };
 
-    tubes::NodalCircuit<7, 5, Tubes> circuit;
+    myzel::dsp::tubes::NodalCircuit<7, 5, Tubes> circuit;
     double makeup = 1.0;
     BiasRamp bias;   // volts on the bias supply; kept across prepare()
 };

@@ -9,7 +9,7 @@ int main (int argc, char** argv)
 {
     double rate = atof (argv[1]), f = atof (argv[2]), A = atof (argv[3]), sec = atof (argv[4]); int mode = atoi (argv[5]);
     auto c = DeskCircuit::standard();
-    desk::TransformerStage it, ot; desk::LineAmp amp;
+    myzel::dsp::TransformerStage it, ot; myzel::dsp::LineAmp amp;
     it.setParams (c.input); ot.setParams (c.output); amp.setParams (c.amp);
     it.prepare (rate); ot.prepare (rate); amp.prepare (rate);
     int n = (int) (sec * rate);
@@ -17,7 +17,7 @@ int main (int argc, char** argv)
     for (int i = 0; i < n; ++i)
     {
         double x = A * std::sin (2 * M_PI * f * i / rate);
-        double y; const desk::TransformerStage* t;
+        double y; const myzel::dsp::TransformerStage* t;
         if (mode == 1) { y = it.process (c.voltsPerUnit * x); t = &it; }
         else if (mode == 2) { y = ot.process (15.0 * x); t = &ot; }
         else { y = ot.process (amp.staticTransfer (it.process (c.voltsPerUnit * x))); t = &ot; }

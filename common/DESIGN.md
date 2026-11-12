@@ -28,8 +28,9 @@ Standalone) with the vendor IDs from the root `CMakeLists.txt`, and adds its `to
 
 ## DSP blocks
 
-Header-only, no JUCE, namespace `myzel::dsp`. A block moves here from a plugin when a second
-plugin needs it; a move never changes a sibling's sound (its golden files stay bit-identical).
+Header-only, no JUCE, namespace `myzel::dsp` (`analytic::` and `tubes::` group two families).
+A block moves here from a plugin when a second plugin needs it; a move never changes a
+sibling's sound (its golden files stay bit-identical).
 
 | File | Contents | Used by |
 |---|---|---|
@@ -38,6 +39,22 @@ plugin needs it; a move never changes a sibling's sound (its golden files stay b
 | `GrainVoice` | one voice of the granular pitch shifter (WSOLA-aligned grains, power-normalised) | Cerulean (Halo), Mulberry (Clean's Shift) |
 | `JilesAtherton` | the Jiles–Atherton tape core, RK4 in field space (validated in Umber's `models/reel/NOTES.md`) | Umber (Reel); Mulberry (Loop, Reel) uses its equations, parameters and Langevin function with its own 8x solver (`TapeCore`) |
 | `AnalyticFilters` | linear sections with exact responses: TPT one-pole and SVF, bilinear shelf with an exact inverse | Umber (Reel), Mulberry (Loop, Reel) |
+| `Oversampler2x` | per-sample 2x polyphase IIR half-band pair (minimum phase, never gains), 4x/8x cascades, linear-phase half-band FIR | Mulberry (Loop, Reel, Clean); Viridian (planned) |
+| `NodalCircuit` | nodal DK solver for a netlist with any nonlinear device (`tubes::`): MNA to discrete state space, Newton on the device ports, adjustable bias supply, compile-time sparsity | Umber (Valve, Fuzz) |
+| `TubeMath`, `KorenTriode` | tube currents from shared Hermite tables; Koren's triode with a smooth grid diode (`tubes::`) | Umber (Valve, Fuzz) |
+| `TriodeStage` | a common-cathode triode gain stage on `NodalCircuit`, component values from the caller (`tubes::`; validated in Umber's `models/valve/NOTES.md`) | Umber (Valve); Viridian (planned) |
+| `DkSolver` | nodal DK solver with built-in Ebers–Moll junction and saturating-core ports, state hand-over between rates | Umber (Class A) |
+| `ClassACircuit` | single-ended class-A transistor stage into a saturating output transformer, switching-event sub-steps, component values from the caller (validated in Umber's `models/classa/NOTES.md`) | Umber (Class A); Viridian (planned) |
+| `MagneticCore` | the Jiles–Atherton core of transformers and inductors, SI units, Langevin table (not the tape core above: different units and solver) | Umber (Desk); Viridian (planned) |
+| `TransformerStage` | an audio transformer as a WDF with the nonlinear core at its root (validated in Umber's `models/desk/NOTES.md`) | Umber (Desk); Viridian (planned) |
+| `LineAmp` | op-amp line stage: soft rail clip in the loop (exact, tabulated), slew limit, input offset | Umber (Desk); Viridian (planned) |
+| `FloatCompare` | `isExactly`: an exact comparison where one is meant (a value that did not move, an exact nominal point), without `-Wfloat-equal` | the solvers above |
+
+The circuit stages take every component value from the caller (`ClassAComponents`,
+`TriodeStageComponents`, `TransformerParams`, `LineAmpParams`): a plugin keeps its own voicing
+(Umber's in its models' `standard…()` functions) and never forks the solver. The first two have
+no values of their own: a field left out is NaN, `complete()` says whether all are set, and
+`prepare()` asserts it.
 
 ## Theme: one kit, each plugin's colours
 

@@ -1,11 +1,11 @@
 #pragma once
 
-#include <algorithm>
-
-#include "dsp/common/CircuitModel.h"
+#include "common/dsp/LineAmp.h"
+#include "common/dsp/TransformerStage.h"
 #include "dsp/common/BiasRamp.h"
-#include "dsp/models/desk/LineAmp.h"
-#include "dsp/models/desk/TransformerStage.h"
+#include "dsp/common/CircuitModel.h"
+
+#include <algorithm>
 
 namespace umber::dsp
 {
@@ -16,10 +16,10 @@ namespace umber::dsp
 */
 struct DeskCircuit
 {
-    double voltsPerUnit;              // input sample 1.0 (0 dBFS) -> source EMF peak volts
-    desk::TransformerParams input;    // 10k:10k bridging input transformer, high-nickel core
-    desk::LineAmpParams amp;
-    desk::TransformerParams output;   // 600:600 output transformer, 50 % nickel / steel core
+    double voltsPerUnit;                   // input sample 1.0 (0 dBFS) -> source EMF peak volts
+    myzel::dsp::TransformerParams input;   // 10k:10k bridging input transformer, high-nickel core
+    myzel::dsp::LineAmpParams amp;
+    myzel::dsp::TransformerParams output;  // 600:600 output transformer, 50 % nickel / steel core
 
     static DeskCircuit standard();
 };
@@ -50,13 +50,13 @@ public:
     /** Small-signal 1 kHz gain from input samples to output volts (used for make-up). */
     static double smallSignalGain (const DeskCircuit& circuit, double frequency);
 
-    const desk::TransformerStage& inputTransformer() const noexcept { return inputStage; }
-    const desk::TransformerStage& outputTransformer() const noexcept { return outputStage; }
+    const myzel::dsp::TransformerStage& inputTransformer() const noexcept { return inputStage; }
+    const myzel::dsp::TransformerStage& outputTransformer() const noexcept { return outputStage; }
 
 private:
     DeskCircuit circuit;
-    desk::TransformerStage inputStage, outputStage;
-    desk::LineAmp amp;
+    myzel::dsp::TransformerStage inputStage, outputStage;
+    myzel::dsp::LineAmp amp;
     double makeup = 1.0;
     BiasRamp bias;   // volts of input offset; kept across prepare()
 };

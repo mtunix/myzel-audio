@@ -10,7 +10,7 @@
 #include <numbers>
 #include <vector>
 
-namespace umber::dsp::tubes
+namespace myzel::dsp::tubes
 {
 
 /**
@@ -291,4 +291,4 @@ private:
     CubicTable table;
 };
 
-} // namespace umber::dsp::tubes
+} // namespace myzel::dsp::tubes

@@ -5,7 +5,43 @@
 namespace umber::dsp
 {
 
-ClassAModel::ClassAModel (const classa::Components& c, double inputVoltsPerUnit)
+myzel::dsp::ClassAComponents ClassAModel::standardComponents()
+{
+    myzel::dsp::ClassAComponents c {};
+    c.vcc      = 24.0;
+
+    c.rs       = 600.0;
+    c.cin      = 4.7e-6;
+    c.r1       = 47.0e3;
+    c.r2       = 6.8e3;
+    c.rbb      = 120.0;
+
+    c.re1      = 22.0;
+    c.re2      = 1.0e3;
+    c.ce       = 1000.0e-6;
+    c.rc       = 5.6e3;
+    c.ccb      = 33.0e-12;
+
+    c.re3      = 1.5e3;
+    c.cout     = 100.0e-6;
+    c.rw       = 40.0;
+    c.lm       = 4.0;
+    c.rl       = 600.0;
+    c.phiSat   = 0.016;
+    c.coreKnee = 0.3;
+
+    c.is1      = 1.0e-14;
+    c.betaF1   = 250.0;
+    c.betaR1   = 4.0;
+    c.is2      = 4.0e-14;
+    c.betaF2   = 120.0;
+    c.vt       = 0.025852;   // 300 K
+
+    c.biasTrimAmps = 600.0e-6;   // +-600 uA trim at the Bias extremes
+    return c;
+}
+
+ClassAModel::ClassAModel (const myzel::dsp::ClassAComponents& c, double inputVoltsPerUnit)
     : components (c), inputVolts (inputVoltsPerUnit)
 {
 }

@@ -3,6 +3,14 @@
 The "warm, musical" model: a single triode gain stage, solved at circuit level every sample at
 the oversampled rate.
 
+| File | Contents |
+|---|---|
+| `ValveModel.{h,cpp}` | Component values, input calibration, source limit, bias range, make-up gain (`CircuitModel` implementation) |
+| `common/dsp/TriodeStage.h` | The common-cathode stage: netlist from its component values, the triode as a two-port device (shared) |
+| `common/dsp/KorenTriode.h`, `common/dsp/TubeMath.h` | Koren's triode with the smooth grid diode; the shared current tables |
+| `common/dsp/NodalCircuit.h` | Nodal DK solver: netlist to discrete state space, Newton, bias supply (shared with Fuzz) |
+| `tests/models/valve/` | Conformance, character, solver and shared-stage tests, plus the Python reference |
+
 ## Circuit
 
 ```
@@ -41,7 +49,7 @@ linearised circuit, so unity small-signal gain and non-inverted polarity hold at
 
 ### Triode model
 
-`src/dsp/common/tubes/KorenTriode.h`
+`common/dsp/KorenTriode.h`
 
 * Plate current: Norman Koren, *Improved vacuum tube models for SPICE simulations*, Glass Audio
   8(5), 1996 — `E1 = Vpk/Kp · ln(1 + exp(Kp(1/µ + Vgk/√(Kvb + Vpk²))))`, `Ip = 2·E1^Ex / Kg1`
@@ -56,11 +64,13 @@ linearised circuit, so unity small-signal gain and non-inverted polarity hold at
   cubic-Hermite tables (`TubeMath.h`: `SoftplusPowerTable`, `PowerTable`; value + exact slope →
   C1; relative error < 1.1e-8 where the tube conducts). No exp/log on the critical path. The
   whole model went from 60 to 49 ns per sample at 192 kHz (the change is −144 dB against the
-  previous output; golden file unchanged). The tables bind to `Ex` when the tube is constructed.
+  previous output; golden file unchanged). The tables bind to `Ex` when the tube is constructed,
+  and again in `TriodeStage::prepare()` (`bindTables()`), so a tube set field by field is solved
+  with its own exponent.
 
 ## Solver
 
-`src/dsp/common/tubes/NodalCircuit.h` — **nodal DK method** (D. T. Yeh, J. S. Abel, J. O. Smith,
+`common/dsp/NodalCircuit.h` — **nodal DK method** (D. T. Yeh, J. S. Abel, J. O. Smith,
 *Automated physical modeling of nonlinear audio circuits for real-time audio effects — Part I*,
 IEEE TASLP 18(4), 2010; M. Holters, U. Zölzer, *A generalized method for the derivation of
 non-linear state-space models from circuit schematics*, EUSIPCO 2015).
@@ -161,7 +171,9 @@ moderate level, ≈ 1.4 at heavy drive.
 `tests/models/valve/ValveModelTests.cpp`: conformance suite; operating point; THD windows;
 H2 dominance (≥ 15 dB over H3 up to 0 dBFS); blocking bias shift and recovery; attack squash;
 frequency response; Newton convergence budget at 88.2/768 kHz up to +56 dB of drive;
-no denormals after 30 s silence; harmonic signature independent of rate.
+no denormals after 30 s silence; harmonic signature independent of rate; the shared
+`TriodeStage` reproduces this operating point from `standardComponents()` and follows other
+values (a larger Rk biases colder, a 12AU7 has ~11 dB less gain).
 
 To reproduce (Python 3 with numpy + scipy; the script compiles a small waveform-dump tool
 against the model sources with the system C++ compiler):
@@ -174,8 +186,9 @@ python3 -m venv /tmp/venv && /tmp/venv/bin/pip install numpy scipy
 ## Knobs for voicing
 
 `kInputVolts` (where it starts to bite), Rg / Rs (depth of blocking), Ck (cathode release),
-Rsup/Csup (sag), Cgp (Miller top end). Changing values only means editing `makeNetlist()`:
-matrices, operating point and make-up gain are re-derived in `prepare()`.
+Rsup/Csup (sag), Cgp (Miller top end). Changing values only means editing
+`ValveModel::standardComponents()`: matrices, operating point and make-up gain are re-derived in
+`prepare()`.
 
 ## Bias
 

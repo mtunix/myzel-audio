@@ -5,6 +5,15 @@ transformer into a bridging load. The transformers carry most of the character. 
 nonlinear magnetising inductances with Jiles–Atherton hysteresis, so low frequencies saturate the
 iron first (flux = ∫V dt).
 
+| File | Contents |
+|---|---|
+| `DeskModel.{h,cpp}` | Component values and core materials (`DeskCircuit::standard()`), wiring, make-up gain, bias trim (`CircuitModel` implementation) |
+| `common/dsp/TransformerStage.h` | One transformer as a WDF with the nonlinear magnetising inductance at its root (shared) |
+| `common/dsp/MagneticCore.h` | The Jiles–Atherton core: material, Langevin table, susceptibility (shared) |
+| `common/dsp/LineAmp.h` | The line amp: exact closed-loop rail clip (tabulated), slew limit, input offset (shared) |
+| `reference/` | The independent Python reference and its C++ dump tool |
+| `tests/models/desk/` | Conformance, character and hysteresis-loop tests |
+
 ## Circuit
 
 ```
@@ -174,7 +183,7 @@ To reproduce, from `src/dsp/models/desk/reference`:
 
 ```
 python3 -m venv venv && venv/bin/pip install numpy scipy numba
-g++ -O2 -std=c++20 -I../../../.. dump_main.cc ../*.cpp -o dump
+g++ -O2 -std=c++20 -I../../../.. -I../../../../../../.. dump_main.cc ../*.cpp -o dump
 venv/bin/python validate.py && venv/bin/python loops.py
 ```
 

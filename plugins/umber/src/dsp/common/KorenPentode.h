@@ -1,11 +1,11 @@
 #pragma once
 
-#include "dsp/common/tubes/KorenTriode.h"
+#include "common/dsp/KorenTriode.h"
 
 #include <cmath>
 #include <numbers>
 
-namespace umber::dsp::tubes
+namespace umber::dsp
 {
 
 /**
@@ -35,6 +35,11 @@ namespace umber::dsp::tubes
 */
 struct KorenPentode
 {
+    using GridDiode = myzel::dsp::tubes::GridDiode;
+    using SoftplusPowerTable = myzel::dsp::tubes::SoftplusPowerTable;
+    using PowerTable = myzel::dsp::tubes::PowerTable;
+    using AtanTable = myzel::dsp::tubes::AtanTable;
+
     double mu   = 19.0;
     double ex   = 1.35;
     double kg1  = 659.0;
@@ -115,8 +120,8 @@ struct KorenPentode
     */
     static double limitPlate (double previous, double next) noexcept
     {
-        return KorenTriode::limitPlate (previous, next);
+        return myzel::dsp::tubes::KorenTriode::limitPlate (previous, next);
     }
 };
 
-} // namespace umber::dsp::tubes
+} // namespace umber::dsp

@@ -27,12 +27,12 @@ namespace
 
 TEST_CASE ("ClassAModel: DC operating point is a sane class-A bias", "[classa]")
 {
-    umber::dsp::classa::ClassACircuit circuit;
-    const umber::dsp::classa::Components c;
+    myzel::dsp::ClassACircuit circuit;
+    const auto c = ClassAModel::standardComponents();
     circuit.prepare (rate, c);
     REQUIRE (circuit.dcConverged());
 
-    using C = umber::dsp::classa::ClassACircuit;
+    using C = myzel::dsp::ClassACircuit;
     const auto& v = circuit.dcNodeVoltages();
     const auto ic1 = (c.vcc - v[C::nodeC1]) / c.rc;
     const auto ie2 = v[C::nodeE3] / c.re3;
@@ -45,6 +45,17 @@ TEST_CASE ("ClassAModel: DC operating point is a sane class-A bias", "[classa]")
     CHECK (v[C::nodeC1] - v[C::nodeE1] > 6.0); // Q1 well out of saturation
     CHECK (v[C::nodeC1] < c.vcc - 8.0);        // and well out of cut-off
     CHECK (std::abs (v[C::nodeT]) < 1.0e-6);   // the transformer sees no DC
+}
+
+TEST_CASE ("ClassAModel: the shared stage's values are complete, a value left out is NaN", "[classa]")
+{
+    using Components = myzel::dsp::ClassAComponents;
+    CHECK (ClassAModel::standardComponents().complete());
+    CHECK_FALSE (Components {}.complete());
+
+    auto missing = ClassAModel::standardComponents();
+    missing.lm = Components::unset;
+    CHECK_FALSE (missing.complete());
 }
 
 TEST_CASE ("ClassAModel: H2 leads at moderate drive, H3 catches up as it clips", "[classa]")
@@ -206,7 +217,7 @@ TEST_CASE ("ClassAModel: Newton solver stays bounded and converges quickly", "[c
         const auto mean = (double) total / (double) x.size();
         INFO ("amplitude " << amplitude << ": mean " << mean << ", worst " << worst << " iterations");
         CHECK (finite);
-        CHECK (worst <= umber::dsp::classa::ClassACircuit::Solver::maxIterations);
+        CHECK (worst <= myzel::dsp::ClassACircuit::Solver::maxIterations);
         CHECK (mean < (amplitude < 2.0 ? 3.2 : 4.0));
     }
 }

@@ -1,11 +1,11 @@
 #pragma once
 
-#include "dsp/common/tubes/TubeMath.h"
+#include "common/dsp/TubeMath.h"
 
 #include <algorithm>
 #include <cmath>
 
-namespace umber::dsp::tubes
+namespace myzel::dsp::tubes
 {
 
 /**
@@ -64,10 +64,18 @@ struct KorenTriode
 
     GridDiode grid;
 
-    // Shared tables for the exponent above (ex is fixed once the tube is constructed).
+    // Shared tables for the exponent above, bound when the tube is built: bindTables() after
+    // changing ex on an existing tube.
     const SoftplusPowerTable* softplus = &SoftplusPowerTable::forExponent (1.0);
     const SoftplusPowerTable* plateCurve = &SoftplusPowerTable::forExponent (ex);
     const PowerTable* power = &PowerTable::forExponent (ex);
+
+    /** Points the tables at the current ex (not real-time: may build a table). */
+    void bindTables()
+    {
+        plateCurve = &SoftplusPowerTable::forExponent (ex);
+        power = &PowerTable::forExponent (ex);
+    }
 
     struct Result
     {
@@ -116,4 +124,4 @@ struct KorenTriode
     }
 };
 
-} // namespace umber::dsp::tubes
+} // namespace myzel::dsp::tubes

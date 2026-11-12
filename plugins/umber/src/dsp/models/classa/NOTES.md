@@ -67,7 +67,7 @@ and it bounds absurd inputs (±1000 → ±12 V).
   only when driven at low frequency (30 Hz, 0 dBFS: 21 % THD vs 11 % at 1 kHz), giving the
   bottom end weight without smearing the mids.
 
-## Solver: nodal DK method (`DkSolver.h`)
+## Solver: nodal DK method (`common/dsp/DkSolver.h`)
 
 The netlist is stamped into MNA form; capacitors and inductors use trapezoidal companion
 models (equivalent to bilinear-transform WDF one-ports). Per sample rate the linear part is
@@ -262,11 +262,13 @@ frequencies; RMS level within 0.03 dB).
 
 ## Files
 
-* `DkSolver.h` — generic DK-method engine (stamping, DC solve, Newton, AC analysis, state
-  hand-over between rates, switching-event mask).
-* `ClassACircuit.{h,cpp}` — the netlist and component values; switching-event sub-steps and
-  the period-averaged output.
-* `ClassAModel.{h,cpp}` — `CircuitModel` wrapper: input calibration, source rail, make-up gain.
+| File | Contents |
+|---|---|
+| `ClassAModel.{h,cpp}` | Component values (`standardComponents()`), input calibration, source rail, make-up gain (`CircuitModel` implementation) |
+| `common/dsp/ClassACircuit.h` | The netlist, stamped from `ClassAComponents`; switching-event sub-steps and the period-averaged output (shared) |
+| `common/dsp/DkSolver.h` | Generic DK-method engine: stamping, DC solve, Newton, AC analysis, state hand-over between rates, switching-event mask (shared) |
+| `validation/reference.py` | The independent Python reference |
+| `tests/models/classa/` | Conformance, character, solver and aliasing tests |
 
 ## Bias
 

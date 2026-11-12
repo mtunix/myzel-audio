@@ -1,5 +1,7 @@
 #pragma once
 
+#include "common/dsp/FloatCompare.h"
+
 #include <algorithm>
 #include <array>
 #include <cassert>
@@ -11,7 +13,7 @@
 #include <utility>
 #include <vector>
 
-namespace umber::dsp::tubes
+namespace myzel::dsp::tubes
 {
 
 /** Fixed-size vector / row-major matrix used in the audio loop. */
@@ -665,7 +667,7 @@ public:
     */
     void setBiasVolts (double volts) noexcept
     {
-        if (! hasBias || volts == biasVolts)
+        if (! hasBias || isExactly (volts, biasVolts))
             return;
 
         const auto dv = volts - biasVolts;
@@ -711,7 +713,7 @@ public:
     void reset() noexcept
     {
         // the rest point at the current bias (the nominal one, exactly, at 0)
-        if (biasVolts == 0.0 || ! biasGridReady)
+        if (isExactly (biasVolts, 0.0) || ! biasGridReady)
             restAtBias = { x0, v0, y0Nominal };
         else
             interpolateRest (biasVolts, restAtBias);
@@ -1350,7 +1352,7 @@ private:
     /** The DC terms for a bias supply voltage (exactly nominal at 0). */
     void applyBiasDc (double volts) noexcept
     {
-        if (volts == 0.0)
+        if (isExactly (volts, 0.0))
         {
             ss.bDc = nominalDc.bDc;
             ss.eDc = nominalDc.eDc;
@@ -1399,7 +1401,7 @@ private:
         const auto i1 = std::min ((int) u, last - 1);
         const auto t = u - i1;
 
-        if (t == 0.0)
+        if (isExactly (t, 0.0))
         {
             out = biasGrid[(size_t) i1];
             return;
@@ -1543,4 +1545,4 @@ private:
     RestPoint restAtBias {};
 };
 
-} // namespace umber::dsp::tubes
+} // namespace myzel::dsp::tubes

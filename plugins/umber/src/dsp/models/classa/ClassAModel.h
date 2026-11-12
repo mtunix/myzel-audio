@@ -1,8 +1,8 @@
 #pragma once
 
+#include "common/dsp/ClassACircuit.h"
 #include "dsp/common/BiasRamp.h"
 #include "dsp/common/CircuitModel.h"
-#include "dsp/models/classa/ClassACircuit.h"
 
 #include <algorithm>
 
@@ -28,14 +28,17 @@ public:
     ClassAModel() = default;
 
     /** For validation tools: a component variation and a different input calibration. */
-    ClassAModel (const classa::Components& c, double inputVoltsPerUnit);
+    ClassAModel (const myzel::dsp::ClassAComponents& c, double inputVoltsPerUnit);
+
+    /** The voiced circuit (values and reasons: classa/NOTES.md). */
+    static myzel::dsp::ClassAComponents standardComponents();
 
     void prepare (double oversampledRate) override;
     void reset() noexcept override;
     void process (float* samples, int numSamples) noexcept override;
     void setBias (double amount) noexcept override { bias.setTarget (std::clamp (amount, -1.0, 1.0)); }
 
-    const classa::ClassACircuit& getCircuit() const noexcept { return circuit; }
+    const myzel::dsp::ClassACircuit& getCircuit() const noexcept { return circuit; }
     double getMakeupGain() const noexcept { return makeup; }
 
     /** Source EMF in volts for a full-scale (1.0) input sample. */
@@ -45,8 +48,8 @@ public:
     static constexpr double sourceRailVolts = 12.0;
 
 private:
-    classa::Components components;
-    classa::ClassACircuit circuit;
+    myzel::dsp::ClassAComponents components = standardComponents();
+    myzel::dsp::ClassACircuit circuit;
     double inputVolts = defaultInputVolts;
     double makeup = 1.0;
     BiasRamp bias;   // kept across prepare()

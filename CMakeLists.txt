@@ -15,7 +15,7 @@ if(NOT CMAKE_BUILD_TYPE AND NOT CMAKE_CONFIGURATION_TYPES)
     set(CMAKE_BUILD_TYPE Release CACHE STRING "Build type" FORCE)
 endif()
 
-set(MYZEL_ALL_PLUGINS cerulean mulberry umber)
+set(MYZEL_ALL_PLUGINS cerulean mulberry umber viridian)
 set(MYZEL_PLUGINS "${MYZEL_ALL_PLUGINS}" CACHE STRING
     "Plugins to build, semicolon-separated (default: all of ${MYZEL_ALL_PLUGINS})")
 

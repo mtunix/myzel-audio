@@ -23,6 +23,7 @@ namespace sessionState
         Restores a tree from read(). replaceState() skips a parameter whose restored value equals
         its cached *snapped* value, so a bool a host set to a raw 0.76 would stay 0.76 when the
         session says 1: every parameter whose raw value is not what the session says is written.
+        A stored value that is not finite (a damaged session) restores as the parameter's default.
     */
     void restore (juce::AudioProcessorValueTreeState& apvts, const juce::ValueTree& state);
 }

@@ -24,7 +24,9 @@ own JUCE configuration, exactly like its own sources, so JUCE is never linked tw
 `cmake/MyzelPlugin.cmake` defines `myzel_add_plugin()`, which turns a `plugins/<name>/`
 folder into `<Name>JuceConfig`, `<Name>Dsp`, `<Name>Shared` and the plugin (VST3, LV2, CLAP,
 Standalone) with the vendor IDs from the root `CMakeLists.txt`, and adds its `tools/` and
-`tests/`. A plugin's `CMakeLists.txt` is its `project()` plus one call.
+`tests/`. A plugin's `CMakeLists.txt` is its `project()` plus one call. `GENERIC_EDITOR` builds a
+plugin on JUCE's generic editor without `MyzelUi`, for a scaffold that has no `ui/Theme.cpp` yet
+(Viridian until M4).
 
 ## DSP blocks
 
@@ -136,7 +138,8 @@ is the plugin's; the grid (12 px gutters, selector column left, output column ri
   the mix lock. `AbCompare`: two snapshots in the UI state.
 - `ParameterUndoRecorder`: records user edits (gestures) only, never automation.
 - `sessionState`: write/read/restore the APVTS tree with a version; restore also fixes raw host
-  values on switches that `replaceState()` would skip.
+  values on switches that `replaceState()` would skip, and gives a stored value that is not
+  finite (a damaged session) the parameter's default.
 - `UiState.h`: the shared UI state keys (scale, view, preset name, A/B, mix lock).
 
 ## Tests and tools
@@ -151,6 +154,7 @@ Each plugin's `tools/ui_snapshot` is a snapshot renderer and an editor self-test
 | `SnapshotTool` | the tool's `main()` (`runSnapshotTool`): arguments, `--selftest` (exit 1 on a failure), the 8× `--leakcheck`, scenes and timing, all in a scratch session. The plugin brings its scenes, meter seeding and self-test |
 | `EditorSelfTest` | the checks of shared editor code, which every self-test runs (`runEditorChecks`): user presets land in the scratch folder, A/B, the mix lock, and the two views (switching, header keys, session and default view, following a restored session) |
 
-Checks of a plugin's own UI stay in its `SelfTest.cpp`. CI runs every self-test on Linux.
+Checks of a plugin's own UI stay in its `SelfTest.cpp`. CI runs every self-test on Linux (a plugin
+still on the generic editor has no snapshot tool, and CI skips the step for it).
 `tools/ui_diff.py` renders a plugin's snapshots and compares them pixel by pixel with a recorded
 baseline: run it before and after any change to shared UI code, for **every** plugin.

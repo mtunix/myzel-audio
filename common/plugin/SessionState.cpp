@@ -1,7 +1,32 @@
 #include "common/plugin/SessionState.h"
 
+#include <cmath>
+
 namespace myzel::plugin::sessionState
 {
+
+namespace
+{
+    /** The saved tree, with a parameter value that is not finite replaced by its default. */
+    juce::ValueTree withFiniteValues (const juce::AudioProcessorValueTreeState& apvts, const juce::ValueTree& saved)
+    {
+        auto state = saved;
+
+        for (auto* p : apvts.processor.getParameters())
+            if (auto* ranged = dynamic_cast<juce::RangedAudioParameter*> (p))
+                if (const auto child = saved.getChildWithProperty ("id", ranged->getParameterID());
+                    child.isValid() && ! std::isfinite ((float) child.getProperty ("value")))
+                {
+                    if (state == saved)
+                        state = saved.createCopy();
+
+                    state.getChildWithProperty ("id", ranged->getParameterID())
+                        .setProperty ("value", ranged->convertFrom0to1 (ranged->getDefaultValue()), nullptr);
+                }
+
+        return state;
+    }
+}
 
 void write (juce::AudioProcessorValueTreeState& apvts, int version, juce::MemoryBlock& destData)
 {
@@ -22,8 +47,9 @@ juce::ValueTree read (const juce::AudioProcessorValueTreeState& apvts, const voi
     return juce::ValueTree::fromXml (*xml);
 }
 
-void restore (juce::AudioProcessorValueTreeState& apvts, const juce::ValueTree& state)
+void restore (juce::AudioProcessorValueTreeState& apvts, const juce::ValueTree& saved)
 {
+    const auto state = withFiniteValues (apvts, saved);
     apvts.replaceState (state);
 
     for (auto* p : apvts.processor.getParameters())

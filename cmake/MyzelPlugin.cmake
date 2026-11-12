@@ -4,7 +4,8 @@
 #     CLAP_FEATURES <features...>
 #     [DSP_SOURCES <files...>]            # default: every src/dsp/**/*.cpp
 #     [DSP_LIBRARIES <targets...>]
-#     [DSP_DEFINITIONS <definitions...>])
+#     [DSP_DEFINITIONS <definitions...>]
+#     [GENERIC_EDITOR])                   # JUCE's generic editor: no kit UI (it needs the plugin's ui/Theme.cpp)
 #
 # Called from a plugin's CMakeLists.txt after its project(), which sets the name and version.
 # Creates, for a plugin in plugins/<name>/:
@@ -15,7 +16,7 @@
 #   <Name>            the plugin: VST3, LV2, CLAP and Standalone, vendor IDs from the root CMakeLists.txt
 # and adds tools/ and tests/ when MYZEL_BUILD_TOOLS / MYZEL_BUILD_TESTS ask for them.
 function(myzel_add_plugin name)
-    cmake_parse_arguments (ARG "" "CODE" "VST3_CATEGORIES;CLAP_FEATURES;DSP_SOURCES;DSP_LIBRARIES;DSP_DEFINITIONS" ${ARGN})
+    cmake_parse_arguments (ARG "GENERIC_EDITOR" "CODE" "VST3_CATEGORIES;CLAP_FEATURES;DSP_SOURCES;DSP_LIBRARIES;DSP_DEFINITIONS" ${ARGN})
     string(TOUPPER "${name}" upper)
     string(TOLOWER "${name}" lower)
     set(dir ${CMAKE_CURRENT_SOURCE_DIR})
@@ -42,7 +43,11 @@ function(myzel_add_plugin name)
 
     add_library(${name}Shared INTERFACE)
     target_sources(${name}Shared INTERFACE ${plugin_sources} ${ui_sources})
-    target_link_libraries(${name}Shared INTERFACE ${name}Dsp MyzelPlugin MyzelUi juce::juce_audio_utils melatonin_blur)
+    if(ARG_GENERIC_EDITOR)
+        target_link_libraries(${name}Shared INTERFACE ${name}Dsp MyzelPlugin juce::juce_audio_utils)
+    else()
+        target_link_libraries(${name}Shared INTERFACE ${name}Dsp MyzelPlugin MyzelUi juce::juce_audio_utils melatonin_blur)
+    endif()
 
     # The plugin
     juce_add_plugin(${name}

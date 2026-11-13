@@ -7,7 +7,7 @@
 #include <cmath>
 #include <vector>
 
-namespace mulberry::dsp
+namespace myzel::dsp
 {
 
 /**
@@ -99,7 +99,7 @@ private:
     integration and fading memory), solved for the 8x record path: the tabulated Langevin
     function and midpoint (RK2) sub-steps of at most 0.2 in field (RK2 is stable to 0.6 for the
     stiffest relaxation, field scale 0.3). A larger step left solver error that folded back as
-    aliasing (loop/NOTES.md); RK4 at 8x cost half again as much for no gain.
+    aliasing (Mulberry's machines/loop/NOTES.md); RK4 at 8x cost half again as much for no gain.
 */
 class TapeCore
 {
@@ -199,4 +199,4 @@ private:
     double m = 0.0, hPrev = 0.0;
 };
 
-} // namespace mulberry::dsp
+} // namespace myzel::dsp

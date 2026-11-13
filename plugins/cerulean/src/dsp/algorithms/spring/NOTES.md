@@ -29,7 +29,7 @@ pickups -> L/R: far end to one side, near end to the other, cross-feed 0.30/0.22
   (K = 5 at 44.1/48 kHz -> fc 4.41/4.8 kHz; 10 at 96 kHz; 21 at 192 kHz). With a > 0 the group
   delay rises towards fc: high frequencies arrive later, the drip chirp. 72 stages per transit
   (144 per round trip) in two coefficient groups (40 + 32), see Drip below. The four SIMD lanes
-  carry the three springs (`DispersionCascade.h`: TDF-II, one multiply-add on the critical path
+  carry the three springs (`common/dsp/DispersionCascade.h`, shared with Inkcap's Room: TDF-II, one multiply-add on the critical path
   per stage, states stored phase-major).
 - **Two pickups per spring**: the far end hears transits 1, 3, 5... (after half the dispersion),
   the near end 2, 4, 6... (after all of it). Physically the spring's two ends; for the image, two

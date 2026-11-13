@@ -8,7 +8,7 @@ changes.
 |---|---|
 | `CleanMachine.{h,cpp}` | the machine: reads, record stage (`Limiter`), Glide, Shift, Wobble |
 | `common/dsp/Oversampler2x.h` | `LinearPhaseHalfBand`: the limiter's 8x interpolators and decimators (shared) |
-| `../../common/Interpolators.h` | the windowed-sinc fractional read (shared by every machine) |
+| `common/dsp/Interpolators.h` (repository root) | the windowed-sinc fractional read (shared by every machine) |
 | `common/dsp/GrainVoice.h` | the granular shifter voice (shared with Cerulean's Halo) |
 | `tests/machines/clean/` | the gates (`support/GateCases.h`) and Clean's own checks |
 

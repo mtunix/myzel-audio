@@ -1,12 +1,16 @@
 #pragma once
 
-#include "dsp/common/ClockedDomain.h"
-#include "dsp/common/Interpolators.h"
+#include "common/dsp/ClockedDomain.h"
+#include "common/dsp/Interpolators.h"
 #include "dsp/common/Modulation.h"
 #include "dsp/machines/Machine.h"
 
 namespace mulberry::dsp
 {
+
+using myzel::dsp::ClockedDomain;
+using myzel::dsp::MirroredRing;
+using myzel::dsp::ModalFilter;
 
 /**
     Rack: an early rack digital delay. An op-amp front end, an anti-aliasing filter (cutoff =

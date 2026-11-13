@@ -7,7 +7,7 @@ converted again, so the grain builds down the trail.
 | File | Contents |
 |---|---|
 | `RackMachine.{h,cpp}` | front end, clock, converter, memory, crossfaded Time jumps |
-| `../../common/ClockedDomain.h` | the filters and the clocked sampling (shared with Bucket, validated there) |
+| `common/dsp/ClockedDomain.h` | the filters and the clocked sampling (shared with Bucket, validated there) |
 | `tests/machines/rack/` | gates, gain ranging, grain down the trail |
 
 ## Signal flow

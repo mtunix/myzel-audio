@@ -1,6 +1,6 @@
 #include "support/GateCases.h"
 
-#include "dsp/common/ClockedDomain.h"
+#include "common/dsp/ClockedDomain.h"
 #include "dsp/machines/bucket/BucketMachine.h"
 
 #include <cstdlib>

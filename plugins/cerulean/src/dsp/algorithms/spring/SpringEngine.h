@@ -1,13 +1,15 @@
 #pragma once
 
+#include "common/dsp/DispersionCascade.h"
 #include "dsp/Engine.h"
-#include "dsp/algorithms/spring/DispersionCascade.h"
 #include "dsp/algorithms/spring/PreciseGlide.h"
 #include "dsp/algorithms/spring/SoftDrive.h"
 #include "dsp/common/ReverbBlocks.h"
 
 namespace cerulean::dsp
 {
+
+using myzel::dsp::DispersionCascade;
 
 /**
     Spring: the boingy guitar-amp tank. Drips, chirps, splash.

@@ -1,6 +1,6 @@
 #pragma once
 
-#include "dsp/common/ClockedDomain.h"
+#include "common/dsp/ClockedDomain.h"
 #include "dsp/common/Modulation.h"
 #include "dsp/machines/Machine.h"
 
@@ -8,6 +8,9 @@
 
 namespace mulberry::dsp
 {
+
+using myzel::dsp::ClockedDomain;
+using myzel::dsp::ModalFilter;
 
 /**
     Bucket: a bucket-brigade delay chip with its anti-aliasing and reconstruction filters and an

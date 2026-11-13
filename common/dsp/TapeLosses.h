@@ -6,7 +6,7 @@
 #include <complex>
 #include <numbers>
 
-namespace mulberry::dsp
+namespace myzel::dsp
 {
 
 /** A playback head and tape: the lengths that set the losses (metres). */
@@ -28,8 +28,8 @@ struct TapeGeometry
 
     Each loss depends on one dimensionless x (a length over the recorded wavelength), so one
     analog prototype per loss serves every speed: its corners sit at fixed x, at v x / length in
-    Hz. The prototypes were fitted to the closed forms (tests/machines/loop/validation/
-    tape_losses.py, fit_shelves.py): gap, two 2-pole low-passes, within 0.10 dB down to -12 dB;
+    Hz. The prototypes were fitted to the closed forms (Mulberry's tests/machines/loop/
+    validation/tape_losses.py, fit_shelves.py): gap, two 2-pole low-passes, within 0.10 dB down to -12 dB;
     spacing (within 0.23 dB to x = 0.5, -27 dB) and thickness (0.06 dB to x = 0.7), first-order
     shelves and a closing pole: their dB falls linearly in f at first, which no all-pole response
     can follow.
@@ -355,4 +355,4 @@ public:
     }
 };
 
-} // namespace mulberry::dsp
+} // namespace myzel::dsp

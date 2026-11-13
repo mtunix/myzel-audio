@@ -1,5 +1,6 @@
 #pragma once
 
+#include "common/dsp/ReverbBlocks.h"
 #include "dsp/AlgorithmInfo.h"
 
 #include <algorithm>
@@ -36,11 +37,7 @@ inline float sizeToScale (float size01) noexcept
     Tone -1..1 -> high-band decay. The high band's RT60 is a fraction of the mid band's, starting
     at a crossover that also moves: dark closes the top down early, bright keeps air ringing.
 */
-struct HighDecay
-{
-    float ratio;        // RT60(high) / RT60(mid), in (0, 1]
-    float crossoverHz;  // where the high band starts
-};
+using HighDecay = myzel::dsp::HighDecay;
 
 inline HighDecay toneToHighDecay (float tone) noexcept
 {
@@ -54,7 +51,7 @@ inline HighDecay toneToHighDecay (float tone) noexcept
 }
 
 /** Low-band crossover used by every algorithm's Low End decay. */
-inline constexpr float lowCrossoverHz = 250.0f;
+inline constexpr float lowCrossoverHz = myzel::dsp::decayLowCrossoverHz;
 
 /** Wet tilt applied after the engine, in dB per side at Tone = +-1 (pivot ~1.2 kHz). */
 inline constexpr float wetTiltMaxDb = 3.0f;

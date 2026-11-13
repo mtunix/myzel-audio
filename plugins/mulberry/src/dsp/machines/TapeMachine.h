@@ -1,8 +1,8 @@
 #pragma once
 
+#include "common/dsp/TapeLosses.h"
 #include "dsp/common/Modulation.h"
 #include "dsp/common/TapeHeads.h"
-#include "dsp/common/TapeLosses.h"
 #include "dsp/common/TapeRecord.h"
 #include "dsp/common/Transport.h"
 #include "dsp/machines/Machine.h"
@@ -11,6 +11,9 @@
 
 namespace mulberry::dsp
 {
+
+using myzel::dsp::TapeGeometry;
+using myzel::dsp::TapeLosses;
 
 /**
     What Loop and Reel share: a transport per line, the tape (position-tracked heads), the 8x

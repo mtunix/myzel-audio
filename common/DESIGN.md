@@ -38,8 +38,16 @@ sibling's sound (its golden files stay bit-identical).
 |---|---|---|
 | `Filters` | double TPT filters: SVF, one-pole, DC blocker, tilt, emphasis shelf | Umber, Mulberry |
 | `Blocks` | float blocks: delay line (linear, cubic Lagrange), Schroeder allpass and allpass chain, one-pole and SVF, LFOs (sine, smooth random), smoothers and glides, envelope follower, PRNG | Cerulean, Mulberry |
+| `ReverbBlocks` | three-band decay filter (Jot, second-order shelves, exactly transparent at gain 1), per-pass band gains from RT60, orthonormal Hadamard / Householder mixing | Cerulean |
+| `EarlyReflections` | a seeded stereo early-reflection cluster: sparse multi-tap per channel, cross taps, gliding with Size | Cerulean (Hall) |
+| `Fdn` | N-line feedback delay network with per-line decay filters, gliding lengths, freeze; its own LFOs or the caller's modulation per line (for a song-position-locked tank) | Cerulean (Hall, Rise, Choir, Halo, Echo, Billow) |
+| `DispersionCascade` | a stretched first-order allpass cascade, four lanes at once (a spring's chirp) | Cerulean (Spring) |
 | `GrainVoice` | one voice of the granular pitch shifter (WSOLA-aligned grains, power-normalised) | Cerulean (Halo), Mulberry (Clean's Shift) |
+| `Interpolators` | 12-tap Kaiser-windowed sinc for fractional reads (every fraction the same DC gain, never above unity), a ring buffer with a mirrored guard so every window is contiguous | Mulberry (every machine's reads) |
 | `JilesAtherton` | the Jiles–Atherton tape core, RK4 in field space (validated in Umber's `models/reel/NOTES.md`) | Umber (Reel); Mulberry (Loop, Reel) uses its equations, parameters and Langevin function with its own 8x solver (`TapeCore`) |
+| `TapeCore` | the same Jiles–Atherton equations solved fast: tabulated Langevin, RK2 sub-steps of at most 0.2 in field | Mulberry (Loop, Reel at 8x) |
+| `TapeLosses` | a playback head's gap, spacing and thickness losses (Bertram) and contour bump as fitted low-order filters, matched (Vicanek) direct-form sections, the closed forms | Mulberry (Loop, Reel) |
+| `ClockedDomain` | Holters–Parker's clocked domain: modal filters, a device sampling the input filter's exact output at its own clock instants, its held staircase into the output filter; `setClockPhase` ties the clock to a timeline | Mulberry (Bucket, Rack) |
 | `AnalyticFilters` | linear sections with exact responses: TPT one-pole and SVF, bilinear shelf with an exact inverse | Umber (Reel), Mulberry (Loop, Reel) |
 | `Oversampler2x` | per-sample 2x polyphase IIR half-band pair (minimum phase, never gains), 4x/8x cascades, linear-phase half-band FIR | Mulberry (Loop, Reel, Clean); Viridian (planned) |
 | `NodalCircuit` | nodal DK solver for a netlist with any nonlinear device (`tubes::`): MNA to discrete state space, Newton on the device ports, adjustable bias supply, compile-time sparsity | Umber (Valve, Fuzz) |

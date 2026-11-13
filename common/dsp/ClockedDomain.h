@@ -6,7 +6,7 @@
 #include <complex>
 #include <numbers>
 
-namespace mulberry::dsp
+namespace myzel::dsp
 {
 
 /**
@@ -60,7 +60,7 @@ struct ModalFilter
 
 /**
     The clocked domain of Holters & Parker's combined model of a bucket-brigade device and its
-    input and output filters (DAFx-18), shared by Bucket and Rack.
+    input and output filters (DAFx-18): Mulberry's Bucket and Rack, Inkcap's Bits.
 
     - Input filter: its modes run at the host rate, the input taken as impulses at the sample
       instants. At each clock instant inside a host period the device samples the filter's exact
@@ -125,6 +125,12 @@ public:
             }
         }
     }
+
+    /**
+        Places the clock: the coming host period starts `phase` clock periods (0 .. 1) after the
+        last clock instant. For a clock tied to a timeline (Inkcap's Bits); never needed otherwise.
+    */
+    void setClockPhase (double phase) noexcept { clockPhase = phase - std::floor (phase); }
 
     /** Starts a host period; returns the number of clock events in it. */
     int beginSample() noexcept
@@ -219,4 +225,4 @@ private:
     int events = 0;
 };
 
-} // namespace mulberry::dsp
+} // namespace myzel::dsp

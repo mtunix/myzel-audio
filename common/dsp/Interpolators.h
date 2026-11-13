@@ -7,7 +7,7 @@
 #include <numbers>
 #include <vector>
 
-namespace mulberry::dsp
+namespace myzel::dsp
 {
 
 /**
@@ -282,4 +282,4 @@ private:
     long long written = 0;
 };
 
-} // namespace mulberry::dsp
+} // namespace myzel::dsp

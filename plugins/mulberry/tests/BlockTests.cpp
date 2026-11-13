@@ -1,6 +1,6 @@
 #include "common/dsp/Oversampler2x.h"
+#include "common/dsp/TapeLosses.h"
 #include "dsp/common/TapeHeads.h"
-#include "dsp/common/TapeLosses.h"
 #include "dsp/common/Transport.h"
 #include "dsp/machines/loop/LoopMachine.h"
 #include "support/EchoAnalysis.h"

@@ -11,9 +11,9 @@ transport, the record path and the losses are shared with Reel (`../TapeMachine.
 | `../../common/Transport.h` | speed with inertia; capstan, pinch, splice, drift, scrape |
 | `../../common/TapeHeads.h` | position-tracked heads (exact Doppler) |
 | `../../common/TapeRecord.h` | record amp and its bandwidth, NAB/IEC emphasis, the core at 8x, losses at 2x |
-| `../../common/TapeCore.h` | the Jiles–Atherton equations solved for 8x (tabulated Langevin, RK2) |
+| `common/dsp/TapeCore.h` | the Jiles–Atherton equations solved for 8x (tabulated Langevin, RK2; shared) |
 | `common/dsp/Oversampler2x.h` | polyphase IIR half-bands, cascaded to 8x (shared) |
-| `../../common/TapeLosses.h` | Bertram's gap, spacing and thickness losses, the head bump |
+| `common/dsp/TapeLosses.h` | Bertram's gap, spacing and thickness losses, the head bump (shared) |
 | `tests/machines/loop/` | gates, Loop's own checks, `validation/` (Python references) |
 
 ## Signal flow

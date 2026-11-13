@@ -2,12 +2,12 @@
 
 A BBD chip with its input (anti-aliasing) and output (reconstruction) filters and an
 NE570-style compander. The chip is sampled at its own clock through the shared clocked domain
-(`../../common/ClockedDomain.h`), so its aliasing and clock images are the device's own.
+(`common/dsp/ClockedDomain.h`), so its aliasing and clock images are the device's own.
 
 | File | Contents |
 |---|---|
 | `BucketMachine.{h,cpp}` | clock, chip, transfer, losses, compander, image normalisation |
-| `../../common/ClockedDomain.h` | Holters–Parker combined filter/device model (shared with Rack) |
+| `common/dsp/ClockedDomain.h` | Holters–Parker combined filter/device model (shared with Rack and Inkcap's Bits) |
 | `tests/machines/bucket/` | gates, the Python reference case, the 64x brute force, chip and compander checks |
 | `tests/machines/bucket/validation/hp_reference.py` | an independent Holters–Parker implementation |
 

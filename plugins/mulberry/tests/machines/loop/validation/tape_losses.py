@@ -143,7 +143,7 @@ def fit_all():
 
 
 def constants_from_header():
-    header = Path(__file__).resolve().parents[4] / "src/dsp/common/TapeLosses.h"
+    header = Path(__file__).resolve().parents[6] / "common/dsp/TapeLosses.h"
     text = header.read_text()
     found = {}
     for name in MODELS:

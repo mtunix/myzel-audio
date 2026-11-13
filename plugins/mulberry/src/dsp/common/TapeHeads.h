@@ -1,12 +1,15 @@
 #pragma once
 
-#include "dsp/common/Interpolators.h"
+#include "common/dsp/Interpolators.h"
 
 #include <cmath>
 #include <cstdint>
 
 namespace mulberry::dsp
 {
+
+using myzel::dsp::MirroredRing;
+using myzel::dsp::WindowedSinc;
 
 /**
     A moving medium (tape, drum) for one line: every written sample is stored with the medium

@@ -1,6 +1,6 @@
 #include "support/GateCases.h"
 
-#include "dsp/common/Interpolators.h"
+#include "common/dsp/Interpolators.h"
 #include "dsp/machines/clean/CleanMachine.h"
 
 #include <catch2/catch_test_macros.hpp>

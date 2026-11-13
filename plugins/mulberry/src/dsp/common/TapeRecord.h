@@ -2,9 +2,9 @@
 
 #include "common/dsp/AnalyticFilters.h"
 #include "common/dsp/Oversampler2x.h"
-#include "dsp/common/TapeCore.h"
+#include "common/dsp/TapeCore.h"
+#include "common/dsp/TapeLosses.h"
 #include "dsp/common/Modulation.h"
-#include "dsp/common/TapeLosses.h"
 
 #include <array>
 #include <cmath>
@@ -13,6 +13,10 @@
 
 namespace mulberry::dsp
 {
+
+using myzel::dsp::TapeCore;
+using myzel::dsp::TapeGeometry;
+using myzel::dsp::TapeLosses;
 
 /** A 4-pole Butterworth low-pass (two bilinear biquads, prewarped corner). */
 class ButterworthLowpass4

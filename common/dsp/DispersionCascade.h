@@ -5,7 +5,7 @@
 #include <cmath>
 #include <vector>
 
-namespace cerulean::dsp
+namespace myzel::dsp
 {
 
 /**
@@ -28,6 +28,7 @@ namespace cerulean::dsp
 
     Lossless for any fixed a in (-1, 1) (|A| = 1 exactly, also with the coefficient rounded to
     float), so a frozen loop built around it holds its energy. No allocation after prepare().
+    Moved from Cerulean's Spring (bit-identical); used by Inkcap's Room (Spring).
 */
 template <int Stages, int FirstGroup>
 class DispersionCascade
@@ -163,4 +164,4 @@ private:
     int K = 1, phase = 0;
 };
 
-} // namespace cerulean::dsp
+} // namespace myzel::dsp

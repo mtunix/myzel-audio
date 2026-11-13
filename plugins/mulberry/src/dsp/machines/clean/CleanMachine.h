@@ -1,13 +1,16 @@
 #pragma once
 
 #include "common/dsp/GrainVoice.h"
+#include "common/dsp/Interpolators.h"
 #include "common/dsp/Oversampler2x.h"
-#include "dsp/common/Interpolators.h"
 #include "dsp/common/Modulation.h"
 #include "dsp/machines/Machine.h"
 
 namespace mulberry::dsp
 {
+
+using myzel::dsp::MirroredRing;
+using myzel::dsp::WindowedSinc;
 
 /**
     Clean: ideal memory. Windowed-sinc reads, a record stage that writes the sample as recorded

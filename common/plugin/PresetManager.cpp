@@ -119,6 +119,9 @@ juce::ValueTree PresetManager::capture() const
         if (auto* p = apvts.getParameter (id))
             t.setProperty (juce::Identifier (id), p->convertFrom0to1 (p->getValue()), nullptr);
 
+    for (const auto& s : format.stateProperties)
+        t.setProperty (s.id, apvts.state.getProperty (s.id, s.defaultValue), nullptr);
+
     return t;
 }
 
@@ -145,6 +148,15 @@ void PresetManager::apply (const juce::ValueTree& snapshot, const juce::String& 
                 p->endChangeGesture();
             }
         }
+    }
+
+    for (const auto& s : format.stateProperties)
+    {
+        if (isStateLocked (s.lockId))
+            continue;
+
+        if (const auto target = snapshot.getProperty (s.id, s.defaultValue); apvts.state.getProperty (s.id) != target)
+            apvts.state.setProperty (s.id, target, &host.getUndoManager());
     }
 
     host.presetApplied();
@@ -227,6 +239,20 @@ bool PresetManager::isLockedParameter (const juce::String& parameterId) const
     return format.lockableIds.contains (parameterId) && isMixLocked();
 }
 
+bool PresetManager::isStateLocked (const juce::Identifier& lockId) const
+{
+    return lockId.isValid() && (bool) host.getUiState().getProperty (lockId, false);
+}
+
+void PresetManager::setStateLocked (const juce::Identifier& lockId, bool shouldLock)
+{
+    if (! lockId.isValid())
+        return;
+
+    host.getUiState().setProperty (lockId, shouldLock, nullptr);
+    notify();
+}
+
 bool PresetManager::isModified() const
 {
     const auto index = getCurrentIndex();
@@ -248,6 +274,10 @@ bool PresetManager::isModified() const
             if (std::abs (targetFor (values, key, *p) - p->getValue()) > 0.002f)
                 return true;
     }
+
+    for (const auto& s : format.stateProperties)
+        if (! isStateLocked (s.lockId) && apvts.state.getProperty (s.id, s.defaultValue) != values.getProperty (s.id, s.defaultValue))
+            return true;
 
     return false;
 }

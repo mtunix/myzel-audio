@@ -36,6 +36,17 @@ struct FactorySnapshot
     juce::NamedValueSet values;
 };
 
+/**
+    Sound that is not a host parameter (Inkcap's seed): a property of the APVTS state tree, which
+    presets and A/B store beside the parameters and restore in the same undo step.
+*/
+struct PresetStateProperty
+{
+    juce::Identifier id;               // the property in the state tree and in preset files: never rename
+    juce::var defaultValue;            // what a preset that does not mention it loads
+    juce::Identifier lockId {};        // a bool in the UI state; while it is on, presets and A/B keep the property
+};
+
 /** Everything a plugin's presets differ in. */
 struct PresetFormat
 {
@@ -44,20 +55,23 @@ struct PresetFormat
     int version = 1;                   // stored in saved presets
     juce::StringArray parameterIds;    // what a preset stores (not session settings like Bypass)
     juce::StringArray lockableIds;     // kept as they are while the mix lock is on
+    std::vector<PresetStateProperty> stateProperties;   // non-parameter sound, if any
     std::vector<FactorySnapshot> factory;
 };
 
 /**
     Factory and user presets.
 
-    A preset is a snapshot of the sound parameters (PresetFormat::parameterIds). Factory presets
+    A preset is a snapshot of the sound parameters (PresetFormat::parameterIds) and of any
+    non-parameter sound in the state tree (PresetFormat::stateProperties). Factory presets
     are compiled in; user presets are XML files in userApplicationDataDirectory/Myzel Audio/<plugin>/Presets.
     Loading is one undoable transaction, every parameter change is sent to the host as a gesture,
     and the host is told afterwards (PresetHost::presetApplied).
 
     Mix lock (a per-session setting): loading a preset or switching A/B keeps the lockable
     parameters (the mix) as they are, so browsing sounds on a send never brings the dry back, and
-    on an insert never changes the balance. The modified dot ignores them too.
+    on an insert never changes the balance. The modified dot ignores them too. A state property
+    with a lockId is kept the same way while its own lock is on (Inkcap's seed Lock).
 
     Message thread only.
 */
@@ -108,6 +122,10 @@ public:
 
     /** True for the lockable parameters while the mix lock is on: presets and A/B leave them alone. */
     bool isLockedParameter (const juce::String& parameterId) const;
+
+    /** A state property's lock (PresetStateProperty::lockId), kept in the UI state like the mix lock. */
+    bool isStateLocked (const juce::Identifier& lockId) const;
+    void setStateLocked (const juce::Identifier& lockId, bool shouldLock);
 
     bool userPresetExists (const juce::String& name) const;
     juce::Result saveUserPreset (const juce::String& name);

@@ -107,6 +107,15 @@ void dualBucket (MulberryProcessor& p)
     setParam (p, params::diffuse, 35.0f);
 }
 
+void drumSwell (MulberryProcessor& p)
+{
+    machine (p, M::drum);
+    setParam (p, params::note, 16.0f);
+    setParam (p, params::feedback, 60.0f);
+    setParam (p, params::paramA, 90.0f);
+    setParam (p, params::paramB, 70.0f);
+}
+
 void runaway (MulberryProcessor& p)
 {
     setParam (p, params::feedback, 108.0f);
@@ -189,6 +198,7 @@ const std::vector<Scene> scenes {
           setParam (p, params::feedback, 62.0f);
       },
       -15.0f, 1.0f, nullptr },
+    { "16-drum-swell", drumSwell, -13.0f, 1.0f, nullptr },
 
     // The studio view.
     { "20-studio-default", nullptr, -15.0f, 1.0f, nullptr, true, true },
@@ -212,6 +222,7 @@ const std::vector<Scene> scenes {
       }, false, true },
     { "27-studio-bypass", [] (MulberryProcessor& p) { setParam (p, params::bypass, 1.0f); }, -24.0f, 1.0f, nullptr, false, true },
     { "28-studio-runaway", runaway, -8.0f, 1.0f, nullptr, false, true, -12.0f, -2.0f },
+    { "29-studio-drum", drumSwell, -13.0f, 1.0f, nullptr, false, true },
 };
 
 void timeRendering (ViewMode view)

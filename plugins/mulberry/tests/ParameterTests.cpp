@@ -80,6 +80,9 @@ TEST_CASE ("Parameters: Param A/B read out per machine", "[parameters]")
     CHECK (params::characterText (Machine::reel, true, 50.0f) == "Nominal");
     CHECK (params::characterText (Machine::loop, false, 100.0f) == "1+2+3");
     CHECK (params::characterText (Machine::loop, false, 0.0f) == "1");
+    CHECK (params::characterText (Machine::drum, false, 0.0f) == "1");
+    CHECK (params::characterText (Machine::drum, false, 100.0f) == "1+2+3+4");
+    CHECK (params::characterText (Machine::drum, true, 0.0f) == "Off");
     CHECK (params::characterText (Machine::rack, false, 0.0f) == "8 bits");
     CHECK (params::characterText (Machine::rack, false, 100.0f) == "16 bits");
     CHECK (params::characterText (Machine::bucket, false, 0.0f) == "1024 stages");
@@ -93,6 +96,8 @@ TEST_CASE ("Parameters: Param A/B read out per machine", "[parameters]")
     CHECK (character::bits (params::characterPercentFromText (Machine::rack, false, "12") / 100.0f) == 12);
     CHECK (character::speedIps (params::characterPercentFromText (Machine::reel, false, "30 ips") / 100.0f) == 30.0f);
     CHECK (character::headMask (params::characterPercentFromText (Machine::loop, false, "2+3") / 100.0f) == 0b110);
+    CHECK (character::drumHeadMask (params::characterPercentFromText (Machine::drum, false, "1+3+4") / 100.0f) == 0b1101);
+    CHECK (character::drumHeadMask (params::characterPercentFromText (Machine::drum, false, "4") / 100.0f) == 0b1000);
     CHECK (params::characterPercentFromText (Machine::oilCan, true, "42 %") == 42.0f);
     CHECK (params::characterPercentFromText (Machine::oilCan, true, "nonsense") < 0.0f);
 }

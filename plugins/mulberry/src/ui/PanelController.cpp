@@ -117,7 +117,7 @@ EchoShape PanelController::currentShape() const
     EchoShape s;
     s.machine = cs.machine;
     s.plan = cs.plan;
-    s.plan.headMask = cs.machine == Machine::loop ? character::headMask (cs.paramA) : 1;
+    setMachineHeads (s.plan, cs.machine, cs.paramA, cs.paramB);
     s.timeMs = cs.timeMs;
     s.feedback = cs.feedback;
     s.synced = flag (params::sync);
@@ -163,6 +163,7 @@ juce::String PanelController::machineDescription (Machine m)
         case Machine::oilCan: return "Oil Can: an electrostatic drum in oil. Warbling, smeared, softer with longer times. A: Brushes (one pickup to a cluster), B: Oil (fresh to old).";
         case Machine::loop:   return "Loop: a tape loop with three playback heads. Time is the motor: changing it bends every echo. A: Heads, B: Wear.";
         case Machine::reel:   return "Reel: a studio tape deck with a sliding head: the tone stays put across Time. A: Speed (7.5 / 15 / 30 ips), B: Bias.";
+        case Machine::drum:   return "Drum: a magnetic drum with four heads at quarters of Time. A: Heads (which heads play), B: Swell (feedback from every head: a dense build-up).";
     }
     return {};
 }

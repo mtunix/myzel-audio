@@ -26,7 +26,7 @@ struct ChainSettings
     float highCutHz = 20000.0f;     // >= 20 kHz means off
     float paramA = 0.5f;
     float paramB = 0.5f;
-    TapPlanInput plan;              // headMask is filled in by the chain (Loop's Param A)
+    TapPlanInput plan;              // the heads are filled in by the chain (setMachineHeads)
     float mix = 0.35f;
     bool wetOnly = false;
     float outputDb = 0.0f;

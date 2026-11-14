@@ -95,6 +95,11 @@ namespace
                 case Machine::oilCan: ends ("1", "5"); break;
                 case Machine::loop:   stepped ({ "1", "2", "3", dot ("1", "2"), dot ("2", "3"), dot ("1", "3"), dot ("1", "2") + juce::String::fromUTF8 ("\xc2\xb7") + "3" }); break;
                 case Machine::reel:   stepped ({ "7.5", "15", "30" }); break;
+                case Machine::drum:
+                    // Fifteen positions: head 1, head 4 (the last single), all four heads.
+                    stepped ({ "1", "", "", "4", "", "", "", "", "", "", "", "", "", "", "ALL" });
+                    std::erase_if (s.marks, [] (const auto& mark) { return mark.text.isEmpty(); });
+                    break;
             }
         }
         else
@@ -107,6 +112,7 @@ namespace
                 case Machine::oilCan: ends ("NEW", "OLD"); break;
                 case Machine::loop:   ends ("NEW", "WORN"); break;
                 case Machine::reel:   s.centreDetent = true; s.marks = { { 0.0f, "UNDER", true }, { 0.5f, "NOM", false }, { 1.0f, "OVER", true } }; break;
+                case Machine::drum:   ends ("OFF", "FULL"); break;
             }
         }
         return s;
@@ -288,12 +294,13 @@ void MainPanel::buildControls()
     paramBScale.setKnobCentre (layout::paramBCentre(), layout::smallKnobDiameter);
     modeAmountScale.setKnobCentre (layout::modeAmountCentre(), layout::smallKnobDiameter);
 
-    // Machine keys, 2 x 3.
-    for (int i = 0; i < numMachines; ++i)
+    // Machine keys in panel order (3 over 4); each stays indexed by its Machine value.
+    for (int slot = 0; slot < numMachines; ++slot)
     {
-        const auto m = static_cast<Machine> (i);
+        const auto m = machineOrder[(size_t) slot];
+        const auto i = (int) m;
         auto key = std::make_unique<LampButton> (juce::String (info (m).name).toUpperCase(), LampButton::Shape::square);
-        key->setKeyBounds (layout::machineKey (i));
+        key->setKeyBounds (layout::machineKey (slot));
         key->setTooltip (PanelController::machineDescription (m));
         key->setTitle (juce::String (info (m).name) + " machine");
         key->setRadioGroupId (1, juce::dontSendNotification);
@@ -436,8 +443,8 @@ void MainPanel::updateMeanings (bool animate)
         paramBScale.setStyle (b, fade);
     }
 
-    // The Loop's own heads step back in Pattern mode (the pattern replaces them).
-    paramAKnob->setAlpha (m.machine == Machine::loop && m.mode == Mode::pattern ? 0.45f : 1.0f);
+    // Loop's and Drum's own heads step back in Pattern mode (the pattern replaces them).
+    paramAKnob->setAlpha ((m.machine == Machine::loop || m.machine == Machine::drum) && m.mode == Mode::pattern ? 0.45f : 1.0f);
 
     if (first || m.mode != previous.mode || m.synced != previous.synced)
     {

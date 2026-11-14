@@ -1,6 +1,7 @@
 #pragma once
 
 #include "common/ui/Theme.h"
+#include "dsp/Machines.h"
 
 namespace mulberry::ui
 {
@@ -73,7 +74,8 @@ namespace layout
     inline P paramACentre()   { return { col2, bottomRowY }; }
     inline P paramBCentre()   { return { col3, bottomRowY }; }
 
-    // Centre: Time with its three keys, then the machine keys (2 x 3).
+    // Centre: Time with its three keys, then the machine keys: the electronic memories (3) over
+    // the moving media (4), both rows the same width.
     inline P timeCentre() { return { centreX, 170.0f }; }
     inline constexpr float timeDiameter = 160.0f;
     inline constexpr float timeKeyWidth = 72.0f, timeKeyHeight = 32.0f, timeKeyGap = 12.0f, timeKeyY = 306.0f;
@@ -86,13 +88,17 @@ namespace layout
     inline R tapKey()  { return timeKey (1); }
     inline R holdKey() { return timeKey (2); }
 
-    inline constexpr float machineKeyWidth = 92.0f, machineKeyHeight = 44.0f, machineKeyGap = 8.0f, machineTopY = 384.0f;
-    inline R machineKey (int index)
+    inline constexpr float machineRowWidth = 292.0f, machineKeyHeight = 44.0f, machineKeyGap = 8.0f, machineTopY = 384.0f;
+    inline constexpr int machineTopRowKeys = 3;
+    /** The key at a slot of machineOrder (MachineInfo.h). */
+    inline R machineKey (int slot)
     {
-        const auto row = index / 3, col = index % 3;
-        const auto total = 3.0f * machineKeyWidth + 2.0f * machineKeyGap;
-        return { centreX - total * 0.5f + (float) col * (machineKeyWidth + machineKeyGap),
-                 machineTopY + (float) row * (machineKeyHeight + machineKeyGap), machineKeyWidth, machineKeyHeight };
+        const auto row = slot < machineTopRowKeys ? 0 : 1;
+        const auto keys = row == 0 ? machineTopRowKeys : numMachines - machineTopRowKeys;
+        const auto col = row == 0 ? slot : slot - machineTopRowKeys;
+        const auto width = (machineRowWidth - (float) (keys - 1) * machineKeyGap) / (float) keys;
+        return { centreX - machineRowWidth * 0.5f + (float) col * (width + machineKeyGap),
+                 machineTopY + (float) row * (machineKeyHeight + machineKeyGap), width, machineKeyHeight };
     }
 
     // Right column: the echo map, Mode and its knob, Mix and Output, Duck and Wet.

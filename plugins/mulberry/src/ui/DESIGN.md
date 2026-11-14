@@ -42,7 +42,7 @@ Three columns separated by vertical grooves at x 468 and 792 (y 80–512).
 | Area | Contents |
 |---|---|
 | Left, x 20–456 | 4 × 2 knobs of Ø64, columns at 66 / 178 / 290 / 402, rows at y 188 and 400. Top row: the loop (Feedback, Drive, Wobble, Diffuse). Bottom row: its colour (Low Cut, High Cut, Param A, Param B). A horizontal groove at y 296 between them |
-| Centre, x 476–784 | Time, Ø160 hero at (630, 170); SYNC / TAP / HOLD keys (72 × 32, gap 12) at y 306 in one well; the six machine keys (92 × 44, gap 8, 2 × 3) from y 384 under a MACHINE legend |
+| Centre, x 476–784 | Time, Ø160 hero at (630, 170); SYNC / TAP / HOLD keys (72 × 32, gap 12) at y 306 in one well; the seven machine keys from y 384 under a MACHINE legend, two rows 292 px wide (gap 8, 44 high): Clean, Rack, Bucket (92 px) over Oil Can, Drum, Loop, Reel (67 px) |
 | Right, x 800–1068 | The echo map (808, 76, 256 × 156); Mode and Ⓜ knobs (Ø64) at (874, 296) and (998, 296); Mix and Output at y 418; DUCK and WET keys (58 × 30) at y 486 under them |
 
 **The 4 × 2 grid (PLAN.md "Open" 1), decided:** kept. Diffuse stays on the panel, since it is a
@@ -50,6 +50,10 @@ sound control people ride. At the first draft's 100 px column pitch the end labe
 neighbours met ("WORNOFF"); the left column grew to 112 px pitch by narrowing the centre
 (machine keys 96 → 92 px) and the hero to Ø160, and end labels were kept short (Oil Can's
 Brushes reads 1 … 5, Oil NEW … OLD).
+
+**Seven machine keys** (the Drum, M5): the electronic memories in the top row, the moving media
+below, in `machineOrder` (`MachineInfo.h`); each key stays indexed by its Machine value. Both rows
+keep the block's 292 px, so the well is unchanged; at 67 px the bottom keys still fit OIL CAN.
 
 ### Advanced deck
 
@@ -70,14 +74,15 @@ Mulberry's additions:
 - **Controls that change meaning** re-bind or re-style and crossfade their printed scale
   (`KnobScale`, sized per knob):
   - Param A / B relabel per machine (GLIDE / SHIFT, BITS / RATE, CHIP / COMPANDER, BRUSHES /
-    OIL, HEADS / WEAR, SPEED / BIAS). Stepped A's (Bits 9, Chip 4, Heads 7, Speed 3) step one
-    position per wheel notch or arrow; dragging stays continuous. Clean's Shift and Reel's Bias
+    OIL, HEADS / SWELL, HEADS / WEAR, SPEED / BIAS). Stepped A's (Bits 9, Chip 4, Drum's Heads
+    15, Loop's Heads 7, Speed 3) step one position per wheel notch or arrow; dragging stays
+    continuous. Drum's Heads prints 1, 4 and ALL (head 1, the last single head, all four). Clean's Shift and Reel's Bias
     have a centre detent.
   - Time is ms (log scale, 1 ms – 4 s) or, with SYNC, the 21-position note switch whose
     read-out names the note and its length ("1/8D  375 ms", "· folded" when folded under 4 s).
   - Ⓜ (right of Mode) is Width in Single and Ping-Pong, Right time (ms or note) in Dual, Steps in
     Pattern. Each meaning is its own parameter and automation lane (PLAN.md Deviations 1).
-  - With Loop in Pattern mode, Heads dims: the pattern replaces the heads.
+  - With Loop or Drum in Pattern mode, Heads dims: the pattern replaces the heads.
 - **Feedback** prints 0, 50 and RUN at its end; 100–120 % is an engraved, hatched band on the
   scale.
 - **TAP** is a UI action, not a parameter: two or more taps set Time in ms (the mean of the
@@ -114,7 +119,7 @@ A/B, meanings, value texts, the echo shape, Tap). Same parameters in both.
 
 | Area | Contents |
 |---|---|
-| Machine card (12, 62, 184 × 228) | the six machines with taglines (keyboard: Up/Down) |
+| Machine card (12, 62, 184 × 228) | the seven machines with taglines, numbered and ordered as on the panel, rows at a 28 px pitch (keyboard: Up/Down) |
 | Mode card (12, 302, 184 × 266) | the four modes; TRAILS switch; HOLD LATCH / PRESS |
 | Echo card (208, 62, 640 × 228) | Time and Right as headline values (typed: "375 ms", "0.25 s", "1/8D"); SYNC, TAP chips; HOLD block; the echo graph, flat, with draggable Pattern steps |
 | Five cards (208…, 302, 118 × 266) | LOOP: Feedback, Drive, Wobble, Rate, Shape · MACHINE: A, B, Diffuse, Low Cut, High Cut · STEREO: Width, Cross-feed, Pans, Steps · TIME: Groove, Feel, Noise, Tempo · DUCK (switch in the title): Amount, Thresh, Release |
@@ -137,8 +142,8 @@ Shared keys (`common/plugin/UiState.h`: scale, view) plus `advancedOpen` (`UiSta
 
 ## Snapshot tool
 
-`MulberryUiSnapshot <dir>` renders the scenes into `docs/screenshots/` (panel 01–15, studio
-20–28); `--selftest` runs the interaction checks (`tools/ui_snapshot/SelfTest.cpp`: knobs,
+`MulberryUiSnapshot <dir>` renders the scenes into `docs/screenshots/` (panel 01–16, studio
+20–29; 16 and 29 are the Drum with Swell); `--selftest` runs the interaction checks (`tools/ui_snapshot/SelfTest.cpp`: knobs,
 detent, machine keys and legends, Sync binding, the Ⓜ knob per mode, Tap, Hold latch and
 momentary, Pattern step drags, the deck, Bypass, undo, presets and A/B, scale, typed character
 values, the studio view) and the shared editor checks.
@@ -156,5 +161,5 @@ values, the studio view) and the shared editor checks.
 | `AdvancedDrawer.{h,cpp}` | the Advanced deck and its tab |
 | `StudioPanel.{h,cpp}` | the studio view and its echo graph |
 | `MulberryEditor.{h,cpp}`, `Header.{h,cpp}` | the editor and its header configuration |
-| `FactoryPresets.{h,cpp}` | the 42 factory presets |
+| `FactoryPresets.{h,cpp}` | the 47 factory presets |
 | `UiState.h` | Mulberry's UI state keys |

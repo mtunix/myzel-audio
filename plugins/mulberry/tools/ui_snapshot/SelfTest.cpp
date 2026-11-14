@@ -69,7 +69,7 @@ int runUiSelfTest (const ScratchSession& scratch)
             check (panel.findKnob (params::paramA)->getStyle().title == info (m).paramA
                    && panel.findKnob (params::paramB)->getStyle().title == info (m).paramB, "Param A/B relabel");
         }
-        check (panel.getMachineKey ((int) Machine::reel).getToggleState() && ! panel.getMachineKey ((int) Machine::loop).getToggleState(),
+        check (panel.getMachineKey (numMachines - 1).getToggleState() && ! panel.getMachineKey ((int) Machine::loop).getToggleState(),
                "only the selected key is lit");
 
         setParam (processor, params::machine, (float) (int) Machine::loop);
@@ -80,6 +80,14 @@ int runUiSelfTest (const ScratchSession& scratch)
         setParam (processor, params::paramA, 7.1f);
         heads->keyPressed (juce::KeyPress (juce::KeyPress::upKey));
         check (heads->getValueText() == "2", "arrow key steps one head combination");
+
+        setParam (processor, params::machine, (float) (int) Machine::drum);
+        setParam (processor, params::paramA, 100.0f);
+        frames (*editor, 1);
+        check (panel.findKnob (params::paramA)->getValueText() == "1+2+3+4", "Drum's Heads read out the head combination");
+        check (panel.findKnob (params::paramA)->getStyle().steps == 15, "Drum's Heads is a 15-position switch");
+        check (panel.getMachineKey ((int) Machine::drum).getBounds().getY() > panel.getMachineKey ((int) Machine::clean).getBounds().getY(),
+               "Drum sits in the lower row, with the moving media");
         setParam (processor, params::machine, (float) (int) Machine::reel);
         setParam (processor, params::paramA, 50.0f);
         frames (*editor, 1);

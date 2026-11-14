@@ -24,28 +24,66 @@ namespace
         return { fraction, 0.0f, { into0, into1, 0.0f, 0.0f } };
     }
 
-    /** The heads of a line on a multi-head machine (Loop), or the single head at Time. */
+    /**
+        The heads of a line: the playing heads (outputs) and the feedback taps with their shares,
+        which sum to 1. Without Swell the playing heads feed back equally (Loop's head sum); Swell
+        blends that towards every head of the machine equally (Drum).
+    */
     struct Heads
     {
-        std::array<float, 3> fractions {};
+        std::array<float, maxHeads> fractions {};
         int count = 0;
         float longest = 1.0f;
+        std::array<float, maxHeads> tapFractions {};
+        std::array<float, maxHeads> tapShares {};
+        int taps = 0;
+        float longestTap = 1.0f;
+        bool multi = false;         // anything but one head at Time feeding back alone
     };
 
-    Heads headsOf (int mask) noexcept
+    Heads headsOf (const TapPlanInput& in) noexcept
     {
         Heads h;
-        for (int i = 0; i < 3; ++i)
-            if (mask & (1 << i))
+        for (int i = 0; i < maxHeads; ++i)
+            if (in.headMask & (1 << i))
             {
-                h.fractions[(size_t) h.count++] = (float) (i + 1);
-                h.longest = (float) (i + 1);
+                h.fractions[(size_t) h.count++] = (float) (i + 1) * in.headUnit;
+                h.longest = (float) (i + 1) * in.headUnit;
             }
         if (h.count == 0)
         {
             h.fractions[0] = 1.0f;
             h.count = 1;
         }
+
+        const auto swell = in.swellHeads > 0 ? std::clamp (in.swell, 0.0f, 1.0f) : 0.0f;
+        if (swell <= 0.0f)
+        {
+            for (int i = 0; i < h.count; ++i)
+            {
+                h.tapFractions[(size_t) i] = h.fractions[(size_t) i];
+                h.tapShares[(size_t) i] = 1.0f / (float) h.count;
+            }
+            h.taps = h.count;
+            h.longestTap = h.longest;
+        }
+        else
+        {
+            const auto heads = std::min (in.swellHeads, maxHeads);
+            for (int i = 0; i < heads; ++i)
+            {
+                const auto fraction = (float) (i + 1) * in.headUnit;
+                bool playing = false;
+                for (int k = 0; k < h.count; ++k)
+                    playing = playing || same (h.fractions[(size_t) k], fraction);
+                h.tapFractions[(size_t) i] = fraction;
+                h.tapShares[(size_t) i] = (playing ? (1.0f - swell) / (float) h.count : 0.0f) + swell / (float) heads;
+                h.longestTap = fraction;
+            }
+            h.taps = heads;
+        }
+
+        h.multi = h.count > 1 || ! same (h.fractions[0], 1.0f) || h.taps > 1;
         return h;
     }
 }
@@ -92,9 +130,12 @@ TapPlan compileTapPlan (const TapPlanInput& in) noexcept
     const auto w = std::clamp (in.width, 0.0f, 1.0f);
     const auto g = std::clamp (in.groove, 0.0f, 0.5f);
     const auto feel = in.feelMs;
-    const auto heads = headsOf (in.headMask);
-    const auto multiHead = heads.count > 1 || ! same (heads.fractions[0], 1.0f);
-    const auto share = 1.0f / (float) heads.count;
+    // Pattern mode replaces the playing heads: its steps play, and it feeds back from Time.
+    auto headInput = in;
+    if (in.mode == Mode::pattern)
+        headInput.headMask = 0;
+    const auto heads = headsOf (headInput);
+    const auto multiHead = heads.multi;
 
     auto& L = plan.lines[0];
     auto& R = plan.lines[1];
@@ -116,8 +157,8 @@ TapPlan compileTapPlan (const TapPlanInput& in) noexcept
                 {
                     for (int h = 0; h < heads.count; ++h)
                         lp.add (output (heads.fractions[(size_t) h], feel, 1.0f, pan));
-                    for (int h = 0; h < heads.count; ++h)
-                        lp.add (tap (heads.fractions[(size_t) h], into0 * share, (1.0f - into0) * share));
+                    for (int t = 0; t < heads.taps; ++t)
+                        lp.add (tap (heads.tapFractions[(size_t) t], into0 * heads.tapShares[(size_t) t], (1.0f - into0) * heads.tapShares[(size_t) t]));
                 }
                 else
                 {
@@ -128,7 +169,7 @@ TapPlan compileTapPlan (const TapPlanInput& in) noexcept
                 }
             }
 
-            const auto cycle = (multiHead || g <= 0.0f) ? heads.longest : 2.0f;
+            const auto cycle = (multiHead || g <= 0.0f) ? heads.longestTap : 2.0f;
             plan.holdFraction = { cycle, cycle };
             break;
         }
@@ -144,16 +185,18 @@ TapPlan compileTapPlan (const TapPlanInput& in) noexcept
             {
                 auto& lp = plan.lines[line];
                 const auto pan = line == 0 ? -w : w;
-                const auto own = (1.0f - c) * share, cross = c * share;
 
                 for (int h = 0; h < heads.count; ++h)
                     lp.add (output (heads.fractions[(size_t) h], feel, 1.0f, pan));
-                for (int h = 0; h < heads.count; ++h)
-                    lp.add (tap (heads.fractions[(size_t) h], line == 0 ? own : cross, line == 0 ? cross : own));
+                for (int t = 0; t < heads.taps; ++t)
+                {
+                    const auto own = (1.0f - c) * heads.tapShares[(size_t) t], cross = c * heads.tapShares[(size_t) t];
+                    lp.add (tap (heads.tapFractions[(size_t) t], line == 0 ? own : cross, line == 0 ? cross : own));
+                }
             }
 
             plan.holdLine = { 0, 1 };
-            plan.holdFraction = { heads.longest, heads.longest };
+            plan.holdFraction = { heads.longestTap, heads.longestTap };
             break;
         }
 
@@ -172,11 +215,14 @@ TapPlan compileTapPlan (const TapPlanInput& in) noexcept
 
                 for (int h = 0; h < heads.count; ++h)
                     lp.add (output (heads.fractions[(size_t) h] * scale, feel, 1.0f, pan));
-                for (int h = 0; h < heads.count; ++h)
-                    lp.add (tap (heads.fractions[(size_t) h] * scale, line == 0 ? 0.0f : share, line == 0 ? share : 0.0f));
+                for (int t = 0; t < heads.taps; ++t)
+                {
+                    const auto share = heads.tapShares[(size_t) t];
+                    lp.add (tap (heads.tapFractions[(size_t) t] * scale, line == 0 ? 0.0f : share, line == 0 ? share : 0.0f));
+                }
             }
 
-            plan.holdFraction = { 2.0f * heads.longest, 2.0f * heads.longest };
+            plan.holdFraction = { 2.0f * heads.longestTap, 2.0f * heads.longestTap };
             break;
         }
 
@@ -200,9 +246,13 @@ TapPlan compileTapPlan (const TapPlanInput& in) noexcept
                 R.add (output (fraction, feel, level, p + spread));
             }
 
-            L.add (tap (1.0f, 1.0f, 0.0f));
-            R.add (tap (1.0f, 0.0f, 1.0f));
-            plan.holdFraction = { 1.0f, 1.0f };
+            // The pattern feeds back from its end (the Drum's last head); Swell spreads it as above.
+            for (int t = 0; t < heads.taps; ++t)
+            {
+                L.add (tap (heads.tapFractions[(size_t) t], heads.tapShares[(size_t) t], 0.0f));
+                R.add (tap (heads.tapFractions[(size_t) t], 0.0f, heads.tapShares[(size_t) t]));
+            }
+            plan.holdFraction = { heads.longestTap, heads.longestTap };
             break;
         }
     }

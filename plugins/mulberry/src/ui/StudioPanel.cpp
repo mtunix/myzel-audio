@@ -244,18 +244,19 @@ void StudioPanel::buildControls()
     using namespace studio;
     auto* um = &controller.getUndoManager();
 
-    for (int i = 0; i < numMachines; ++i)
+    for (int slot = 0; slot < numMachines; ++slot)
     {
-        const auto m = static_cast<Machine> (i);
-        auto row = std::make_unique<SelectorRow> (i, info (m).name, info (m).tagline);
-        row->setBounds (machineRow (i).toNearestInt());
+        const auto m = machineOrder[(size_t) slot];
+        const auto i = (int) m;
+        auto row = std::make_unique<SelectorRow> (slot, info (m).name, info (m).tagline);
+        row->setBounds (machineRow (slot).toNearestInt());
         row->setTooltip (PanelController::machineDescription (m));
         row->setRadioGroupId (machineRadioGroup, juce::dontSendNotification);
         row->setClickingTogglesState (false);
         row->onClick = [this, i] { machineAttachment->setValueAsCompleteGesture ((float) i); };
-        row->onStep = [this, i] (int delta)
+        row->onStep = [this, slot] (int delta)
         {
-            const auto next = juce::jlimit (0, numMachines - 1, i + delta);
+            const auto next = (int) machineOrder[(size_t) juce::jlimit (0, numMachines - 1, slot + delta)];
             machineAttachment->setValueAsCompleteGesture ((float) next);
             machineRows[(size_t) next]->grabKeyboardFocus();
         };

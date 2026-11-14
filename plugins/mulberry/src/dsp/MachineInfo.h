@@ -1,6 +1,7 @@
 #pragma once
 
 #include "dsp/Machines.h"
+#include "dsp/TapPlan.h"
 
 #include <algorithm>
 #include <array>
@@ -33,7 +34,12 @@ inline constexpr std::array<MachineInfo, numMachines> machineInfos { {
     { Machine::oilCan, "Oil Can", "oilcan", "Oil drum",      "BRUSHES", "OIL",       0, 0,  4.0f },
     { Machine::loop,   "Loop",    "loop",   "Tape loop",     "HEADS",   "WEAR",      7, 0,  5.0f },
     { Machine::reel,   "Reel",    "reel",   "Tape deck",     "SPEED",   "BIAS",      3, 0,  6.0f },
+    { Machine::drum,   "Drum",    "drum",   "Magnetic drum", "HEADS",   "SWELL",    15, 0,  5.0f },
 } };
+
+/** The machines in panel and list order: the electronic memories, then the moving media. */
+inline constexpr std::array<Machine, numMachines> machineOrder { Machine::clean, Machine::rack, Machine::bucket,
+                                                                 Machine::oilCan, Machine::drum, Machine::loop, Machine::reel };
 
 inline const MachineInfo& info (Machine m) noexcept
 {
@@ -83,6 +89,37 @@ namespace character
     inline constexpr std::array<float, 3> speedsIps { 7.5f, 15.0f, 30.0f };
     inline float speedIps (float a) noexcept { return speedsIps[(size_t) step (a, 3)]; }
     inline float bias (float b) noexcept { return 2.0f * clamp01 (b) - 1.0f; }   // -1 under .. +1 over
+
+    // Drum: every combination of its four heads (1/4 .. 4/4 of Time), singles first.
+    inline constexpr std::array<int, 15> drumHeadMasks { 0b0001, 0b0010, 0b0100, 0b1000, 0b0011, 0b0110, 0b1100, 0b0101,
+                                                         0b1010, 0b1001, 0b0111, 0b1110, 0b1011, 0b1101, 0b1111 };
+    inline constexpr std::array<const char*, 15> drumHeadNames { "1", "2", "3", "4", "1+2", "2+3", "3+4", "1+3",
+                                                                 "2+4", "1+4", "1+2+3", "2+3+4", "1+2+4", "1+3+4", "1+2+3+4" };
+    inline int drumHeadMask (float a) noexcept { return drumHeadMasks[(size_t) step (a, 15)]; }
+    inline float swell (float b) noexcept { return clamp01 (b); }
+}
+
+/**
+    The machine's own heads in the tap plan: Loop's three (Param A), Drum's four (Param A) with
+    its Swell (Param B). Pattern mode replaces the heads; Drum's Swell still spreads the feedback.
+*/
+inline void setMachineHeads (dsp::TapPlanInput& in, Machine m, float paramA, float paramB) noexcept
+{
+    in.headMask = 1;
+    in.headUnit = 1.0f;
+    in.swellHeads = 0;
+    in.swell = 0.0f;
+
+    if (m == Machine::loop && in.mode != Mode::pattern)
+        in.headMask = character::headMask (paramA);
+
+    if (m == Machine::drum)
+    {
+        in.headUnit = 0.25f;
+        in.swellHeads = 4;
+        in.swell = character::swell (paramB);
+        in.headMask = in.mode == Mode::pattern ? 1 : character::drumHeadMask (paramA);
+    }
 }
 
 /** Global mappings shared by the parameters, the DSP and the UI. */

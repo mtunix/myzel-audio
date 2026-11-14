@@ -24,7 +24,7 @@ file(GLOB_RECURSE MULBERRY_DSP_FRAME_SOURCES CONFIGURE_DEPENDS
     ${PROJECT_SOURCE_DIR}/src/dsp/*.cpp)
 file(GLOB_RECURSE MULBERRY_MACHINE_SOURCES CONFIGURE_DEPENDS ${PROJECT_SOURCE_DIR}/src/dsp/machines/*.cpp)
 
-foreach(machine clean rack bucket oilcan loop reel)
+foreach(machine clean rack bucket oilcan loop reel drum)
     file(GLOB_RECURSE machine_tests CONFIGURE_DEPENDS ${CMAKE_CURRENT_SOURCE_DIR}/machines/${machine}/*.cpp)
     if(NOT machine_tests)
         continue()

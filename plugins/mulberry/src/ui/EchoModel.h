@@ -46,6 +46,7 @@ inline float nominalPassDb (Machine m) noexcept
         case Machine::oilCan: return -0.5f;
         case Machine::loop:   return -0.6f;
         case Machine::reel:   return -0.4f;
+        case Machine::drum:   return -0.5f;
     }
     return 0.0f;
 }
@@ -53,9 +54,7 @@ inline float nominalPassDb (Machine m) noexcept
 /** The repeats of a click into both inputs, up to spanMs, strongest first never below -60 dB. */
 inline std::vector<EchoEvent> echoEvents (const EchoShape& s, float spanMs, int maxEvents = 160)
 {
-    auto input = s.plan;
-    input.headMask = (s.machine == Machine::loop && input.mode != Mode::pattern) ? input.headMask : 1;
-    const auto plan = dsp::compileTapPlan (input);
+    const auto plan = dsp::compileTapPlan (s.plan);
     const auto loop = std::min (s.feedback, 1.2f) * std::pow (10.0f, nominalPassDb (s.machine) / 20.0f);
 
     struct Pulse { int line; float t, amplitude; };

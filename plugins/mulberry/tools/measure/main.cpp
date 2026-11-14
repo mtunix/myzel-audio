@@ -29,6 +29,7 @@ namespace
             case Machine::reel:   return 0.05f;
             case Machine::loop:   return 0.25f;
             case Machine::oilCan: return 1.0f;
+            case Machine::drum:   return 0.15f;
             case Machine::clean:
             case Machine::rack:
             case Machine::bucket: break;
@@ -36,7 +37,7 @@ namespace
         return -1.0f;
     }
 
-    /** Param A / B for the gates (as the machine's tests): Loop on one head and new tape. */
+    /** Param A / B for the gates (as the machine's tests): Loop and Drum on one head. */
     std::pair<float, float> gateParams (Machine m)
     {
         switch (m)
@@ -45,6 +46,7 @@ namespace
             case Machine::bucket: return { 1.0f, 0.0f };     // 8192 stages, no compander
             case Machine::oilCan: return { 0.0f, 0.5f };     // one pickup
             case Machine::rack:   return { 1.0f, 0.5f };     // 16 bits: the click gate sees no grain
+            case Machine::drum:   return { character::stepCentre (3, 15), 0.0f };   // head 4 alone, no swell
             case Machine::clean:
             case Machine::reel:   break;
         }
@@ -92,8 +94,8 @@ namespace
         line ("echo level over Drive -12..+24 (spread)", hi - lo, "dB", hi - lo <= 0.4);
 
         // Flutter
-        // Flutter at the machine's defaults (Loop: one head, default wear; Bucket: 8192 stages).
-        const auto fa = m == Machine::loop ? 0.0f : (m == Machine::bucket ? 1.0f : 0.5f);
+        // Flutter at the machine's defaults (Loop, Drum: one head; Bucket: 8192 stages).
+        const auto fa = m == Machine::loop ? 0.0f : (m == Machine::bucket ? 1.0f : (m == Machine::drum ? a : 0.5f));
         const auto f0 = flutterPercent (m, 48000.0, 0.0f, fa, 0.5f, 8.0);
         const auto f1 = flutterPercent (m, 48000.0, 0.5f, fa, 0.5f, 24.0);
         const auto target = flutterTarget (m);

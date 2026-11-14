@@ -2,6 +2,7 @@
 
 #include "dsp/machines/bucket/BucketMachine.h"
 #include "dsp/machines/clean/CleanMachine.h"
+#include "dsp/machines/drum/DrumMachine.h"
 #include "dsp/machines/oilcan/OilCanMachine.h"
 #include "dsp/machines/rack/RackMachine.h"
 #include "dsp/machines/loop/LoopMachine.h"
@@ -19,6 +20,7 @@ std::unique_ptr<EchoMachine> createMachine (mulberry::Machine m, uint32_t seed)
         case mulberry::Machine::oilCan: return std::make_unique<OilCanMachine> (seed);
         case mulberry::Machine::loop:   return std::make_unique<LoopMachine> (seed);
         case mulberry::Machine::reel:   return std::make_unique<ReelMachine> (seed);
+        case mulberry::Machine::drum:   return std::make_unique<DrumMachine> (seed);
         case mulberry::Machine::clean:
             break;
     }

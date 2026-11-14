@@ -42,11 +42,12 @@ namespace studio
         return { c.getX() + 8.0f, c.getY() + cardTitleHeight + 2.0f + (float) row * paramRowPitch, c.getWidth() - 16.0f, rowHeight };
     }
 
-    inline constexpr float listRowHeight = 30.0f;
-    inline R machineRow (int index)
+    inline constexpr float listRowHeight = 30.0f, machineRowHeight = 28.0f;   // seven machines fill their card
+    /** The row at a slot of machineOrder (MachineInfo.h). */
+    inline R machineRow (int slot)
     {
         const auto c = machineCard();
-        return { c.getX() + 6.0f, c.getY() + cardTitleHeight + 2.0f + (float) index * listRowHeight, c.getWidth() - 12.0f, listRowHeight - 2.0f };
+        return { c.getX() + 6.0f, c.getY() + cardTitleHeight + 2.0f + (float) slot * machineRowHeight, c.getWidth() - 12.0f, machineRowHeight - 2.0f };
     }
     inline R modeRow (int index)
     {

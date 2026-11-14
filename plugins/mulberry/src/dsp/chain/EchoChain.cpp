@@ -95,7 +95,7 @@ const EchoMachine* EchoChain::activeMachine() const noexcept
 TapPlanInput EchoChain::planInputFor (const ChainSettings& s, bool monoInput) const noexcept
 {
     auto in = s.plan;
-    in.headMask = (s.machine == mulberry::Machine::loop && in.mode != Mode::pattern) ? character::headMask (s.paramA) : 1;
+    setMachineHeads (in, s.machine, s.paramA, s.paramB);
     in.monoInput = monoInput;
     return in;
 }

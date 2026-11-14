@@ -126,6 +126,7 @@ juce::String characterText (Machine m, bool isParamB, float percent)
                 if (x < 0.02f) return "One";
                 return pct;
             case Machine::loop:   return c::headNames[(size_t) c::step (x, 7)];
+            case Machine::drum:   return c::drumHeadNames[(size_t) c::step (x, 15)];
             case Machine::reel:
             {
                 const auto ips = c::speedIps (x);
@@ -157,6 +158,9 @@ juce::String characterText (Machine m, bool isParamB, float percent)
             return pct;
         case Machine::loop:
             if (x < 0.02f) return "New";
+            return pct;
+        case Machine::drum:
+            if (x < 0.02f) return "Off";
             return pct;
         case Machine::reel:
         {

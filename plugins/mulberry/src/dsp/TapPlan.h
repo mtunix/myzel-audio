@@ -36,6 +36,7 @@ struct Read
 };
 
 inline constexpr int maxReadsPerLine = 20;
+inline constexpr int maxHeads = 4;
 inline constexpr int maxPatternSteps = 16;
 
 struct LinePlan
@@ -56,8 +57,8 @@ struct LinePlan
     What a mode does, compiled into lines and heads. The machines only know lines and reads, so
     every mode works on every machine.
 
-    - Feedback weights into a line sum to at most 1 over all reads (Loop's head sum, Dual's
-      cross-feed), so Feedback alone sets the loop gain.
+    - Feedback weights into a line sum to at most 1 over all reads (Loop's head sum, Drum's
+      Swell, Dual's cross-feed), so Feedback alone sets the loop gain.
     - Output pans preserve the mono sum: a read at pan p sends (1-p)/2 left and (1+p)/2 right.
 */
 struct TapPlan
@@ -74,7 +75,10 @@ struct TapPlan
 struct TapPlanInput
 {
     Mode mode = Mode::single;
-    int headMask = 1;               // Loop's heads (bits for 1, 2, 3 x Time); 1 on other machines
+    int headMask = 1;               // playing heads, bit n for head n + 1 (Loop, Drum); 1 elsewhere
+    float headUnit = 1.0f;          // head n reads at n x headUnit of Time (Loop 1, Drum 1/4)
+    int swellHeads = 0;             // Drum: Swell spreads the feedback over this many heads
+    float swell = 0.0f;             // 0: the playing heads feed back .. 1: every head equally
     float groove = 0.0f;            // maps::grooveOffset: odd echoes / even steps move by this
     float feelMs = 0.0f;            // every output head moves by this (taps stay: the loop keeps time)
     float width = 1.0f;             // 0 .. 1

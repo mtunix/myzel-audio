@@ -1,8 +1,8 @@
 # Mulberry
 
-An echo plugin by **Myzel Audio**: six delay machines, each modelled from how it works, an ideal
-digital memory, an early rack unit, a bucket-brigade chip, an oil-can drum, a tape loop and a
-studio tape deck. Each one repeats, darkens, wobbles, changes time and runs away in its own way.
+An echo plugin by **Myzel Audio**: seven delay machines, each modelled from how it works, an
+ideal digital memory, an early rack unit, a bucket-brigade chip, an oil-can drum, a magnetic drum,
+a tape loop and a studio tape deck. Each one repeats, darkens, wobbles, changes time and runs away in its own way.
 
 ![Mulberry](docs/screenshots/01-default.png)
 
@@ -19,8 +19,9 @@ Licence: AGPLv3. Sibling of [Umber](../umber) and [Cerulean](../cerulean).
 | 2 | **Rack** | Early rack digital delay, gain-ranging converter | Bits (8–16) | Rate (6–20 kHz) | jump, 10 ms crossfade |
 | 3 | **Bucket** | Bucket-brigade chip, filters, NE570 compander | Chip (1024–8192 stages) | Compander | the clock glides |
 | 4 | **Oil Can** | Electrostatic drum in oil | Brushes (1–5) | Oil (new … old) | the belt slips |
-| 5 | **Loop** | Tape loop with three playback heads | Heads | Wear | the motor bends every echo |
-| 6 | **Reel** | Studio tape deck, sliding head | Speed (7.5 / 15 / 30 ips) | Bias | the head slides |
+| 5 | **Drum** | Magnetic drum, four contact-free heads at quarters of Time | Heads (15 combinations) | Swell (feedback from every head) | the heavy drum glides |
+| 6 | **Loop** | Tape loop with three playback heads | Heads | Wear | the motor bends every echo |
+| 7 | **Reel** | Studio tape deck, sliding head | Speed (7.5 / 15 / 30 ips) | Bias | the head slides |
 
 ## Controls
 
@@ -31,7 +32,7 @@ saturation) · **Drive** · **Wobble** · **Diffuse** · **Low Cut / High Cut** 
 its own knob (Width, Right time or Steps) · **Mix** (pedal law) · **Output** · **Duck** · **Wet**
 · the echo map (the repeats of a click, a beat grid, the Pattern step editor) · **ADVANCED**:
 Groove, Feel, Width, Cross-feed, Pan rule, Wobble rate and shape, Noise, Trails, Duck settings,
-BPM, Hold mode. Header: presets (42 factory), Bypass (with trails), A/B, undo/redo, the view
+BPM, Hold mode. Header: presets (47 factory), Bypass (with trails), A/B, undo/redo, the view
 switch and ⚙ (mix lock, window size). A studio view shows every control at once with exact
 typed values and meters.
 
@@ -50,7 +51,7 @@ typed values and meters.
   `src/dsp/machines/`.
 - **One tap plan for four modes** (`src/dsp/TapPlan.h`): reads with fractions, offsets and
   weights into feedback and output buses; routing changes crossfade, weight changes ramp.
-- **Trails everywhere.** Two slots, each with all six machines: a machine or preset change moves
+- **Trails everywhere.** Two slots, each with all seven machines: a machine or preset change moves
   the input to the fresh slot while the old one rings out (never running away).
 - **Measured, not guessed.** Every machine runs the same gates (`tests/support/MachineGates.h`):
   echo time, per-repeat loss against the prediction, level, AES6 flutter, glide clicks, THD,
@@ -77,7 +78,7 @@ Plugins land in `build/plugins/mulberry/Mulberry_artefacts/Release/{VST3,CLAP,LV
 ```sh
 ctest --test-dir build/plugins/mulberry --output-on-failure        # every Mulberry suite
 build/plugins/mulberry/tests/MulberryTests                         # tap plan, chain, processor, parameters, presets, blocks, golden files
-build/plugins/mulberry/tests/MulberryTests_reel                    # one machine's gates (likewise _clean, _rack, _bucket, _oilcan, _loop)
+build/plugins/mulberry/tests/MulberryTests_reel                    # one machine's gates (likewise _clean, _rack, _bucket, _oilcan, _drum, _loop)
 build/plugins/mulberry/tools/MulberryMeasure                       # every gate of every machine, with CPU
 build/plugins/mulberry/tools/MulberryMeasure loop --quick          # one machine, without the long gates
 xvfb-run -a build/plugins/mulberry/tools/MulberryUiSnapshot_artefacts/Release/MulberryUiSnapshot docs/screenshots

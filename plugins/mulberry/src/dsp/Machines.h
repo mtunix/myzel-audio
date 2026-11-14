@@ -11,10 +11,11 @@ enum class Machine
     bucket,
     oilCan,
     loop,
-    reel
+    reel,
+    drum
 };
 
-inline constexpr int numMachines = 6;
+inline constexpr int numMachines = 7;
 
 /** Routing modes. Never reorder: stored in state. */
 enum class Mode

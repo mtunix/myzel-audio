@@ -102,6 +102,54 @@ TEST_CASE ("TapPlan: Loop's heads replace the single head, the pattern replaces 
     CHECK (outputs (pattern.lines[0]) == 5);
 }
 
+TEST_CASE ("TapPlan: Drum's four heads sit at quarters of Time; Swell spreads the feedback over all four", "[tapplan]")
+{
+    auto in = base (Mode::single);
+    in.headUnit = 0.25f;
+    in.swellHeads = 4;
+    in.headMask = 0b0001;
+    const auto plain = compileTapPlan (in);
+    REQUIRE (plain.lines[0].numReads == 2);
+    CHECK (plain.lines[0].reads[0].fraction == 0.25f);
+    CHECK (plain.lines[0].reads[1].fraction == 0.25f);
+    CHECK (plain.lines[0].reads[1].weights[feedback0] == 1.0f);
+    CHECK (plain.holdFraction[0] == 0.25f);
+
+    in.swell = 0.5f;
+    const auto swelled = compileTapPlan (in);
+    REQUIRE (swelled.lines[0].numReads == 5);
+    CHECK (outputs (swelled.lines[0]) == 1);
+    CHECK (swelled.lines[0].reads[1].weights[feedback0] == Catch::Approx (0.5f + 0.125f));
+    for (int t = 2; t <= 4; ++t)
+    {
+        CHECK (swelled.lines[0].reads[(size_t) t].fraction == Catch::Approx (0.25f * (float) t));
+        CHECK (swelled.lines[0].reads[(size_t) t].weights[feedback0] == Catch::Approx (0.125f));
+    }
+    CHECK (feedbackInto (swelled, 0) == Catch::Approx (1.0f));
+    CHECK (swelled.holdFraction[0] == 1.0f);
+
+    // Riding Swell keeps the reads in place: only weights change, so the chain ramps them.
+    in.swell = 0.9f;
+    CHECK (compileTapPlan (in).samePositions (swelled));
+
+    for (int m = 0; m < numModes; ++m)
+        for (int mask = 1; mask < 16; ++mask)
+            for (float s : { 0.0f, 0.3f, 1.0f })
+                for (float c : { 0.0f, 0.6f })
+                {
+                    in.mode = static_cast<Mode> (m);
+                    in.headMask = mask;
+                    in.swell = s;
+                    in.crossFeed = c;
+                    in.steps = 6;
+                    const auto plan = compileTapPlan (in);
+                    INFO ("mode " << m << " heads " << mask << " swell " << s << " cross " << c);
+                    CHECK (feedbackInto (plan, 0) <= 1.0f + 1.0e-6f);
+                    CHECK (feedbackInto (plan, 1) <= 1.0f + 1.0e-6f);
+                    CHECK (feedbackInto (plan, 0) + feedbackInto (plan, 1) > 0.99f);
+                }
+}
+
 TEST_CASE ("TapPlan: Ping-Pong sums the input into the left line and crosses the feedback", "[tapplan]")
 {
     const auto plan = compileTapPlan (base (Mode::pingPong));

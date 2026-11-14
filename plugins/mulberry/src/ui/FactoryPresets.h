@@ -27,7 +27,7 @@ struct FactoryPreset
     const char* category = "";
 
     // Front panel
-    int machine = 5;                // Machine enum: 0 Clean, 1 Rack, 2 Bucket, 3 Oil Can, 4 Loop, 5 Reel
+    int machine = 5;                // Machine enum: 0 Clean, 1 Rack, 2 Bucket, 3 Oil Can, 4 Loop, 5 Reel, 6 Drum
     int mode = 0;                   // Mode enum: 0 Single, 1 Dual, 2 Ping-Pong, 3 Pattern
     bool sync = true;
     float time = 375.0f;            // ms (free)

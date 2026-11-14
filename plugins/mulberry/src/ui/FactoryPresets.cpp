@@ -8,7 +8,7 @@ namespace mulberry::ui
 namespace
 {
     // Machine and mode indices (Machines.h).
-    constexpr int clean = 0, rack = 1, bucket = 2, oilCan = 3, loop = 4, reel = 5;
+    constexpr int clean = 0, rack = 1, bucket = 2, oilCan = 3, loop = 4, reel = 5, drum = 6;
     constexpr int dual = 1, pingPong = 2, pattern = 3;
 
     // Notes (NoteValues.h).
@@ -20,6 +20,7 @@ namespace
     constexpr float heads1 = 7.1f, heads123 = 92.9f, heads12 = 50.0f;
     constexpr float ips7 = 16.7f, ips15 = 50.0f, ips30 = 83.3f;
     constexpr float shift0 = 50.0f, shiftFifth = 78.0f, shiftOctave = 98.0f;
+    constexpr float drum1 = 3.3f, drum24 = 56.7f, drum124 = 83.3f, drum134 = 90.0f, drumAll = 96.7f;
 
     constexpr FactoryPreset presets[] = {
         // Utility
@@ -36,6 +37,8 @@ namespace
           .paramA = bits16, .paramB = 80.0f, .timeRight = 62.0f, .mix = 40.0f },
         { .name = "Bucket Slap", .category = "Slapback", .machine = bucket, .sync = false, .time = 130.0f, .feedback = 12.0f,
           .paramA = chip1k, .paramB = 70.0f, .mix = 30.0f },
+        { .name = "Drum Slap", .category = "Slapback", .machine = drum, .sync = false, .time = 480.0f, .feedback = 10.0f,
+          .paramA = drum1, .paramB = 0.0f, .mix = 30.0f },
 
         // Tape Echoes
         { .name = "Studio Reel", .category = "Tape Echoes", .note = n1_8D, .feedback = 38.0f, .paramA = ips30, .mix = 30.0f },
@@ -48,6 +51,8 @@ namespace
         { .name = "Dual Reels", .category = "Tape Echoes", .mode = dual, .note = n1_8D, .feedback = 40.0f, .paramA = ips15,
           .noteRight = n1_4, .mix = 32.0f, .output = -1.0f, .crossFeed = 20.0f },
         { .name = "Tape Ping", .category = "Tape Echoes", .mode = pingPong, .note = n1_8, .feedback = 45.0f, .paramA = ips15, .mix = 30.0f },
+        { .name = "Drum Repeat", .category = "Tape Echoes", .machine = drum, .note = n1_2, .feedback = 40.0f, .paramA = drum24,
+          .paramB = 0.0f, .mix = 32.0f },
 
         // Analog
         { .name = "Bucket Quarter", .category = "Analog", .machine = bucket, .note = n1_4, .feedback = 40.0f, .paramA = chip4k,
@@ -96,6 +101,8 @@ namespace
         { .name = "Oil Pattern", .category = "Rhythmic", .machine = oilCan, .mode = pattern, .note = n1_2, .feedback = 30.0f,
           .paramA = 30.0f, .paramB = 40.0f, .steps = 6, .mix = 32.0f, .panRule = 1,
           .stepLevels = { 100.0f, 40.0f, 70.0f, 40.0f, 90.0f, 40.0f, 100.0f, 100.0f, 100.0f, 100.0f, 100.0f, 100.0f, 100.0f, 100.0f, 100.0f, 100.0f } },
+        { .name = "Drum Gallop", .category = "Rhythmic", .machine = drum, .mode = pingPong, .note = n1_2, .feedback = 35.0f,
+          .paramA = drum134, .paramB = 20.0f, .mix = 30.0f },
 
         // Dub & Runaway
         { .name = "Dub Loop", .category = "Dub & Runaway", .machine = loop, .note = n1_8D, .feedback = 92.0f, .drive = 6.0f,
@@ -108,6 +115,8 @@ namespace
           .highCut = 5000.0f, .paramA = ips15, .mix = 38.0f, .duck = true },
         { .name = "Rack Meltdown", .category = "Dub & Runaway", .machine = rack, .note = n1_8, .feedback = 112.0f, .paramA = bits8,
           .paramB = 20.0f, .mix = 35.0f, .output = -3.0f },
+        { .name = "Drum Runaway", .category = "Dub & Runaway", .machine = drum, .note = n1_2, .feedback = 104.0f, .lowCut = 150.0f,
+          .highCut = 4500.0f, .paramA = drum124, .paramB = 60.0f, .mix = 38.0f },
 
         // Ambient & Diffuse
         { .name = "Smear Cloud", .category = "Ambient & Diffuse", .machine = oilCan, .sync = false, .time = 700.0f, .feedback = 65.0f,
@@ -120,6 +129,8 @@ namespace
           .diffuse = 50.0f, .highCut = 8000.0f, .paramB = shiftOctave, .mix = 38.0f },
         { .name = "Bucket Haze", .category = "Ambient & Diffuse", .machine = bucket, .mode = dual, .note = n1_4D, .feedback = 65.0f,
           .diffuse = 55.0f, .paramA = chip8k, .paramB = 60.0f, .noteRight = n1_2, .mix = 40.0f, .crossFeed = 30.0f },
+        { .name = "Drum Swell", .category = "Ambient & Diffuse", .machine = drum, .note = n1_1, .feedback = 75.0f, .highCut = 7000.0f,
+          .paramA = drumAll, .paramB = 100.0f, .mix = 38.0f, .output = -2.0f },
     };
 }
 

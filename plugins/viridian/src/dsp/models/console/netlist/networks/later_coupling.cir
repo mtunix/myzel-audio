@@ -1,0 +1,17 @@
+Console, later card: the low-pass's output coupling, open-circuit (the source the EQ input sees with the low-pass in)
+* C46, R72, R74, C47, R76 and R75 as in ../later_front.cir (the six parts between t13o and the EQ
+* input, copied: the EQ is always attached there in that file). ConsoleTests checks the joined
+* card against ngspice on ../later_front.cir.
+*@ name ConsoleLaterCoupling
+*@ generate ../../generated/ConsoleLaterCoupling.h vectors ../../../../../../tests/models/console/generated/ConsoleLaterCouplingVectors.h
+*@ depends ../later_front.cir
+*@ input vin
+*@ output eq_in
+Vin t13o 0 dc 0 ac 1
+C46 t13o lpf_j5 220u
+R72 t13o lpf_j5 100k
+R74 lpf_j5 0 1meg
+C47 lpf_j5 lpf_j6 220u
+R76 lpf_j6 0 10k
+R75 lpf_j6 eq_in 10
+.end

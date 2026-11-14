@@ -1,0 +1,116 @@
+* Console, later card, back: LMF and LF bands around the second summing amp (T8).
+* Transcribed from the later card's drawing at its last revision (../NOTES.md, "Sources").
+* The drawing gives R38 and R39 twice; the LF centre-tap and input resistors are R38b and R39b here.
+* Signal in: node in (the front's output, an op-amp: the split is exact).
+* Signal out: node out (the card's EQ output through C23 and C24, inverted).
+* Every part on the signal path is here; rails are AC ground (../NOTES.md, "Netlists").
+*
+* Controls, pot fractions 0..1 (laws in ../NOTES.md):
+*   lmf_gain, lf_gain  boost/cut wiper: 0 full cut, 0.5 centre tap, 1 full boost
+*   lmf_freq, lf_freq  frequency rheostats, both gangs: 0 = 0 ohm (top frequency) .. 1 = 50k
+*   lmf_q              Q pot gang a wiper: 0 lowest Q .. 1 highest Q; gang b is 1 - lmf_q
+*   lf_bell            1 bell (FETs on), 0 shelf (FETs off, switch a shorts C16 || C17)
+* Calibration (fixed): lmf_trim (RV3, LMF Q) and lf_trim (RV4, LF bell Q), in ohms.
+
+.param lmf_gain=0.5 lmf_freq=0.5 lmf_q=0.5
+.param lf_gain=0.5 lf_freq=0.5 lf_bell=1
+.param lmf_trim=181.47 lf_trim=810.91
+
+XU8 0 sj8 t8o opamp
+R38 in sj8 4.75k
+R35 sj8 t8o 4.75k
+C15 sj8 t8o 220p
+C23 t8o out_j 220u
+R51 t8o out_j 100k
+R52 out_j 0 1meg
+C24 out_j out 220u
+R53 out 0 10k
+R36 sj8 lmf_out 4.75k
+R37 sj8 lf_out 4.75k
+
+* LMF boost/cut: 25k lin, centre tap to ground through R39 (on the motherboard).
+R25 in lmf_a 1k
+R27 lmf_b t8o 1k
+R39 lmf_ct 0 4.7k
+R26 lmf_w 0 1.8k
+R96 lmf_w lf_out 12k
+.if (lmf_gain >= 0.5)
+RLMFg1 lmf_a lmf_w {25k*(1-lmf_gain)}
+RLMFg2 lmf_w lmf_ct {25k*(lmf_gain-0.5)}
+RLMFg3 lmf_ct lmf_b 12.5k
+.else
+RLMFg1 lmf_a lmf_ct 12.5k
+RLMFg2 lmf_ct lmf_w {25k*(0.5-lmf_gain)}
+RLMFg3 lmf_w lmf_b {25k*lmf_gain}
+.endif
+
+* LMF band-pass T6 with positive feedback (Q), post amp T7.
+RLMFfa lmf_w lmf_n25 {50k*lmf_freq}
+R28 lmf_n25 lmf_n28r 3k
+C12 lmf_n28r sj6 22n
+R29 sj6 lmf_n27 3.6k
+RLMFfb lmf_n27 bp6 {50k*lmf_freq}
+C13 sj6 bp6 22n
+XU6 p6 sj6 bp6 opamp
+R98 p6 0 100k
+C14 bp6 lmf_x 100u
+RLMFtrim lmf_x lmf_t {lmf_trim}
+R32 lmf_t lmf_n30 910
+R31 lmf_n30 lmf_n29 1.8k
+R30 lmf_n29 0 470
+RLMFqa1 lmf_n29 p6 {10k*lmf_q}
+RLMFqa2 p6 lmf_n30 {10k*(1-lmf_q)}
+R33 lmf_x sj7 750
+R34 sj7 lmf_n32 750
+RLMFqb lmf_n32 lmf_out {10k*(1-lmf_q)}
+XU7 0 sj7 lmf_out opamp
+
+* LF boost/cut, as LMF.
+R39b in lf_a 1k
+R40 lf_b t8o 1k
+R38b lf_ct 0 4.7k
+R41 lf_w 0 1.8k
+R97 lf_w lmf_out 12k
+.if (lf_gain >= 0.5)
+RLFg1 lf_a lf_w {25k*(1-lf_gain)}
+RLFg2 lf_w lf_ct {25k*(lf_gain-0.5)}
+RLFg3 lf_ct lf_b 12.5k
+.else
+RLFg1 lf_a lf_ct 12.5k
+RLFg2 lf_ct lf_w {25k*(0.5-lf_gain)}
+RLFg3 lf_w lf_b {25k*lf_gain}
+.endif
+
+* LF band-pass T9, post amp T10. Bell: the J112s close, so the Q divider (R45, RV4) takes T9's
+* output through C20, and R87 with C51 joins T10's feedback. Shelf: switch a shorts C16 || C17,
+* the divider reaches T9's output through C20 and R85 only, and R88 sits in series with R87.
+RLFfa lf_w lf_n34 {50k*lf_freq}
+R43 sj9 lf_n35 4.7k
+RLFfb lf_n35 bp9 {50k*lf_freq}
+C18 sj9 bp9 33n
+C19 sj9 bp9 47n
+XU9 p9 sj9 bp9 opamp
+R44 p9 0 5.1k
+R45 p9 lf_n45 2.4k
+C21 bp9 lf_z 100u
+R47 lf_z sj10 3k
+R48 sj10 lf_out 43k
+XU10 0 sj10 lf_out opamp
+.if (lf_bell == 1)
+C16 lf_n34 lf_n37 33n
+C17 lf_n34 lf_n37 47n
+R42 lf_n37 sj9 4.3k
+.else
+R42 lf_n34 sj9 4.3k
+.endif
+RLFtrim lf_n45 lf_y {lf_trim}
+C20 lf_y lf_w20 100u
+R87 sj10 lf_n87 7.5k
+C51 lf_n87 lf_f4 100u
+.if (lf_bell == 1)
+VF4 lf_w20 bp9 0
+VF5 lf_f4 lf_out 0
+.else
+R85 lf_w20 bp9 100k
+R88 lf_f4 lf_out 100k
+.endif

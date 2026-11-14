@@ -1,0 +1,12 @@
+RC low-pass with a variable resistor: H = 1 / (1 + s C (Rmin + pos Rpot))
+*@ name RcLowpass
+*@ generate ../../../tests/network/generated/RcLowpass.h vectors ../../../tests/network/generated/RcLowpassVectors.h
+*@ input vin
+*@ output out
+*@ pot pos 0.5
+.param pos=0.5
+.param rmin=100 rpot=10k cap=10n
+Vin in 0 dc 0 ac 1
+R1 in out {rmin + pos*rpot}
+C1 out 0 {cap}
+.end

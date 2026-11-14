@@ -96,99 +96,101 @@ TEST_CASE ("Processor: mono -> mono and stereo -> stereo only", "[processor]")
     CHECK_FALSE (p.checkBusesLayoutSupported (layout (Set::create5point1(), Set::create5point1())));
 }
 
-TEST_CASE ("Processor: the scaffold passes audio through bit for bit, any block size", "[processor]")
+TEST_CASE ("Processor: the output does not depend on the host's block sizes", "[processor]")
 {
     const juce::ScopedJuceInitialiser_GUI juce;
 
     for (const auto channels : { 1, 2 })
         for (const auto rate : { 44100.0, 48000.0, 96000.0, 192000.0 })
-            for (const auto& sizes : std::vector<std::vector<int>> { { 1 }, { 2 }, { 3 }, { 7 }, { 64 }, { 333 }, { 4096 },
-                                                                     { 1, 4096, 17, 512, 2, 999 } })
+        {
+            auto render = [&] (const std::vector<int>& sizes)
             {
-                INFO (channels << " ch, " << rate << " Hz, first block " << sizes.front());
                 ViridianProcessor p;
                 const auto set = channels == 1 ? juce::AudioChannelSet::mono() : juce::AudioChannelSet::stereo();
                 REQUIRE (p.setBusesLayout (layout (set, set)));
+                setParam (p, params::model, (float) Model::console);
+                setParam (p, params::controlId (Control::highGain), 0.8f);
+                setParam (p, params::controlId (Control::lmGain), 0.3f);
+                setParam (p, params::controlId (Control::hpfFreq), 0.4f);
+                setParam (p, params::drive, 12.0f);
                 p.prepareToPlay (rate, 4096);
-                CHECK (p.getLatencySamples() == 0);
-
-                const auto in = noise (channels, 12000, 7u);
-                CHECK (identical (run (p, in, sizes), in));
+                CHECK (p.getLatencySamples() == 30);
+                return run (p, noise (channels, 12000, 7u), sizes);
+            };
+            const auto reference = render ({ 4096 });
+            for (const auto& sizes : std::vector<std::vector<int>> { { 1 }, { 3 }, { 64 }, { 333 }, { 1, 4096, 17, 512, 2, 999 } })
+            {
+                INFO (channels << " ch, " << rate << " Hz, first block " << sizes.front());
+                CHECK (identical (render (sizes), reference));
             }
-}
-
-TEST_CASE ("Processor: the scaffold chain passes through on every model at its flat settings", "[processor][scaffold]")
-{
-    const juce::ScopedJuceInitialiser_GUI juce;
-
-    for (int m = 0; m < numModels; ++m)
-        for (const auto alt : { false, true })
-        {
-            // The scaffold chain ignores the slots: M1 replaces this with PLAN's flat-is-flat gate
-            // (within 0.1 dB of the amps-only response).
-            INFO (m << (alt ? " Alt" : ""));
-            ViridianProcessor p;
-            setParam (p, params::model, (float) m);
-            setParam (p, params::alt, alt ? 1.0f : 0.0f);
-            const auto flat = flatPositions (static_cast<Model> (m));
-            for (int c = 0; c < numControls; ++c)
-                setParam (p, params::controlId (static_cast<Control> (c)), flat[(size_t) c]);
-
-            p.prepareToPlay (48000.0, 512);
-            const auto in = noise (2, 4096, 11u);
-            CHECK (identical (run (p, in, { 512 }), in));
         }
 }
 
-TEST_CASE ("Processor: Output gain is applied, Bypass returns the input", "[processor]")
+TEST_CASE ("Processor: Output gain is applied, Bypass returns the input delayed by the latency", "[processor]")
 {
     const juce::ScopedJuceInitialiser_GUI juce;
     ViridianProcessor p;
     constexpr double rate = 48000.0;
-    p.prepareToPlay (rate, 512);
-
-    // The first block takes its settings at once; later changes glide.
+    // prepareToPlay() takes the settings as they are (PLAN.md Settled 19); later changes glide.
     setParam (p, params::output, -6.0f);
-    const auto in = noise (2, 512, 3u);
-    const auto out = run (p, in, { 512 });
-    const auto g = juce::Decibels::decibelsToGain (-6.0f);
+    p.prepareToPlay (rate, 512);
+    const auto latency = p.getLatencySamples();
+    juce::AudioBuffer<float> sine (2, 4800);
     for (int ch = 0; ch < 2; ++ch)
-        for (int i = 0; i < 512; ++i)
-            REQUIRE (juce::exactlyEqual (out.getSample (ch, i), in.getSample (ch, i) * g));
+        for (int i = 0; i < sine.getNumSamples(); ++i)
+            sine.setSample (ch, i, 0.5f * std::sin (2.0f * juce::MathConstants<float>::pi * 1000.0f * (float) i / (float) rate));
+    const auto out = run (p, sine, { 512 });
+    double in2 = 0.0, out2 = 0.0;
+    for (int i = 2400; i < 4800; ++i)
+    {
+        in2 += sine.getSample (0, i - latency) * sine.getSample (0, i - latency);
+        out2 += out.getSample (0, i) * out.getSample (0, i);
+    }
+    // The default model is a placeholder: flat but for the chain's three band-limits' ripple.
+    const auto bandLimits = 3.0 * 20.0 * std::log10 (std::abs (viridian::dsp::ChainBandLimit::response (1000.0 / rate)));
+    CHECK_THAT (10.0 * std::log10 (out2 / in2), WithinAbs (-6.0 + bandLimits, 1.0e-3));
 
     setParam (p, params::bypass, 1.0f);
     const auto settle = noise (2, (int) (rate * 0.05), 4u);
     run (p, settle, { 256 });
-    const auto in2 = noise (2, 2048, 5u);
-    CHECK (identical (run (p, in2, { 256 }), in2));
+    const auto in = noise (2, 2048, 5u);
+    const auto bypassed = run (p, in, { 256 });
+    for (int ch = 0; ch < 2; ++ch)
+        for (int i = latency; i < in.getNumSamples(); ++i)
+            REQUIRE (juce::exactlyEqual (bypassed.getSample (ch, i), in.getSample (ch, i - latency)));
     CHECK (p.getBypassParameter() == p.getState().getParameter (params::bypass));
 }
 
-TEST_CASE ("Processor: Bypass and Output glide without steps", "[processor]")
+TEST_CASE ("Processor: Bypass and Output glide without clicks", "[processor]")
 {
     const juce::ScopedJuceInitialiser_GUI juce;
     ViridianProcessor p;
     constexpr double rate = 48000.0;
+    setParam (p, params::model, (float) Model::console);
+    setParam (p, params::controlId (Control::highGain), 1.0f);
     p.prepareToPlay (rate, 512);
 
-    juce::AudioBuffer<float> dc (2, (int) (rate * 0.2));
-    dc.clear();
+    juce::AudioBuffer<float> sine (2, (int) (rate * 0.3));
     for (int ch = 0; ch < 2; ++ch)
-        juce::FloatVectorOperations::fill (dc.getWritePointer (ch), 0.5f, dc.getNumSamples());
+        for (int i = 0; i < sine.getNumSamples(); ++i)
+            sine.setSample (ch, i, 0.5f * std::sin (2.0f * juce::MathConstants<float>::pi * 330.0f * (float) i / (float) rate));
 
     setParam (p, params::output, -24.0f);
-    run (p, dc, { 512 });    // settled at -24 dB
+    run (p, sine, { 512 });
     setParam (p, params::bypass, 1.0f);
-    const auto out = run (p, dc, { 512 });
+    setParam (p, params::output, 0.0f);
+    const auto out = run (p, sine, { 512 });
 
-    // The 20 ms fade moves 0.5 * (1 - g) in equal steps: no step is larger than one share.
-    const auto g = juce::Decibels::decibelsToGain (-24.0f);
-    const auto share = 0.5f * (1.0f - g) / (float) (rate * dsp::EqChain::bypassSeconds);
-    auto largest = 0.0f;
-    for (int i = 1; i < out.getNumSamples(); ++i)
-        largest = std::max (largest, std::abs (out.getSample (0, i) - out.getSample (0, i - 1)));
-    CHECK (largest <= share * 1.01f);
-    CHECK (juce::exactlyEqual (out.getSample (0, out.getNumSamples() - 1), 0.5f));
+    // The 3rd difference of a 330 Hz sine is -79 dB re its RMS; a step would stand out above -60.
+    double peak = 0.0, sum = 0.0;
+    for (int i = 3; i < out.getNumSamples(); ++i)
+    {
+        const auto* y = out.getReadPointer (0);
+        peak = std::max (peak, (double) std::abs (y[i] - 3.0f * y[i - 1] + 3.0f * y[i - 2] - y[i - 3]));
+        sum += (double) y[i] * y[i];
+    }
+    CHECK (20.0 * std::log10 (peak / std::sqrt (sum / out.getNumSamples())) <= -60.0);
+    CHECK (juce::exactlyEqual (out.getSample (0, out.getNumSamples() - 1), sine.getSample (0, out.getNumSamples() - 1 - p.getLatencySamples())));
 }
 
 TEST_CASE ("Processor: state round-trips, including the extremes", "[processor][state]")

@@ -1,0 +1,181 @@
+* Console, later card, front: high-pass (T11 first order, T12 second order) and low-pass (T13),
+* then the HF and HMF bands around the first summing amp (T3). Transcribed from the later card's
+* drawing at its last revision (../NOTES.md, "Sources"); designators as drawn, except the
+* high-pass R79, which is R79b here (the drawing uses R79 twice). One file because the filter
+* output drives the EQ input, whose load moves with the EQ controls, and the high-pass takes its
+* feedback from that output.
+* Signal in: node in. Signal out: node out (T3 output, inverted), which drives ..._back.cir.
+* Ideal source, no load. Every part on the signal path is here; rails are AC ground (../NOTES.md).
+*
+* Controls, pot fractions 0..1 (laws in ../NOTES.md):
+*   hpf_freq           high-pass rheostats, all three gangs (47k): 0 = 0 ohm (top corner) .. 1 = 47k
+*   lpf_freq           low-pass rheostats, both gangs (10k): 0 = 0 ohm (top corner) .. 1 = 10k
+*   hpf_in, lpf_in     1 in, 0 bypassed (the switches at the pots' ends: the panel's Off)
+*   hf_gain, hmf_gain  boost/cut wiper: 0 full cut, 0.5 centre tap, 1 full boost
+*   hf_freq, hmf_freq  frequency rheostats, both gangs: 0 = 0 ohm (top frequency) .. 1 = 50k
+*   hmf_q              Q pot gang a wiper: 0 lowest Q .. 1 highest Q; gang b is 1 - hmf_q
+*   hf_bell            1 bell (FETs on), 0 shelf (FETs off)
+* Calibration (fixed), in ohms: hpf_gain_trim (RV5, the high-pass's level trim), hpf_q_trim
+* (RV6, the high-pass's Sallen-Key gain), hf_trim (RV1, HF bell Q), hmf_trim (RV2, HMF Q).
+
+.param hpf_freq=1 lpf_freq=0 hpf_in=0 lpf_in=0
+.param hf_gain=0.5 hf_freq=0.5 hf_bell=1
+.param hmf_gain=0.5 hmf_freq=0.5 hmf_q=0.5
+.param hpf_gain_trim=294.56 hpf_q_trim=1.9k hf_trim=2110.87 hmf_trim=192.47
+
+* High-pass: RV5/R56 pad, first-order C34 section, buffer T11, Sallen-Key T12 with a gain of
+* 1 + R58 / (RV6 + R57). Its feedback (R59, gang a) returns from the output side of C39, C40, R64.
+* A section that cannot reach the output is left out: bypassed, it changes nothing.
+.if (hpf_in == 1)
+RHPFtrim in hpf_na {hpf_gain_trim}
+R56 hpf_na 0 300
+C34 hpf_na p11 220n
+R79b p11 0 1meg
+R55 p11 hpf_n7 1.8k
+RHPFc hpf_n7 0 {47k*hpf_freq}
+XU11 p11 t11o t11o opamp
+C36 t11o hpf_nj 220n
+R59 hpf_nj hpf_n56 1.8k
+RHPFa hpf_n56 hpf_n54 {47k*hpf_freq}
+C37 hpf_nj p12 220n
+R60 p12 hpf_n55 1.8k
+RHPFb hpf_n55 0 {47k*hpf_freq}
+XU12 p12 m12 t12o opamp
+R58 m12 t12o 7.5k
+RV6 m12 hpf_n57 {hpf_q_trim}
+R57 hpf_n57 0 5.6k
+C39 t12o hpf_j1 220u
+R61 t12o hpf_j1 100k
+R63 hpf_j1 0 1meg
+C40 hpf_j1 hpf_j2 220u
+R65 hpf_j2 0 10k
+R64 hpf_j2 hpf_n54 10
+VHPFsw hpf_n54 n51 0
+.else
+VHPFsw in n51 0
+.endif
+
+* Low-pass: unity-gain Sallen-Key behind C41, C42 and their loads, which also load the high-pass
+* output while the low-pass is bypassed. C43 reads 68n on the drawing; 6n8 is used (NOTES.md).
+.if (hpf_in + lpf_in >= 1)
+C41 n51 lpf_j3 220u
+R66 lpf_j3 0 10k
+R67 lpf_j3 0 1meg
+C42 lpf_j3 lpf_j4 220u
+R68 lpf_j4 0 100k
+R70 lpf_j4 0 10k
+R69 lpf_j4 lpf_n44 680
+RLPFa lpf_n44 lpf_n45 {10k*lpf_freq}
+C43 lpf_n45 t13o 6.8n
+RLPFb lpf_n45 lpf_n46 {10k*lpf_freq}
+R71 lpf_n46 p13 680
+C44 p13 0 3.3n
+XU13 p13 t13o t13o opamp
+.endif
+.if (lpf_in == 1)
+C46 t13o lpf_j5 220u
+R72 t13o lpf_j5 100k
+R74 lpf_j5 0 1meg
+C47 lpf_j5 lpf_j6 220u
+R76 lpf_j6 0 10k
+R75 lpf_j6 lpf_n47 10
+VLPFsw lpf_n47 eq_in 0
+.else
+VLPFsw n51 eq_in 0
+.endif
+
+* EQ input (C22, C1; R1 and R50 to the rails) and the summing amp T3: R12 || C8 feedback,
+* each band returning into the virtual earth.
+C22 eq_in in_n 220u
+R1 in_n 0 100k
+R50 in_n 0 1meg
+C1 in_n bus 220u
+XU3 0 sj3 out opamp
+R10 bus sj3 4.75k
+R12 sj3 out 4.75k
+C8 sj3 out 220p
+R13 sj3 hmf_out 4.75k
+R14 sj3 hf_out 4.75k
+
+* HMF boost/cut: 25k lin, centre tap to ground through R40 (on the motherboard).
+R11 bus hmf_a 1k
+R16 hmf_b out 1k
+R40 hmf_ct 0 4.7k
+R17 hmf_w 0 1.8k
+R94 hmf_w hf_out 12k
+.if (hmf_gain >= 0.5)
+RHMFg1 hmf_a hmf_w {25k*(1-hmf_gain)}
+RHMFg2 hmf_w hmf_ct {25k*(hmf_gain-0.5)}
+RHMFg3 hmf_ct hmf_b 12.5k
+.else
+RHMFg1 hmf_a hmf_ct 12.5k
+RHMFg2 hmf_ct hmf_w {25k*(0.5-hmf_gain)}
+RHMFg3 hmf_w hmf_b {25k*hmf_gain}
+.endif
+
+* HMF band-pass T4 with positive feedback (Q) from its own output, post amp T5.
+RHMFfa hmf_w hmf_n14 {50k*hmf_freq}
+R18 hmf_n14 hmf_n18r 3k
+C9 hmf_n18r sj4 4.7n
+R19 sj4 hmf_n16 3.6k
+RHMFfb hmf_n16 bp4 {50k*hmf_freq}
+C10 sj4 bp4 4.7n
+XU4 p4 sj4 bp4 opamp
+R62 p4 0 100k
+C11 bp4 hmf_x 100u
+RHMFtrim hmf_x hmf_t {hmf_trim}
+R22 hmf_t hmf_n19 910
+R21 hmf_n19 hmf_n18 1.8k
+R20 hmf_n18 0 470
+RHMFqa1 hmf_n18 p4 {10k*hmf_q}
+RHMFqa2 p4 hmf_n19 {10k*(1-hmf_q)}
+R23 hmf_x sj5 750
+R24 sj5 hmf_n21 750
+RHMFqb hmf_n21 hmf_out {10k*(1-hmf_q)}
+XU5 0 sj5 hmf_out opamp
+
+* HF boost/cut, as HMF.
+R2 bus hf_a 1k
+R15 hf_b out 1k
+R41 hf_ct 0 4.7k
+R3 hf_w 0 1.8k
+R95 hf_w hmf_out 12k
+.if (hf_gain >= 0.5)
+RHFg1 hf_a hf_w {25k*(1-hf_gain)}
+RHFg2 hf_w hf_ct {25k*(hf_gain-0.5)}
+RHFg3 hf_ct hf_b 12.5k
+.else
+RHFg1 hf_a hf_ct 12.5k
+RHFg2 hf_ct hf_w {25k*(0.5-hf_gain)}
+RHFg3 hf_w hf_b {25k*hf_gain}
+.endif
+
+* HF band-pass T1, post amp T2. Bell: the J112s close, so C5 and the Q divider (R7, RV1) take
+* T1's output through C6, and R81 with C2 joins T2's feedback. Shelf: they reach T1's output
+* through C6 and R79 only, and R82 sits in series with R81.
+CHFp hf_w hf_n9 220p
+RHFfa hf_w hf_n9 {50k*hf_freq}
+R4 hf_n9 hf_n4 3k
+C3 hf_n4 sj1 2.2n
+R5 sj1 hf_n6 3.6k
+RHFfb hf_n6 bp1 {50k*hf_freq}
+C4 sj1 bp1 220p
+XU1 p1 sj1 bp1 opamp
+R6 p1 0 5.1k
+R7 p1 hf_n7 2.4k
+C7 bp1 hf_z 100u
+R8 hf_z sj2 3k
+R9 sj2 hf_out 43k
+XU2 0 sj2 hf_out opamp
+C5 sj1 hf_y 2.2n
+RHFtrim hf_n7 hf_y {hf_trim}
+C6 hf_y hf_w6 100u
+R81 sj2 hf_n81 33k
+C2 hf_n81 hf_f2 2.2u
+.if (hf_bell == 1)
+VF1 hf_w6 bp1 0
+VF2 hf_f2 hf_out 0
+.else
+R79 hf_w6 bp1 100k
+R82 hf_f2 hf_out 100k
+.endif

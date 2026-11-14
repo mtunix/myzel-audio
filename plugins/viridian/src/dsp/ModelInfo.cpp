@@ -104,20 +104,28 @@ namespace
         } };
     }
 
-    // Alt off: the early curve family; on: the later one (wider gain, narrower Q, see NOTES.md).
+    // Alt off: the early card; on: the later one. Every range is the circuit's own travel under the
+    // control laws (console/NOTES.md, "Control laws"), rounded inwards; the low-pass stops at the
+    // published 22 kHz. Gains and Q are the values at each band's calibration point.
     constexpr EqSection console (bool later)
     {
-        const auto range = later ? 18.0f : 15.0f;
-        const auto maxQ = later ? 4.0f : 2.5f;
-        const auto bellQ = later ? 1.3f : 0.8f;
+        if (later)
+            return { {
+                frequency (15.11f, 409.64f, OffAt::start),
+                frequency (36.50f, 442.53f), gainDb (18.0f), fixed ("Q", Unit::q, 2.12f), shape(),
+                frequency (135.73f, 2201.33f), gainDb (18.0f), q (0.50f, 4.26f),
+                frequency (635.33f, 10304.11f), gainDb (18.0f), q (0.54f, 4.06f),
+                frequency (1294.14f, 20988.88f), gainDb (18.0f), fixed ("Q", Unit::q, 0.94f), shape(),
+                frequency (3188.89f, 22000.0f, OffAt::end),
+            } };
 
         return { {
-            frequency (16.0f, 350.0f, OffAt::start),
-            frequency (30.0f, 450.0f), gainDb (range), fixed ("Q", Unit::q, bellQ), shape(),
-            frequency (200.0f, 2500.0f), gainDb (range), q (0.5f, maxQ),
-            frequency (600.0f, 7000.0f), gainDb (range), q (0.5f, maxQ),
-            frequency (1500.0f, 16000.0f), gainDb (range), fixed ("Q", Unit::q, bellQ), shape(),
-            frequency (3000.0f, 22000.0f, OffAt::end),
+            frequency (10.74f, 308.96f, OffAt::start),
+            frequency (36.37f, 424.83f), gainDb (15.2f), fixed ("Q", Unit::q, 0.91f), shape(),
+            frequency (193.98f, 2265.74f), gainDb (15.0f), q (0.49f, 2.89f),
+            frequency (619.08f, 7231.08f), gainDb (15.0f), q (0.53f, 2.78f),
+            frequency (1261.03f, 14729.29f), gainDb (16.1f), fixed ("Q", Unit::q, 0.62f), shape(),
+            frequency (3252.85f, 22000.0f, OffAt::end),
         } };
     }
 
@@ -132,17 +140,17 @@ namespace
 
     constexpr std::array<ModelInfo, numModels> infos { {
         { Model::passive, "Passive", "passive", "Passive program EQ, valve amp",
-          {}, passive, passive, 2.0f },
+          {}, passive, passive, 5.0f },
         { Model::inductor, "Inductor", "inductor", "Class-A, inductor mids",
-          { true, "HI-Q", "Narrower Low-Mid bell" }, inductor, inductor, 3.0f },
+          { true, "HI-Q", "Narrower Low-Mid bell" }, inductor, inductor, 5.0f },
         { Model::proportional, "Proportional", "proportional", "Discrete, proportional Q",
           { true, "FILTERS", "Band-pass filters in: 50 Hz high-pass, 15 kHz low-pass" },
-          proportional (false), proportional (true), 2.0f },
+          proportional (false), proportional (true), 4.0f },
         { Model::console, "Console", "console", "Console channel EQ",
           { true, "TIGHT", "Later curves: wider gain, narrower Q, steeper high-pass" },
-          console (false), console (true), 1.0f },
+          console (false), console (true), 3.0f, 10.0f },
         { Model::mastering, "Mastering", "mastering", "Clean parametric",
-          {}, mastering, mastering, 1.0f },
+          {}, mastering, mastering, 3.0f },
     } };
 
     float clamp01 (float x) noexcept

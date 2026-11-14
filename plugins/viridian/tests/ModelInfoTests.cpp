@@ -62,12 +62,15 @@ TEST_CASE ("ModelInfo: five models in panel order", "[modelinfo]")
         CHECK (&info (m.model) == &m);
     }
 
-    // PLAN.md, Performance budget.
-    CHECK (juce::exactlyEqual (info (Model::passive).cpuBudgetPercent, 2.0f));
-    CHECK (juce::exactlyEqual (info (Model::inductor).cpuBudgetPercent, 3.0f));
-    CHECK (juce::exactlyEqual (info (Model::proportional).cpuBudgetPercent, 2.0f));
-    CHECK (juce::exactlyEqual (info (Model::console).cpuBudgetPercent, 1.0f));
-    CHECK (juce::exactlyEqual (info (Model::mastering).cpuBudgetPercent, 1.0f));
+    // PLAN.md, Performance budget (Settled 22).
+    CHECK (juce::exactlyEqual (info (Model::passive).cpuBudgetPercent, 5.0f));
+    CHECK (juce::exactlyEqual (info (Model::inductor).cpuBudgetPercent, 5.0f));
+    CHECK (juce::exactlyEqual (info (Model::proportional).cpuBudgetPercent, 4.0f));
+    CHECK (juce::exactlyEqual (info (Model::console).cpuBudgetPercent, 3.0f));
+    CHECK (juce::exactlyEqual (info (Model::mastering).cpuBudgetPercent, 3.0f));
+    CHECK (juce::exactlyEqual (info (Model::console).cpuDriveCeilingPercent, 10.0f));
+    for (const auto m : { Model::passive, Model::inductor, Model::proportional, Model::mastering })
+        CHECK (juce::exactlyEqual (info (m).cpuDriveCeilingPercent, 0.0f));
 
     CHECK (slotOf (Control::hpfFreq) == Slot::hpf);
     CHECK (slotOf (Control::lowShape) == Slot::low);
@@ -128,19 +131,28 @@ TEST_CASE ("ModelInfo: step tables follow the models' NOTES", "[modelinfo]")
 
     SECTION ("Console")
     {
-        const auto& hpf = controlInfo (Model::console, false, Control::hpfFreq);
-        CHECK (juce::exactlyEqual (hpf.min, 16.0f));
-        CHECK (juce::exactlyEqual (hpf.max, 350.0f));
-        CHECK (juce::exactlyEqual (controlInfo (Model::console, false, Control::lowFreq).min, 30.0f));
-        CHECK (juce::exactlyEqual (controlInfo (Model::console, false, Control::lowFreq).max, 450.0f));
-        CHECK (juce::exactlyEqual (controlInfo (Model::console, false, Control::lmFreq).min, 200.0f));
-        CHECK (juce::exactlyEqual (controlInfo (Model::console, false, Control::lmFreq).max, 2500.0f));
-        CHECK (juce::exactlyEqual (controlInfo (Model::console, false, Control::hmFreq).min, 600.0f));
-        CHECK (juce::exactlyEqual (controlInfo (Model::console, false, Control::hmFreq).max, 7000.0f));
-        CHECK (juce::exactlyEqual (controlInfo (Model::console, false, Control::highFreq).min, 1500.0f));
-        CHECK (juce::exactlyEqual (controlInfo (Model::console, false, Control::highFreq).max, 16000.0f));
-        CHECK (juce::exactlyEqual (controlInfo (Model::console, false, Control::lpfFreq).min, 3000.0f));
-        CHECK (juce::exactlyEqual (controlInfo (Model::console, false, Control::lpfFreq).max, 22000.0f));
+        // console/NOTES.md, "Slot mapping": the circuit's travel per card.
+        struct Range
+        {
+            Control control;
+            float early0, early1, later0, later1;
+        };
+        for (const auto& r : { Range { Control::hpfFreq, 10.74f, 308.96f, 15.11f, 409.64f },
+                               Range { Control::lowFreq, 36.37f, 424.83f, 36.50f, 442.53f },
+                               Range { Control::lmFreq, 193.98f, 2265.74f, 135.73f, 2201.33f },
+                               Range { Control::hmFreq, 619.08f, 7231.08f, 635.33f, 10304.11f },
+                               Range { Control::highFreq, 1261.03f, 14729.29f, 1294.14f, 20988.88f },
+                               Range { Control::lpfFreq, 3252.85f, 22000.0f, 3188.89f, 22000.0f } })
+        {
+            INFO ((int) r.control);
+            CHECK (juce::exactlyEqual (controlInfo (Model::console, false, r.control).min, r.early0));
+            CHECK (juce::exactlyEqual (controlInfo (Model::console, false, r.control).max, r.early1));
+            CHECK (juce::exactlyEqual (controlInfo (Model::console, true, r.control).min, r.later0));
+            CHECK (juce::exactlyEqual (controlInfo (Model::console, true, r.control).max, r.later1));
+            CHECK (controlInfo (Model::console, true, r.control).logScale);
+        }
+        CHECK (controlInfo (Model::console, false, Control::hpfFreq).off == OffAt::start);
+        CHECK (controlInfo (Model::console, true, Control::lpfFreq).off == OffAt::end);
     }
 
     SECTION ("Mastering")
@@ -290,23 +302,32 @@ TEST_CASE ("ModelInfo: Alt's meaning per model", "[modelinfo]")
     CHECK (juce::exactlyEqual (controlInfo (Model::proportional, true, Control::hpfFreq).min, 50.0f));
     CHECK (juce::exactlyEqual (controlInfo (Model::proportional, true, Control::lpfFreq).min, 15000.0f));
 
-    // Console: the later curves widen the gain, narrow the Q and tighten the bells.
-    for (const auto c : gainControls)
+    // Console: the later card widens the gain and the mids' Q; each band has its own fixed bell Q.
+    struct Band
     {
-        CHECK (juce::exactlyEqual (controlInfo (Model::console, false, c).max, 15.0f));
-        CHECK (juce::exactlyEqual (controlInfo (Model::console, true, c).max, 18.0f));
-    }
-    for (const auto c : { Control::lmQ, Control::hmQ })
+        Control control;
+        float early, later;
+    };
+    for (const auto& b : { Band { Control::lowGain, 15.2f, 18.0f }, Band { Control::lmGain, 15.0f, 18.0f },
+                           Band { Control::hmGain, 15.0f, 18.0f }, Band { Control::highGain, 16.1f, 18.0f } })
     {
-        CHECK (juce::exactlyEqual (controlInfo (Model::console, false, c).min, 0.5f));
-        CHECK (juce::exactlyEqual (controlInfo (Model::console, false, c).max, 2.5f));
-        CHECK (juce::exactlyEqual (controlInfo (Model::console, true, c).max, 4.0f));
+        INFO ((int) b.control);
+        CHECK (juce::exactlyEqual (controlInfo (Model::console, false, b.control).max, b.early));
+        CHECK (juce::exactlyEqual (controlInfo (Model::console, false, b.control).min, -b.early));
+        CHECK (juce::exactlyEqual (controlInfo (Model::console, true, b.control).max, b.later));
     }
-    for (const auto c : { Control::lowQ, Control::highQ })
-    {
-        CHECK (juce::exactlyEqual (controlInfo (Model::console, false, c).min, 0.8f));
-        CHECK (juce::exactlyEqual (controlInfo (Model::console, true, c).min, 1.3f));
-    }
+    CHECK (juce::exactlyEqual (controlInfo (Model::console, false, Control::lmQ).min, 0.49f));
+    CHECK (juce::exactlyEqual (controlInfo (Model::console, false, Control::lmQ).max, 2.89f));
+    CHECK (juce::exactlyEqual (controlInfo (Model::console, true, Control::lmQ).min, 0.50f));
+    CHECK (juce::exactlyEqual (controlInfo (Model::console, true, Control::lmQ).max, 4.26f));
+    CHECK (juce::exactlyEqual (controlInfo (Model::console, false, Control::hmQ).min, 0.53f));
+    CHECK (juce::exactlyEqual (controlInfo (Model::console, false, Control::hmQ).max, 2.78f));
+    CHECK (juce::exactlyEqual (controlInfo (Model::console, true, Control::hmQ).min, 0.54f));
+    CHECK (juce::exactlyEqual (controlInfo (Model::console, true, Control::hmQ).max, 4.06f));
+    CHECK (juce::exactlyEqual (controlInfo (Model::console, false, Control::lowQ).min, 0.91f));
+    CHECK (juce::exactlyEqual (controlInfo (Model::console, true, Control::lowQ).min, 2.12f));
+    CHECK (juce::exactlyEqual (controlInfo (Model::console, false, Control::highQ).min, 0.62f));
+    CHECK (juce::exactlyEqual (controlInfo (Model::console, true, Control::highQ).min, 0.94f));
 }
 
 TEST_CASE ("ModelInfo: maps are monotonic and reach every detent", "[modelinfo]")
@@ -398,7 +419,7 @@ TEST_CASE ("ModelInfo: filters have an Off at their outer end", "[modelinfo]")
     const auto& hpf = controlInfo (Model::console, false, Control::hpfFreq);
     CHECK (map (hpf, 0.009f).off);
     CHECK_FALSE (map (hpf, 0.01f).off);
-    CHECK (juce::exactlyEqual (map (hpf, 0.01f).value, 16.0f));
+    CHECK (juce::exactlyEqual (map (hpf, 0.01f).value, 10.74f));
 }
 
 TEST_CASE ("ModelInfo: Gain 0.5 is flat on the bipolar models", "[modelinfo]")
@@ -553,7 +574,7 @@ TEST_CASE ("EqParams: a model switch reinterprets the knobs", "[modelinfo]")
     CHECK_THAT (resolveEq (Model::inductor, false, p)[Control::lowGain].value, WithinAbs (3.84, 1.0e-5));
     CHECK (juce::exactlyEqual (resolveEq (Model::proportional, false, p)[Control::lowGain].value, 2.0f));   // nearest detent
     CHECK (resolveEq (Model::proportional, false, p)[Control::lowGain].detent == 6);
-    CHECK_THAT (resolveEq (Model::console, false, p)[Control::lowGain].value, WithinAbs (3.6, 1.0e-5));
+    CHECK_THAT (resolveEq (Model::console, false, p)[Control::lowGain].value, WithinAbs (3.648, 1.0e-5));
     CHECK_THAT (resolveEq (Model::console, true, p)[Control::lowGain].value, WithinAbs (4.32, 1.0e-5));
     CHECK_THAT (resolveEq (Model::passive, false, p)[Control::lowGain].value, WithinAbs (6.2, 1.0e-5));
 

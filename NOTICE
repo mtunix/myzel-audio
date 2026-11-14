@@ -1,0 +1,35 @@
+Myzel Audio plugins: notice
+
+Licence
+
+The GNU Affero General Public License v3 (see LICENSE) covers the code in this repository and
+our own work in it, including our netlists and model notes, which are our transcriptions and
+analyses of circuits. It does not cover the circuits they describe: those designs belong to
+their manufacturers and designers, and we claim no rights in them. We do not redistribute
+anyone's schematic drawings, manuals or other documents.
+
+Halite's test excerpts (plugins/halite/tests/corpus) are cut from the VCTK and VocalSet speech
+and singing corpora and keep their licence, CC BY 4.0; ATTRIBUTION.md there names each source.
+
+Fonts
+
+The editors embed fonts under the SIL Open Font License 1.1, which comes with each of them:
+Inter, Copyright 2016-2023 The Inter Project Authors (common/ui/assets/fonts/OFL.txt), in every
+plugin, and JetBrains Mono, Copyright 2020 The JetBrains Mono Project Authors
+(plugins/inkcap/src/ui/assets/fonts/OFL.txt), in Inkcap. The fonts are embedded unmodified, with
+their own copyright and licence metadata; they are not sold on their own.
+
+Names
+
+Hardware, model and company names appear only in the developer notes (the NOTES.md files), and
+only to identify the circuit a model was studied from. They are trademarks of their owners. No
+affiliation with, or endorsement by, any of them is implied. The plugins, their presets and
+their user documentation do not use these names.
+
+Rights holders
+
+If you hold rights in something in this repository and object to its use, open an issue at
+https://github.com/mtunix/myzel-audio/issues, or contact the maintainer through the GitHub
+profile if you prefer not to post publicly. We will acknowledge the request promptly, take the
+material in question out of the current branches while we look into it, and tell you what we
+did.

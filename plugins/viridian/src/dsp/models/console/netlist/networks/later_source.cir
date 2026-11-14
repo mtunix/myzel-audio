@@ -1,0 +1,14 @@
+Console, later card: the high-pass's open-circuit output, the Thevenin source the EQ input sees with the low-pass out
+* ../later_front.cir with hpf_in = lpf_in = 1, measured at n51: the high-pass loaded by the
+* low-pass's input network only (the EQ input hangs behind the low-pass's op-amp and drops out).
+*@ name ConsoleLaterSource
+*@ generate ../../generated/ConsoleLaterSource.h vectors ../../../../../../tests/models/console/generated/ConsoleLaterSourceVectors.h
+*@ input vin
+*@ output n51
+*@ pot hpf_freq 1
+*@ pot lpf_freq 0
+.include ../opamp.lib
+.include ../later_front.cir
+.param hpf_in=1 lpf_in=1
+Vin in 0 dc 0 ac 1
+.end

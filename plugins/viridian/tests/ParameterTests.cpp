@@ -149,12 +149,12 @@ TEST_CASE ("Parameters: slot read-outs per model", "[parameters]")
 
     CHECK (controlText (Model::console, false, Control::lowShape, 0.0f) == "Shelf");
     CHECK (controlText (Model::console, false, Control::lowShape, 1.0f) == "Bell");
-    CHECK (controlText (Model::console, false, Control::lowQ, 0.5f) == "0.80");
-    CHECK (controlText (Model::console, true, Control::lowQ, 0.5f) == "1.30");
-    CHECK (controlText (Model::console, false, Control::lowGain, 1.0f) == "+15.0 dB");
+    CHECK (controlText (Model::console, false, Control::lowQ, 0.5f) == "0.91");
+    CHECK (controlText (Model::console, true, Control::lowQ, 0.5f) == "2.12");
+    CHECK (controlText (Model::console, false, Control::lowGain, 1.0f) == "+15.2 dB");
     CHECK (controlText (Model::console, true, Control::lowGain, 1.0f) == "+18.0 dB");
     CHECK (controlText (Model::console, false, Control::hpfFreq, 0.0f) == "Off");
-    CHECK (controlText (Model::console, false, Control::hpfFreq, 0.01f) == "16 Hz");
+    CHECK (controlText (Model::console, false, Control::hpfFreq, 0.01f) == "11 Hz");
 
     CHECK (controlText (Model::mastering, false, Control::highFreq, 1.0f) == "26.0 kHz");
     CHECK (controlText (Model::mastering, false, Control::lowQ, 0.0f) == "0.40");

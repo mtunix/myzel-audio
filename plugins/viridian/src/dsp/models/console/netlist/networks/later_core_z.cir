@@ -1,0 +1,19 @@
+Console, later card: the EQ input's impedance with both filters out, through a 1k sense resistor
+* ../later_front.cir with hpf_in = lpf_in = 0 (in = n51 = eq_in), driven through Rsense:
+* H = Z / (Z + 1k), Z the load the high-pass's output sees when the low-pass is out.
+*@ name ConsoleLaterCoreZ
+*@ generate ../../generated/ConsoleLaterCoreZ.h vectors ../../../../../../tests/models/console/generated/ConsoleLaterCoreZVectors.h
+*@ input vsense
+*@ output in
+*@ pot hf_gain 0.5
+*@ pot hf_freq 0.5
+*@ switch hf_bell 2 1
+*@ pot hmf_gain 0.5
+*@ pot hmf_freq 0.5
+*@ pot hmf_q 0.5
+.include ../opamp.lib
+.include ../later_front.cir
+.param hpf_in=0 lpf_in=0
+Vsense sense 0 dc 0 ac 1
+Rsense sense in 1k
+.end

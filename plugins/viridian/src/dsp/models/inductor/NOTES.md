@@ -13,11 +13,11 @@ value** marks numbers with no primary source.
 
 | Source | What it gives | Trust |
 |---|---|---|
-| Rupert Neve & Co., *1073 Channel Amp*, drawing EH10023 (1973, issues to 17-5-74); Neve, B182 C & D high-pass filter D/10,019 (1970/71); B205 circuit diagram D/10,042 (1971); B211 D/10,048 (1970); BA283 AM & AV EX/10,283 (1971/72) with the BA283AV parts list. Scan: technicalaudio.com service pack "Neve 1073 channel amplifier documentation" v0.1a (hosted at barryrudolph.com) | module wiring, step tables, every EQ and filter part value, the amplifier boards | primary; the pack lacks the switch drawings EK20065 (LF), EK20066 (HPF), EK20105 (presence) and the module parts list |
+| Rupert Neve & Co., *1073 Channel Amp*, drawing EH10023 (1973, issues to 17-5-74); Neve, B182 C & D high-pass filter D/10,019 (1970/71); B205 circuit diagram D/10,042 (1971); B211 D/10,048 (1970); BA283 AM & AV EX/10,283 (1971/72) with the BA283AV parts list, as collected in the service pack "Neve 1073 channel amplifier documentation" v0.1a | module wiring, step tables, every EQ and filter part value, the amplifier boards | primary; the pack lacks the switch drawings EK20065 (LF), EK20066 (HPF), EK20105 (presence) and the module parts list |
 | AMS Neve, *1073 & 1084 Channel Amplifiers User Guide*, issue 5.2 | the published control specs of both modules, the HPF termination note, module specs | manufacturer (current reissues) |
 | AMS Neve 1084 product page (ams-neve.com/1084-2) | 1084 specs | manufacturer; disagrees with the user guide on the filters |
 | D. Berners, "How is the Neve 1073 different from the Pultec or from other EQs UA has modeled?", *UA WebZine* 4(4), May 2006 (Ask the Doctors) | what a published model of this EQ found | secondary, by the modeller |
-| Retailer listings for replacement inductors (don-audio.com: "Neve T1280 inductor 200/160/100/80/50 mH", "NV530 Neve T1530 EQ inductor 2 H / 1.1 H / 450 mH") | inductor taps | secondary; used only as a consistency check below |
+| Retailer listings for replacement inductors (don-audio.com): T1280 taps 200/160/100/80/50 mH, T1530 taps 2 H / 1.1 H / 450 mH | inductor taps | secondary; used only as a consistency check below |
 
 Not obtained: a 1084 schematic (the High-Q and low-pass circuits), the presence switch drawing
 EK20105, inductor self-capacitance and core data.
@@ -55,8 +55,8 @@ UA's Berners (2006), consistent with the drawings: the high and low shelves are 
 around an active stage with **an inductor and capacitor** setting the resonance; the high-pass is
 **passive**, "uses magnetics to generate a third-order low-cut response", and is sensitive to its
 load. The AMS Neve guide says the same of the HPF and gives its termination: a 5k1 from the fader
-send to 0 V (R70 on EH10023), replaced by a 4k7–5k fader when one is fitted; "failure to do so will
-result in incorrect levels and uneven frequency response".
+send to 0 V (R70 on EH10023), replaced by a 4k7–5k fader when one is fitted; without it the
+levels and the frequency response are wrong.
 
 **The low shelf has no inductor.** B205 is resistors and capacitors only. The inductors in the
 module are the presence coils T1280 and T1530 (B211) and the HPF coil T1295 (B182).
@@ -215,7 +215,7 @@ the sourced values. The nonlinear-inductor row is for M3; `PLAN.md`'s model text
 
 - Rupert Neve & Co., *1073 Channel Amp*, EH10023, 1973; Neve Group, *B182 C & D*, D/10,019;
   *B205 circuit diagram*, D/10,042; *B211*, D/10,048; *BA283 AM & AV*, EX/10,283 and parts list.
-  Service pack "Neve 1073 channel amplifier documentation", technicalaudio.com, v0.1a.
+  Service pack "Neve 1073 channel amplifier documentation", v0.1a.
 - AMS Neve, *1073 & 1084 Channel Amplifiers User Guide*, issue 5.2.
 - D. Berners, "Ask the Doctors: How is the Neve 1073 different from the Pultec …", *Universal
   Audio WebZine* 4(4), May 2006.

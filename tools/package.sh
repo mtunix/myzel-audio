@@ -35,7 +35,7 @@ cp -r "$artefacts/VST3/$name.vst3" "$stage/"
 cp -r "$artefacts/LV2/$name.lv2" "$stage/"
 cp "$artefacts/CLAP/$name.clap" "$stage/"
 cp "$artefacts/Standalone/$name" "$stage/"
-cp "$root/LICENSE" "$plugin_dir/README.md" "$stage/"
+cp "$root/LICENSE" "$root/NOTICE" "$plugin_dir/README.md" "$stage/"
 mkdir -p "$stage/docs"
 cp "$plugin_dir/docs/MANUAL.md" "$stage/docs/" 2>/dev/null || true
 

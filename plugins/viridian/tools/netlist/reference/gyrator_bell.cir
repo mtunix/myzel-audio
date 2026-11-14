@@ -1,0 +1,33 @@
+Gyrator boost/cut band: a series R, simulated L and C from the boost/cut pot's wiper to ground
+* Closed form (ideal op-amps), a = P (1 - x), b = P x, Z the wiper's branch to ground:
+*   H = (a b + Z (a + b) + R2 a) / (a b + Z (a + b) + R1 b)
+*   Z = Rs + Rg1 (1 + s Cg Rg2) / (1 + s Cg Rg1) + 1 / (s C2), Rg2 = the freq pot, C2 by range
+*@ name GyratorBell
+*@ generate ../../../tests/network/generated/GyratorBell.h vectors ../../../tests/network/generated/GyratorBellVectors.h
+*@ input vin
+*@ output out
+*@ pot boost 0.5
+*@ pot freq 0.5
+*@ switch range 2 0
+.param boost=0.5 freq=0.5 range=0
+.param r1=4.7k r2=4.7k p=10k rs=220 rg1=470 rgmin=10k rgpot=100k cg=33n
+.subckt opamp inp inn out
+*@ nullor e1
+E1 out 0 inp inn 1e9
+.ends
+.subckt pot a w b params: r=10k pos=0.5
+Ra a w {r*(1 - pos)}
+Rb w b {r*pos}
+.ends
+Vin in 0 dc 0 ac 1
+R1 in p {r1}
+R2 out n {r2}
+XU1 p n out opamp
+XP p w n pot r={p} pos={boost}
+Rs w x {rs}
+C2 x y {range > 0.5 ? 47n : 100n}
+Cg y g {cg}
+Rg2 g 0 {rgmin + freq*rgpot}
+XU2 g o o opamp
+Rg1 o y {rg1}
+.end

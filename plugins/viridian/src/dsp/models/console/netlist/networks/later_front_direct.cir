@@ -1,0 +1,18 @@
+Console, later card, front with both filters out: the bands around the first summing amp
+* The tools/netlist view of ../later_front.cir with hpf_in = lpf_in = 0: the input reaches the EQ
+* input directly. Also the load the high-pass sees with the low-pass out (later_core_z.cir).
+*@ name ConsoleLaterFrontDirect
+*@ generate ../../generated/ConsoleLaterFrontDirect.h vectors ../../../../../../tests/models/console/generated/ConsoleLaterFrontDirectVectors.h
+*@ input vin
+*@ output out
+*@ pot hf_gain 0.5
+*@ pot hf_freq 0.5
+*@ switch hf_bell 2 1
+*@ pot hmf_gain 0.5
+*@ pot hmf_freq 0.5
+*@ pot hmf_q 0.5
+.include ../opamp.lib
+.include ../later_front.cir
+.param hpf_in=0 lpf_in=0
+Vin in 0 dc 0 ac 1
+.end

@@ -134,7 +134,8 @@ struct ModelInfo
     AltInfo alt;
     EqSection eq;                   // Alt off
     EqSection eqAlt;                // Alt on; equals eq where Alt changes no slot
-    float cpuBudgetPercent = 1.0f;  // PLAN.md, 48 kHz stereo, one core
+    float cpuBudgetPercent = 3.0f;  // PLAN.md Performance budget: 48 kHz stereo, one core, worst case at rest up to the rails at Drive 0
+    float cpuDriveCeilingPercent = 0.0f;    // the same with Drive pushed into the rails; 0 until the model is measured
 
     const EqSection& section (bool altOn) const noexcept { return altOn && alt.active ? eqAlt : eq; }
 };

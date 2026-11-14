@@ -1,0 +1,21 @@
+Console, early card, front: HPF, LPF, HF and HMF into the first summing amp
+* The tools/netlist view of ../early_front.cir: the card's netlist unchanged, the ideal source and
+* the tool's directives (controls in the netlist's order of use, defaults as its .param lines).
+*@ name ConsoleEarlyFront
+*@ generate ../../generated/ConsoleEarlyFront.h vectors ../../../../../../tests/models/console/generated/ConsoleEarlyFrontVectors.h
+*@ input vin
+*@ output out
+*@ switch hpf_in 2 0
+*@ pot hpf_freq 1
+*@ switch lpf_in 2 0
+*@ pot lpf_freq 0
+*@ pot hf_gain 0.5
+*@ pot hf_freq 0.5
+*@ switch hf_bell 2 1
+*@ pot hmf_gain 0.5
+*@ pot hmf_freq 0.5
+*@ pot hmf_q 0.5
+.include ../opamp.lib
+.include ../early_front.cir
+Vin in 0 dc 0 ac 1
+.end

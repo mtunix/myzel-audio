@@ -1,0 +1,17 @@
+Console, later card: the low-pass's output coupling's impedance at the EQ input, through a 1k sense resistor
+* As later_coupling.cir, t13o grounded and the EQ input driven through Rsense: H = Z / (Z + 1k).
+*@ name ConsoleLaterCouplingZ
+*@ generate ../../generated/ConsoleLaterCouplingZ.h vectors ../../../../../../tests/models/console/generated/ConsoleLaterCouplingZVectors.h
+*@ depends ../later_front.cir
+*@ input vsense
+*@ output eq_in
+Vground t13o 0 dc 0
+C46 t13o lpf_j5 220u
+R72 t13o lpf_j5 100k
+R74 lpf_j5 0 1meg
+C47 lpf_j5 lpf_j6 220u
+R76 lpf_j6 0 10k
+R75 lpf_j6 eq_in 10
+Vsense sense 0 dc 0 ac 1
+Rsense sense eq_in 1k
+.end

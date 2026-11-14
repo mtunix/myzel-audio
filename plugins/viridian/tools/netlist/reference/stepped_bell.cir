@@ -1,0 +1,16 @@
+Stepped RLC dip: the RLC bell with its capacitor on a rotary switch, H = (s^2 L C + s R2 C + 1) / (s^2 L C + s (R1 + R2) C + 1)
+*@ name SteppedBell
+*@ generate ../../../tests/network/generated/SteppedBell.h vectors ../../../tests/network/generated/SteppedBellVectors.h
+*@ input vin
+*@ output out
+*@ pot depth 0.5
+*@ step cap 47n 100n 220n 470n 1u
+.param depth=0.5
+.param cap=220n
+.param r1=3.3k rmin=47 rpot=10k ind=100m
+Vin in 0 dc 0 ac 1
+R1 in out {r1}
+R2 out a {rmin + depth*rpot}
+L1 a b {ind}
+C1 b 0 {cap}
+.end

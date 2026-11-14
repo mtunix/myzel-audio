@@ -16,11 +16,11 @@ What was actually read, and how far each can be trusted:
 
 | Source | What it gives | Trust |
 |---|---|---|
-| Pulse Techniques, *Pultec Program Equalizer Model EQP-1A* (8-page scan: spec sheet, EQP-1A3 sheet, response curves, operating instructions, pot list, EQP-1R network drawing, EQP-1A amplifier drawing DWG E-72,658-2, EQP-1R amplifier DWG E-112,353-7) | step tables, ranges, pot values and tapers, the amplifier schematic, the curve families | primary; the network drawing in this scan is the **EQP-1R**, not the EQP-1A |
+| Pulse Techniques, *Pultec Program Equalizer Model EQP-1A* (8 pages: spec sheet, EQP-1A3 sheet, response curves, operating instructions, pot list, EQP-1R network drawing, EQP-1A amplifier drawing DWG E-72,658-2, EQP-1R amplifier DWG E-112,353-7) | step tables, ranges, pot values and tapers, the amplifier schematic, the curve families | primary; the network drawing in this document is the **EQP-1R**, not the EQP-1A |
 | J. Erland (Gyraf Audio), *Do-A-Pultec* page: `pultech.gif` (PE-1A filter and amp, Nov 2001), `meq5.gif` (MEQ-5 filter sections, Feb 2002) | an EQP-1A-type network with per-position capacitors and inductances; the MEQ-5 dip network | reverse-engineered; the author notes the transformer data are guesswork |
 | A. Barrera Herrero, *Pultec EQP-1A Modeling with Wave Digital Filters*, MSc thesis, Universitat Pompeu Fabra 2023 (Zenodo 8382764) | a published digital model and its errors; insertion loss; how they sourced the circuit | secondary |
 
-Not obtained: the original EQP-1A equaliser-network drawing (the scan carries the EQP-1R network
+Not obtained: the original EQP-1A equaliser-network drawing (the manual carries the EQP-1R network
 instead), the MEQ-5 manual. The SMC 2024 paper by the same group (Barrera, Lizarraga-Seijas,
 Font, *Modeling the Pultec EQP-1A with Wave Digital Filters*) was found in a search but could not
 be downloaded (host unreachable); it is not cited for any value here.
@@ -42,15 +42,15 @@ From the EQP-1A spec sheet and operating instructions unless marked.
 | Dip frequency (MEQ-5) | 0.2, 0.3, 0.5, 0.7, 1, 1.5, 2, 3, 4, 5, 7 kHz | | (Gyraf MEQ-5 drawing legend) |
 | Dip depth (MEQ-5) | continuous | 0 to 10 dB: **secondary** (retailer listings only) | 2.5 kΩ, counter-clockwise log taper (manual p. 5, MEQ-5 entry) |
 
-The manual's own wording on the controls, which the model must keep:
+What the manual says about the controls, which the model must keep:
 
 - The low boost and atten work on the same Low Frequency curve. The manual says not to boost and
   attenuate together on the low frequencies; doing it anyway is the well-known "trick" (below).
 - High boost and high atten have separate frequency switches and may be used together.
-- The IN-OUT key "away from IN" is equivalent to returning every boost and attenuate control to
-  zero; **the amplifier remains in the circuit**. This is exactly Viridian's EQ In key.
-- "The boost, attenuate and bandwidth controls are continuously variable": the manual's curve
-  families are typical settings, not steps.
+- The IN-OUT key moved off IN equals every boost and attenuate control at zero; **the amplifier
+  stays in the circuit**. This is exactly Viridian's EQ In key.
+- Boost, attenuate and bandwidth are continuous controls: the manual's curve families are
+  typical settings, not steps.
 
 Filter slopes: the shelves are first-order RC/RL sections (6 dB/oct asymptotes); the high boost is
 a second-order series resonance. No HPF or LPF (the HPF and LPF slots dim, as `PLAN.md` says).
@@ -110,14 +110,14 @@ boost on every position, consistent with the bump-below-a-dip that boost plus cu
 
 ### Network: EQP-1R, as drawn in the manual
 
-The manual scan's only network drawing is the EQP-1R, a sibling with fewer frequencies. Same
+The manual's only network drawing is the EQP-1R, a sibling with fewer frequencies. Same
 family: 620 Ω input shunt, 10 kΩ linear high boost, 2.5 kΩ linear bandwidth with a 1 MΩ, a
 tapped 50 mH + 100 mH inductor, 1 kΩ linear high atten with an 82 Ω and a 0.13 µF capacitor
 (legibility uncertain), 100 kΩ log low atten with capacitors read as 0.0362 / 0.02 / 0.01 µF,
 a 12 kΩ, and the low boost pot with capacitors read as 1 / 0.5 / 0.28 µF on 30 / 60 / 100 Hz.
-Several values are only partly legible in the scan. Barrera (2023) built his LTspice circuit from
-this drawing plus Gyraf's and then adjusted values to a measured reissue; Viridian does not copy
-his adjusted values (`PLAN.md`: no curve fitting to measurements).
+Several values are only partly legible in the copy read. Barrera (2023) built his LTspice
+circuit from this drawing plus Gyraf's and then adjusted values to a measured reissue; Viridian
+does not copy his adjusted values (`PLAN.md`: no curve fitting to measurements).
 
 ### Netlist plan (M3)
 
@@ -165,8 +165,8 @@ From DWG E-72,658-2 (EQP-1A, original drawing):
  supply: 6X4 rectifier, 470 Ω, 1 kΩ and 2.2 kΩ RC filtering, B+ 345 / 325 V
 ```
 
-"Overall gain with input and output transformers connected for same impedance is 0 dB."
-Spec sheet: amplifier flat 20 Hz–20 kHz +0/−1 dB, distortion 0.15 % at +10 dBm into 600 Ω,
+With the input and output transformers strapped for the same impedance, the overall gain is
+0 dB. Spec sheet: amplifier flat 20 Hz–20 kHz +0/−1 dB, distortion 0.15 % at +10 dBm into 600 Ω,
 maximum peak output +21 dBm, noise 92 dB below +10 dBm. Barrera (2023) gives the passive
 network's insertion loss as 16 dB, which the amplifier restores.
 
@@ -251,9 +251,8 @@ the sourced values. The amplifier row is for M3.
 
 - Pulse Techniques, *Pultec Program Equalizer Model EQP-1A*: specifications, installation and
   operating instructions, "Tubes & potentiometers in Pultec equalizers", EQP-1R equaliser drawing,
-  DWG E-72,658-2 (EQP-1A amplifier), DWG E-112,353-7 (EQP-1R amplifier). Scan:
-  thehistoryofrecording.com/Manuals/Pultec/Pultec_EQP-1A_Manual.pdf.
-- J. Erland, Gyraf Audio, *Do-A-Pultec* (gyraf.dk/gy_pd/pultec/pultec.htm): `pultech.gif`
+  DWG E-72,658-2 (EQP-1A amplifier), DWG E-112,353-7 (EQP-1R amplifier).
+- J. Erland, Gyraf Audio, *Do-A-Pultec*: `pultech.gif`
   (PE-1A program equaliser, November 2001) and `meq5.gif` (MEQ-5 filter sections, rev. 1,
   15-02-2002).
 - A. Barrera Herrero, *Pultec EQP-1A Modeling with Wave Digital Filters*, MSc thesis, Universitat

@@ -17,14 +17,13 @@ no primary source.
 |---|---|---|
 | API, *550A Discrete 3 Band EQ* brochure (apiaudio.com/docs/brochures/br550a.pdf) | features, op-amp, proportional Q, reciprocity, band-pass | manufacturer |
 | API, 550A product page specifications (apiaudio.com) | current 550A step tables, gain steps, band-pass range, clip level, impedances, THD | manufacturer (current production) |
-| API, *550b Four Band Switchable Equalizer* brochure (hosted at barryrudolph.com) | 550B step tables, filter slope, clip level and rails | manufacturer |
+| API, *550b Four Band Switchable Equalizer* brochure | 550B step tables, filter slope, clip level and rails | manufacturer |
 | API, *5500 Dual Equalizer Operator's Manual*, rev. 2024-01-17 | the circuit family's description: twin-T plus a proportional-Q section, reciprocity by reorganising the same parts, 2520 op-amps, 2503 output transformer | manufacturer (a 550B-derived product) |
 | UA, *API 500 Series EQ Collection* manual and the Waves *API 550* manual (search-result text only, pages not opened) | the original 550A's five frequencies per band | secondary |
 | ms-tas.com, "API 550 Equalizers" | version table (550, 550A, 550A-1, 550B), proportional vs constant Q in numbers | secondary; links a Wolff/Klett versions document that could not be retrieved |
 
 Not obtained: any schematic, the 2520 op-amp's circuit, the output transformer's data, the
-"Versions of API 550 Equalizer" document (technicalaudio.com, offline; the archive copy was
-refused).
+Wolff/Klett "Versions of API 550 Equalizer" document (no copy could be retrieved).
 
 ## Step tables
 
@@ -48,20 +47,19 @@ stays unsourced.
 filter **50 Hz to 15 kHz**, switched in by a toggle, slope not stated.
 
 550A, original five-point version (secondary): Low 50, 100, 200, 300, 400 Hz; Mid 0.4, 0.8, 1.5,
-3, 5 kHz; High 5, 7, 10, 12.5, 15 kHz. The brochure's "21 points in 5 steps of boost … fifteen
-equalization points" mixes the two versions.
+3, 5 kHz; High 5, 7, 10, 12.5, 15 kHz. The brochure counts both 21 points in 5 boost steps
+and fifteen equalisation points, which mixes the two versions.
 
 ## Circuit
 
 What the manufacturer states:
 
-- "The Twin 'T' topology is found in many equalizer circuits, but … Saul Walker included a novel
-  Proportional Q section." Proportional Q "spread[s] the equalizer's action over a broad bandwidth
-  at low degrees of boost or cut … as the amplitude is advanced … the bandwidth narrows" (5500
-  manual).
-- **Reciprocal**: "When switching an API EQ from boost to cut, the exact same components are used,
-  reorganized around the amplifier for the appropriate function. This guarantees 100 %
-  reciprocity" (5500 manual); "reciprocal and repeatable filtering" (550A/550B brochures).
+- The circuit is a twin-T equaliser to which the designer, Saul Walker, added a proportional-Q
+  section. Small boosts and cuts act over a broad bandwidth, and the bandwidth narrows as the
+  amount rises (5500 manual).
+- **Reciprocal**: boost and cut use the same components, rearranged around the amplifier, which
+  the 5500 manual says makes the two 100 % reciprocal; the 550A and 550B brochures call the
+  filtering reciprocal and repeatable.
 - Gain from the **2520** discrete op-amp; the 550A's output is transformer isolated (API spec);
   the 5500 pairs the 2520 with the API **2503** output transformer.
 - Proportional Q in numbers (ms-tas, secondary): a 2 dB boost at 200 Hz spans roughly 20 Hz to
@@ -79,8 +77,8 @@ each band's resonance is an LC tank, a twin-T RC network or a gyrator is **not s
 
 Blocked on a schematic. Two ways forward, for the user to choose (see the report):
 
-1. Obtain the 550A/550B schematic (the TB550A clone threads on GroupDIY, or API service
-   documentation) and netlist it, as the other models.
+1. Obtain the 550A/550B schematic (a published DIY clone's documentation, the TB550A, or
+   API service documentation) and netlist it, as the other models.
 2. Design our own reciprocal stepped-ladder network that meets the manufacturer's published
    behaviour (the step tables, ±2/4/6/9/12 dB, proportional Q, 12 dB/oct sections, exact
    reciprocity) and document it here as our circuit, not as a copy of the hardware.
@@ -112,8 +110,8 @@ manuals were seen only as search-result text and are cited for the original 550A
 ## What the gates must reproduce
 
 1. **Proportional Q.** At a fixed frequency the −3 dB bandwidth of the deviation shrinks as the
-   step goes from 2 to 12 dB (the 550B brochure plots "the 'Proportional Q' characteristics … from
-   0 to +12 dB of boost").
+   step goes from 2 to 12 dB (the 550B brochure plots the proportional-Q curves for boosts from 0
+   to +12 dB).
 2. **Reciprocity.** Boost +x then cut −x at the same frequency and step sums to flat: the cut
    response is the exact inverse of the boost response (mirror image in dB). Test it at every
    frequency and step, within the gate tolerance.

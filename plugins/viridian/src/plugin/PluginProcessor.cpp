@@ -36,7 +36,7 @@ ViridianProcessor::ViridianProcessor()
 
 void ViridianProcessor::prepareToPlay (double sampleRate, int maximumBlockSize)
 {
-    chain.prepare (sampleRate, maximumBlockSize, getTotalNumOutputChannels());
+    chain.prepare (sampleRate, maximumBlockSize, getTotalNumOutputChannels(), readSettings());
     setLatencySamples (chain.getLatencySamples());
 }
 

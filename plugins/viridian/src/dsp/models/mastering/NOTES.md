@@ -13,7 +13,7 @@ source.
 
 | Source | What it gives | Trust |
 |---|---|---|
-| George Massenburg Labs, *Model 8200 Parametric Equalizer Series II* owner's manual (copy hosted at barryrudolph.com) | features, controls, band table, specifications with test notes, gain/Q/phase plots | manufacturer |
+| George Massenburg Labs, *Model 8200 Parametric Equalizer Series II* owner's manual | features, controls, band table, specifications with test notes, gain/Q/phase plots | manufacturer |
 | G. Massenburg, "Parametric Equalization", AES 42nd Convention, 1972, paper K-2 | the parametric EQ's original description (all-active RC, no inductors) | seen only as an AES E-Library listing in search results; full text not read |
 | GroupDIY thread "Massenburg EQ schematic?" (search-result text only) | a builder's remark that the Massenburg and Sontec EQs share a topology | secondary, unverified |
 
@@ -31,22 +31,22 @@ All controls continuous (8200 manual):
 | 4 | 400 Hz–26 kHz | 0.4–4.0 | ±15 dB |
 | 5 (High) | 400 Hz–26 kHz | 0.4–4.0, or shelf (counter-clockwise detent) | ±15 dB |
 
-- "Q is defined as the center frequency of the alteration … divided by the bandwidth of that
-  alteration" (manual). Which bandwidth (−3 dB of the deviation, or of the half-gain points) is
-  not stated: a decision for M2, recorded here when made.
-- Gain: "continuously variable from −15 dB to +15 dB, with a highly accurate 0 dB position (no
-  detent)". The manual's gain-step and Q-step plots show symmetric boost and cut families.
-- Frequency legends "are estimations and will vary slightly from unit to unit".
+- The manual defines Q as the centre frequency of the alteration over its bandwidth. Which
+  bandwidth (−3 dB of the deviation, or of the half-gain points) is not stated: a decision for
+  M2, recorded here when made.
+- Gain: continuous from −15 to +15 dB, with an accurate 0 dB position and no detent. The
+  manual's gain-step and Q-step plots show symmetric boost and cut families.
+- The frequency legends are approximate and vary slightly between units (manual).
 - No high- or low-pass filter on the 8200.
 
 ## Circuit
 
-What the manual states: "all-discrete, Class-A design; no integrated circuits"; "no interstage or
-coupling capacitors"; "transformerless; precision electronically balanced input buffer and
-DC-servo stabilized direct-coupled output"; "GML 9202 low-noise … wide bandwidth precision discrete
-opamp"; carbon-film pots; no tantalum, ceramic or electrolytic capacitors in the signal path;
-±28 V supply with board-level regulation to ±18 V. The pots sit where "potentiometer noise is
-attenuated", and noise rises "proportionally with gain, frequency, and Q".
+What the manual states: an all-discrete class-A design with no integrated circuits and no
+interstage or coupling capacitors; transformerless, with an electronically balanced input buffer
+and a direct-coupled output held by a DC servo; the GML 9202 discrete op-amp (low noise, wide
+bandwidth); carbon-film pots; no tantalum, ceramic or electrolytic capacitors in the signal path;
+±28 V supply with board-level regulation to ±18 V. The pots sit where their noise is attenuated,
+and noise rises in proportion to gain, frequency and Q.
 
 The band topology is **unsourced**. Massenburg's 1972 paper describes an all-active RC design
 (per its listing); the forum remark ties the 8200 and the MES-432 to one topology but names none.

@@ -1,0 +1,16 @@
+* Op-amp models for the Console netlists. Pins: non-inverting input, inverting input, output.
+* The netlists instantiate `opamp`; include this file first (see ../NOTES.md, "Netlists").
+
+* Ideal: a nullor. ngspice stands in a 1e9 VCVS; tools/netlist stamps the nullor exactly.
+.subckt opamp inp inn out
+*@ nullor e1
+E1 out 0 inp inn 1e9
+.ends opamp
+
+* Rail clip for transient checks: a 5534-class amp on +-18 V rails.
+* vsat: peak output swing (datasheet: 32 V p-p typical at +-18 V, 600 ohm load).
+* aol: DC open-loop gain (100 V/mV typical). The knee follows LineAmp's soft clip u / sqrt(1 + u^2).
+.subckt opamp_rail inp inn out params: vsat=16 aol=1e5
+B1 out 0 V = vsat * (aol * (V(inp) - V(inn)) / vsat)
++ / sqrt(1 + ((aol * (V(inp) - V(inn)) / vsat) ** 2))
+.ends opamp_rail

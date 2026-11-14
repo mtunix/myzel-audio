@@ -276,6 +276,9 @@ public:
         upIndex = downIndex = 0;
     }
 
+    /** The odd phase's tap j (the even phase is 1/2 at the centre). */
+    double coefficient (int j) const noexcept { return coefficients[(size_t) j]; }
+
     /** One sample in, two out (in time order). */
     void upsample (double x, double& y0, double& y1) noexcept
     {

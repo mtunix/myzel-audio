@@ -49,7 +49,7 @@ sibling's sound (its golden files stay bit-identical).
 | `TapeLosses` | a playback head's gap, spacing and thickness losses (Bertram) and contour bump as fitted low-order filters, matched (Vicanek) direct-form sections, the closed forms | Mulberry (Loop, Reel); Inkcap (Crush's head: its prototypes in TPT form, so Damage can move them) |
 | `ClockedDomain` | Holters–Parker's clocked domain: modal filters, a device sampling the input filter's exact output at its own clock instants, its held staircase into the output filter; `setClockPhase` ties the clock to a timeline | Mulberry (Bucket, Rack); Inkcap (Bits) |
 | `AnalyticFilters` | linear sections with exact responses: TPT one-pole and SVF, bilinear shelf with an exact inverse | Umber (Reel), Mulberry (Loop, Reel) |
-| `Oversampler2x` | per-sample 2x polyphase IIR half-band pair (minimum phase, never gains), 4x/8x cascades, linear-phase half-band FIR | Mulberry (Loop, Reel, Clean); Viridian (planned); Inkcap (Crush) |
+| `Oversampler2x` | per-sample 2x polyphase IIR half-band pair (minimum phase, never gains), 4x/8x cascades, linear-phase half-band FIR | Mulberry (Loop, Reel, Clean); Viridian (the chain's 2x pair, `OpAmpClip`'s FIRs); Inkcap (Crush) |
 | `NodalCircuit` | nodal DK solver for a netlist with any nonlinear device (`tubes::`): MNA to discrete state space, Newton on the device ports, adjustable bias supply, compile-time sparsity | Umber (Valve, Fuzz) |
 | `TubeMath`, `KorenTriode` | tube currents from shared Hermite tables; Koren's triode with a smooth grid diode (`tubes::`) | Umber (Valve, Fuzz) |
 | `TriodeStage` | a common-cathode triode gain stage on `NodalCircuit`, component values from the caller (`tubes::`; validated in Umber's `models/valve/NOTES.md`) | Umber (Valve); Viridian (planned); Inkcap (Crush's Valve) |
@@ -57,7 +57,8 @@ sibling's sound (its golden files stay bit-identical).
 | `ClassACircuit` | single-ended class-A transistor stage into a saturating output transformer, switching-event sub-steps, component values from the caller (validated in Umber's `models/classa/NOTES.md`) | Umber (Class A); Viridian (planned) |
 | `MagneticCore` | the Jiles–Atherton core of transformers and inductors, SI units, Langevin table (not the tape core above: different units and solver) | Umber (Desk); Viridian (planned) |
 | `TransformerStage` | an audio transformer as a WDF with the nonlinear core at its root (validated in Umber's `models/desk/NOTES.md`) | Umber (Desk); Viridian (planned) |
-| `LineAmp` | op-amp line stage: soft rail clip in the loop (exact, tabulated), slew limit, input offset | Umber (Desk); Viridian (planned) |
+| `LineAmp` | op-amp line stage: soft rail clip in the loop (exact, tabulated), slew limit, input offset | Umber (Desk) |
+| `OpAmpClip` | an IC op-amp stage: LineAmp's loop at the chip's loop gain (exact, tabulated in units of the swing); at 4x the caller's rate, on a linear-phase path that runs only near the rails (the output the same to the bit), the input as an interpolating cubic spline, the rails' clip and the slew limit solved exactly on each segment and integrated under a cubic B-spline, the loop's knee under a triangle, the loop's smooth residue under a triangle near the rails (antiderivative antialiasing); `OpAmpClipLanes<2>` runs two channels in one loop, each the same to the bit as alone | Viridian (Console) |
 | `FloatCompare` | `isExactly`: an exact comparison where one is meant (a value that did not move, an exact nominal point), without `-Wfloat-equal` | the solvers above |
 
 The circuit stages take every component value from the caller (`ClassAComponents`,

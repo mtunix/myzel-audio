@@ -1,0 +1,16 @@
+Interacting third-order LC ladder: two pots in one irreducible denominator (no closed form here;
+* checked against ngspice only)
+*@ name Ladder3
+*@ generate ../../../tests/network/generated/Ladder3.h vectors ../../../tests/network/generated/Ladder3Vectors.h
+*@ input vin
+*@ output out
+*@ pot src 0.5
+*@ pot load 0.5
+.param src=0.5 load=0.5
+Vin in 0 dc 0 ac 1
+R1 in n1 {100 + src*2k}
+C1 n1 0 47n
+L1 n1 out 22m
+C2 out 0 47n
+R2 out 0 {500 + load*20k}
+.end

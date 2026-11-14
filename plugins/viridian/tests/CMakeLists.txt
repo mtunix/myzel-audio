@@ -38,3 +38,47 @@ foreach(model passive inductor proportional console mastering)
     target_compile_definitions(${target} PRIVATE ${VIRIDIAN_TEST_DEFINITIONS})
     catch_discover_tests(${target} TEST_PREFIX "${model}: ")
 endforeach()
+
+# The linear-network machinery: tests/network/*.cpp ---------------------------
+# MatchedSection, FrequencyMap and Network against the reference circuits that
+# tools/netlist generates into tests/network/generated (no JUCE).
+file(GLOB VIRIDIAN_NETWORK_TESTS CONFIGURE_DEPENDS ${CMAKE_CURRENT_SOURCE_DIR}/network/*.cpp)
+add_executable(ViridianTests_network ${VIRIDIAN_NETWORK_TESTS} ${VIRIDIAN_DSP_COMMON_SOURCES})
+target_include_directories(ViridianTests_network PRIVATE ${PROJECT_SOURCE_DIR}/src ${CMAKE_CURRENT_SOURCE_DIR} ${CMAKE_SOURCE_DIR})
+target_link_libraries(ViridianTests_network PRIVATE
+    juce::juce_recommended_config_flags
+    juce::juce_recommended_warning_flags
+    Catch2::Catch2WithMain)
+catch_discover_tests(ViridianTests_network TEST_PREFIX "network: ")
+
+# tools/netlist against closed forms and ngspice, where python3 (sympy, numpy, mpmath) and
+# ngspice are installed; elsewhere the generated headers are checked by the C++ tests alone.
+find_package(Python3 COMPONENTS Interpreter QUIET)
+find_program(VIRIDIAN_NGSPICE ngspice)
+if(Python3_Interpreter_FOUND AND VIRIDIAN_NGSPICE)
+    execute_process(COMMAND ${Python3_EXECUTABLE} -c "import sympy, numpy, mpmath"
+                    RESULT_VARIABLE viridian_python_modules OUTPUT_QUIET ERROR_QUIET)
+    if(viridian_python_modules EQUAL 0)
+        add_test(NAME "network: tools/netlist reference circuits"
+                 COMMAND ${Python3_EXECUTABLE} ${PROJECT_SOURCE_DIR}/tools/netlist/validate.py)
+    endif()
+endif()
+if(NOT TEST "network: tools/netlist reference circuits")
+    message(STATUS "Viridian: tools/netlist validation not registered (needs python3 with sympy, numpy, mpmath, and ngspice)")
+endif()
+
+# Every generated header's stamp against its netlist and the files it includes: a header older
+# than its netlist fails here wherever python3 runs, without sympy or ngspice.
+if(Python3_Interpreter_FOUND)
+    add_test(NAME "network: generated headers match their netlists"
+             COMMAND ${Python3_EXECUTABLE} ${PROJECT_SOURCE_DIR}/tools/netlist/sources.py)
+endif()
+
+# Regenerates every header a netlist names with '*@ generate' (checked in; not part of the build).
+if(Python3_Interpreter_FOUND)
+    add_custom_target(ViridianNetworks
+        COMMAND ${Python3_EXECUTABLE} ${PROJECT_SOURCE_DIR}/tools/netlist/netlist.py regenerate
+        WORKING_DIRECTORY ${CMAKE_SOURCE_DIR}
+        COMMENT "Regenerating Viridian's network headers from their netlists"
+        VERBATIM)
+endif()

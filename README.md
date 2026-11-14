@@ -58,4 +58,5 @@ Each plugin's README has its own test and tool commands.
 
 ## Licence
 
-AGPLv3, see [LICENSE](LICENSE). Built with [JUCE](https://juce.com) under its AGPLv3 option.
+AGPLv3, see [LICENSE](LICENSE). Built with [JUCE](https://juce.com) under its AGPLv3 option. What
+the licence covers, hardware names and how to raise a rights concern: [NOTICE](NOTICE).

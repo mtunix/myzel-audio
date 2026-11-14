@@ -1,0 +1,23 @@
+18 dB/oct high-pass: a buffered RC stage into a unity-gain Sallen-Key stage, one dual-gang pot
+* (the frequency) in both stages, so the denominator factors into two blocks that share a pot
+*@ name Hpf18
+*@ generate ../../../tests/network/generated/Hpf18.h vectors ../../../tests/network/generated/Hpf18Vectors.h
+*@ input vin
+*@ output out
+*@ pot freq 0.5
+.param freq=0.5
+.param rmin=1k rpot=50k
+.subckt opamp inp inn out
+*@ nullor e1
+E1 out 0 inp inn 1e9
+.ends
+Vin in 0 dc 0 ac 1
+C1 in a 100n
+R1 a 0 {rmin + freq*rpot}
+XU1 a b b opamp
+C2 b c 100n
+C3 c d 100n
+R2 c out {(rmin + freq*rpot)/2}
+R3 d 0 {2*(rmin + freq*rpot)}
+XU2 d out out opamp
+.end

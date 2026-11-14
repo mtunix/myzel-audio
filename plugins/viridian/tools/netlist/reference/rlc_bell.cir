@@ -1,0 +1,14 @@
+Passive RLC dip: H = (s^2 L C + s R2 C + 1) / (s^2 L C + s (R1 + R2) C + 1), R2 = depth pot
+*@ name RlcBell
+*@ generate ../../../tests/network/generated/RlcBell.h vectors ../../../tests/network/generated/RlcBellVectors.h
+*@ input vin
+*@ output out
+*@ pot depth 0.5
+.param depth=0.5
+.param r1=3.3k rmin=47 rpot=10k ind=100m cap=220n
+Vin in 0 dc 0 ac 1
+R1 in out {r1}
+R2 out a {rmin + depth*rpot}
+L1 a b {ind}
+C1 b 0 {cap}
+.end

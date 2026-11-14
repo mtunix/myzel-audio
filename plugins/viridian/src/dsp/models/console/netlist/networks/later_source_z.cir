@@ -1,0 +1,16 @@
+Console, later card: the high-pass's output impedance at n51, through a 1k sense resistor
+* ../later_front.cir with hpf_in = lpf_in = 1, its input grounded and n51 driven through Rsense:
+* H = Z / (Z + 1k), Z the Thevenin impedance of the high-pass with the low-pass's input network.
+*@ name ConsoleLaterSourceZ
+*@ generate ../../generated/ConsoleLaterSourceZ.h vectors ../../../../../../tests/models/console/generated/ConsoleLaterSourceZVectors.h
+*@ input vsense
+*@ output n51
+*@ pot hpf_freq 1
+*@ pot lpf_freq 0
+.include ../opamp.lib
+.include ../later_front.cir
+.param hpf_in=1 lpf_in=1
+Vground in 0 dc 0
+Vsense sense 0 dc 0 ac 1
+Rsense sense n51 1k
+.end

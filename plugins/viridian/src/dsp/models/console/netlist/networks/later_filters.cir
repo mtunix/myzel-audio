@@ -1,0 +1,15 @@
+Console, later card: high-pass and low-pass to the low-pass's op-amp output (the low-pass in)
+* ../later_front.cir with lpf_in = 1, measured at t13o: an op-amp output, so what follows (the
+* output coupling and the EQ) hangs behind it and drops out of the analysis.
+*@ name ConsoleLaterFilters
+*@ generate ../../generated/ConsoleLaterFilters.h vectors ../../../../../../tests/models/console/generated/ConsoleLaterFiltersVectors.h
+*@ input vin
+*@ output t13o
+*@ switch hpf_in 2 0
+*@ pot hpf_freq 1
+*@ pot lpf_freq 0
+.include ../opamp.lib
+.include ../later_front.cir
+.param lpf_in=1
+Vin in 0 dc 0 ac 1
+.end

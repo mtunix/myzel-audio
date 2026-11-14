@@ -2,8 +2,11 @@
 # dependencies, the shared compile settings and the MYZEL_* options. Layout and targets:
 # cmake/MyzelPlugin.cmake.
 #   src/dsp                 ModelInfo (slot mapping per model) and EqParams
+#   src/dsp/common          the linear-network machinery: FrequencyMap, MatchedSection, Network
 #   src/dsp/models/<m>      one directory per EQ model
 #   src/dsp/chain           the full signal chain
+#   tools/netlist           netlist -> generated network header (Python; `ViridianNetworks` reruns it)
+#   tools/measure           ViridianMeasure (the gates through the chain), compare.py (against ngspice)
 project(Viridian VERSION 0.1.0 LANGUAGES C CXX)
 
 # GENERIC_EDITOR until Viridian has its own panel and Theme (PLAN.md, M4).

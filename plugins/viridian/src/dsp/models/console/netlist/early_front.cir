@@ -1,0 +1,141 @@
+* Console, early card, front: high-pass (T11) and low-pass (T12), then the HF and HMF bands
+* around the first summing amp (T3). Transcribed from the early card's drawing (../NOTES.md,
+* "Sources"); designators as drawn. One file because the filter output drives the EQ input
+* through C26 into a load that moves with the EQ controls.
+* Signal in: node in. Signal out: node out (T3 output, inverted), which drives ..._back.cir.
+* Ideal source, no load. Every part on the signal path is here (../NOTES.md, "Netlists").
+*
+* Controls, pot fractions 0..1 (laws in ../NOTES.md):
+*   hpf_freq           high-pass rheostats, both gangs (50k): 0 = 0 ohm (top corner) .. 1 = 50k
+*   lpf_freq           low-pass rheostats, both gangs (10k): 0 = 0 ohm (top corner) .. 1 = 10k
+*   hpf_in, lpf_in     1 in, 0 bypassed (the panel's Off; the card has no switch of its own)
+*   hf_gain, hmf_gain  boost/cut wiper: 0 full cut, 0.5 centre tap, 1 full boost
+*   hf_freq, hmf_freq  frequency rheostats, both gangs: 0 = 0 ohm (top frequency) .. 1 = 50k
+*   hmf_q              Q pot gang a wiper: 0 lowest Q .. 1 highest Q; gang b is 1 - hmf_q
+*   hf_bell            1 bell, 0 shelf
+* Calibration (fixed): hmf_trim, the HMF Q trimmer, in ohms.
+
+.param hpf_freq=1 lpf_freq=0 hpf_in=0 lpf_in=0
+.param hf_gain=0.5 hf_freq=0.5 hf_bell=1
+.param hmf_gain=0.5 hmf_freq=0.5 hmf_q=0.5
+.param hmf_trim=273.23
+
+* High-pass: R58/R59 pad (0.63) into a Sallen-Key with a gain of 1 + R56/R57 (1.59).
+.if (hpf_in == 1)
+R58 in hpf_n42 300
+R59 hpf_n42 0 510
+C22 hpf_n42 hpf_nb 220n
+RHPFa hpf_nb hpf_n54 {50k*hpf_freq}
+R49 hpf_n54 hpf_out 1.8k
+C23 hpf_nb p11 330n
+R50 p11 hpf_n55 1.8k
+RHPFb hpf_n55 0 {50k*hpf_freq}
+XU11 p11 m11 hpf_out opamp
+R57 m11 0 5.1k
+R56 m11 hpf_out 3k
+.else
+VHPFoff in hpf_out 0
+.endif
+
+* Low-pass: unity-gain Sallen-Key.
+.if (lpf_in == 1)
+R51 hpf_out lpf_n44 470
+RLPFa lpf_n44 lpf_n45 {10k*lpf_freq}
+C24 lpf_n45 t12o 6.8n
+RLPFb lpf_n45 lpf_n46 {10k*lpf_freq}
+R52 lpf_n46 p12 470
+C25 p12 0 3.3n
+XU12 p12 t12o t12o opamp
+C26 t12o eq_in 100u
+R53 eq_in 0 100k
+.else
+VLPFoff hpf_out eq_in 0
+.endif
+
+* EQ input (C1, R1) and the summing amp T3: R12 || C8 feedback, each band returning into the
+* virtual earth.
+R1 eq_in 0 100k
+C1 eq_in bus 100u
+XU3 0 sj3 out opamp
+R10 bus sj3 4.75k
+R12 sj3 out 4.75k
+C8 sj3 out 330p
+R13 sj3 hmf_out 4.75k
+R14 sj3 hf_out 4.75k
+
+* HMF boost/cut: 25k lin, centre tap to ground through R40 (on the motherboard).
+R11 bus hmf_a 1k
+R16 hmf_b out 1k
+R40 hmf_ct 0 4.7k
+R17 hmf_w 0 1.8k
+R64 hmf_w hf_out 12k
+.if (hmf_gain >= 0.5)
+RHMFg1 hmf_a hmf_w {25k*(1-hmf_gain)}
+RHMFg2 hmf_w hmf_ct {25k*(hmf_gain-0.5)}
+RHMFg3 hmf_ct hmf_b 12.5k
+.else
+RHMFg1 hmf_a hmf_ct 12.5k
+RHMFg2 hmf_ct hmf_w {25k*(0.5-hmf_gain)}
+RHMFg3 hmf_w hmf_b {25k*hmf_gain}
+.endif
+
+* HMF band-pass T4 with positive feedback (Q) from its own output, post amp T5.
+RHMFfa hmf_w hmf_n14 {50k*hmf_freq}
+R18 hmf_n14 hmf_n18r 4.3k
+C9 hmf_n18r sj4 4.7n
+R19 sj4 hmf_n16 5.1k
+RHMFfb hmf_n16 bp4 {50k*hmf_freq}
+C10 sj4 bp4 4.7n
+XU4 p4 sj4 bp4 opamp
+R62 p4 0 100k
+C11 bp4 hmf_x 100u
+RHMFtrim hmf_x hmf_t {hmf_trim}
+R22 hmf_t hmf_n19 910
+R21 hmf_n19 hmf_n18 1.8k
+R20 hmf_n18 0 470
+RHMFqa1 hmf_n18 p4 {10k*hmf_q}
+RHMFqa2 p4 hmf_n19 {10k*(1-hmf_q)}
+R23 hmf_x sj5 750
+R24 sj5 hmf_n21 750
+RHMFqb hmf_n21 hmf_out {10k*(1-hmf_q)}
+XU5 0 sj5 hmf_out opamp
+
+* HF boost/cut, as HMF.
+R2 bus hf_a 1k
+R15 hf_b out 1k
+R41 hf_ct 0 4.7k
+R3 hf_w 0 1.8k
+R63 hf_w hmf_out 12k
+.if (hf_gain >= 0.5)
+RHFg1 hf_a hf_w {25k*(1-hf_gain)}
+RHFg2 hf_w hf_ct {25k*(hf_gain-0.5)}
+RHFg3 hf_ct hf_b 12.5k
+.else
+RHFg1 hf_a hf_ct 12.5k
+RHFg2 hf_ct hf_w {25k*(0.5-hf_gain)}
+RHFg3 hf_w hf_b {25k*hf_gain}
+.endif
+
+* HF band-pass T1, post amp T2. Bell: the switch takes C5 and the Q divider to T1's output
+* through C7. Shelf: C6 joins them to T1's output instead.
+C2 hf_w hf_n9 220p
+RHFfa hf_w hf_n9 {50k*hf_freq}
+R4 hf_n9 hf_n4 4.3k
+C3 hf_n4 sj1 2.2n
+R5 sj1 hf_n6 5.1k
+RHFfb hf_n6 bp1 {50k*hf_freq}
+C4 sj1 bp1 220p
+XU1 p1 sj1 bp1 opamp
+R6 p1 0 1k
+C7 bp1 hf_z 100u
+.if (hf_bell == 1)
+C5 sj1 hf_z 2.2n
+R7 p1 hf_z 1.8k
+.else
+C5 sj1 hf_y 2.2n
+C6 hf_y bp1 330p
+R7 p1 hf_y 1.8k
+.endif
+R8 hf_z sj2 750
+R9 sj2 hf_out 7.5k
+XU2 0 sj2 hf_out opamp

@@ -1,0 +1,23 @@
+Baxandall-type low shelf around an inverting op-amp, wiper at the virtual earth
+* Closed form: H = -Zf / Zi, Zi = R1 + (P (1 - x) || 1/(s C1)), Zf = R2 + (P x || 1/(s C2))
+*@ name BaxandallShelf
+*@ generate ../../../tests/network/generated/BaxandallShelf.h vectors ../../../tests/network/generated/BaxandallShelfVectors.h
+*@ input vin
+*@ output out
+*@ pot bass 0.5
+*@ switch turnover 2 0
+.param bass=0.5 turnover=0
+.param r1=10k r2=10k p=100k
+.subckt opamp inp inn out
+*@ nullor e1
+E1 out 0 inp inn 1e9
+.ends
+Vin in 0 dc 0 ac 1
+R1 in a {r1}
+Ra a w {p*(1 - bass)}
+C1 a w {turnover > 0.5 ? 22n : 47n}
+Rb w b {p*bass}
+C2 w b {turnover > 0.5 ? 22n : 47n}
+R2 b out {r2}
+XU1 0 w out opamp
+.end

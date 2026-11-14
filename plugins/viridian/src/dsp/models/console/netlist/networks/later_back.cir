@@ -1,0 +1,17 @@
+Console, later card, back: LMF and LF into the second summing amp, the card's output
+* The tools/netlist view of ../later_back.cir: the card's netlist unchanged, the ideal source and
+* the tool's directives (controls in the netlist's order of use, defaults as its .param lines).
+*@ name ConsoleLaterBack
+*@ generate ../../generated/ConsoleLaterBack.h vectors ../../../../../../tests/models/console/generated/ConsoleLaterBackVectors.h
+*@ input vin
+*@ output out
+*@ pot lmf_gain 0.5
+*@ pot lmf_freq 0.5
+*@ pot lmf_q 0.5
+*@ pot lf_gain 0.5
+*@ pot lf_freq 0.5
+*@ switch lf_bell 2 1
+.include ../opamp.lib
+.include ../later_back.cir
+Vin in 0 dc 0 ac 1
+.end

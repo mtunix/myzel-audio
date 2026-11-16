@@ -21,7 +21,7 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        plugin: [cerulean, inkcap, mulberry, umber, viridian]
+        plugin: [cerulean, halite, inkcap, mulberry, umber, viridian]
     env:
       CPM_SOURCE_CACHE: ${{ github.workspace }}/.cache/CPM
     steps:
@@ -59,8 +59,9 @@ jobs:
           xvfb-run -a -s "-screen 0 3000x2000x24" \
             "build/plugins/${{ matrix.plugin }}/tools/${name}UiSnapshot_artefacts/Release/${name}UiSnapshot" --selftest
 
+      # Halite validates its LV2 as well (the others: not yet measured); pluginval loads no CLAP.
       - name: pluginval (strictness 10)
-        run: xvfb-run -a tools/pluginval.sh ${{ matrix.plugin }} build 10
+        run: xvfb-run -a tools/pluginval.sh ${{ matrix.plugin }} build 10 ${{ matrix.plugin == 'halite' && 'vst3,lv2' || 'vst3' }}
 
       - name: Package
         run: tools/package.sh ${{ matrix.plugin }} build
@@ -77,7 +78,7 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        plugin: [cerulean, inkcap, mulberry, umber, viridian]
+        plugin: [cerulean, halite, inkcap, mulberry, umber, viridian]
     env:
       CPM_SOURCE_CACHE: ${{ github.workspace }}/.cache/CPM
     steps:
@@ -106,7 +107,7 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        plugin: [cerulean, inkcap, mulberry, umber, viridian]
+        plugin: [cerulean, halite, inkcap, mulberry, umber, viridian]
     env:
       CPM_SOURCE_CACHE: ${{ github.workspace }}/.cache/CPM
     steps:

@@ -1,0 +1,13 @@
+file	role	corpus	source	speaker	sex	rate	start	duration	labels
+vctk-p225-033	ess	VCTK 0.92	p225_033_mic2.flac	p225	F	48000	1.240	3.040	pocketsphinx 5.0.4
+vctk-p226-180	ess	VCTK 0.92	p226_180_mic2.flac	p226	M	48000	0.820	2.980	pocketsphinx 5.0.4
+vctk-p262-177	ess	VCTK 0.92	p262_177_mic2.flac	p262	F	48000	2.380	3.010	pocketsphinx 5.0.4
+vctk-p245-212	ess	VCTK 0.92	p245_212_mic2.flac	p245	M	48000	0.720	3.020	pocketsphinx 5.0.4
+vctk-p294-410	ess	VCTK 0.92	p294_410_mic2.flac	p294	F	48000	0.760	2.680	pocketsphinx 5.0.4
+vctk-p311-401	ess	VCTK 0.92	p311_401_mic2.flac	p311	M	48000	0.630	2.550	pocketsphinx 5.0.4
+vctk-p299-227	bright	VCTK 0.92	p299_227_mic2.flac	p299	F	48000	0.760	2.590	pocketsphinx 5.0.4
+vctk-p237-252	bright	VCTK 0.92	p237_252_mic2.flac	p237	M	48000	0.810	2.630	pocketsphinx 5.0.4
+vctk-p253-287	esh	VCTK 0.92	p253_287_mic2.flac	p253	F	48000	0.950	3.020	pocketsphinx 5.0.4
+vctk-p251-251	esh	VCTK 0.92	p251_251_mic2.flac	p251	M	48000	1.240	3.020	pocketsphinx 5.0.4
+vocalset-f2-scales-belt-i	bright	VocalSet 1.0	FULL/female2/scales/belt/f2_scales_belt_i.wav	f2	F	44100	0.187	3.000	Annotated-VocalSet
+vocalset-m2-scales-belt-i	bright	VocalSet 1.0	FULL/male2/scales/belt/m2_scales_belt_i.wav	m2	M	44100	0.198	3.000	Annotated-VocalSet

@@ -2,6 +2,7 @@
 #     CODE <four characters>              # PLUGIN_CODE: never change it, hosts identify the plugin by it
 #     VST3_CATEGORIES <categories...>
 #     CLAP_FEATURES <features...>
+#     [LV2_CLASS <class>]                 # lv2:<class> in the manifest, e.g. DynamicsPlugin (default: JUCE's lv2:Plugin)
 #     [DSP_SOURCES <files...>]            # default: every src/dsp/**/*.cpp
 #     [DSP_LIBRARIES <targets...>]
 #     [DSP_DEFINITIONS <definitions...>]
@@ -16,7 +17,7 @@
 #   <Name>            the plugin: VST3, LV2, CLAP and Standalone, vendor IDs from the root CMakeLists.txt
 # and adds tools/ and tests/ when MYZEL_BUILD_TOOLS / MYZEL_BUILD_TESTS ask for them.
 function(myzel_add_plugin name)
-    cmake_parse_arguments (ARG "GENERIC_EDITOR" "CODE" "VST3_CATEGORIES;CLAP_FEATURES;DSP_SOURCES;DSP_LIBRARIES;DSP_DEFINITIONS" ${ARGN})
+    cmake_parse_arguments (ARG "GENERIC_EDITOR" "CODE;LV2_CLASS" "VST3_CATEGORIES;CLAP_FEATURES;DSP_SOURCES;DSP_LIBRARIES;DSP_DEFINITIONS" ${ARGN})
     string(TOUPPER "${name}" upper)
     string(TOLOWER "${name}" lower)
     set(dir ${CMAKE_CURRENT_SOURCE_DIR})
@@ -50,6 +51,11 @@ function(myzel_add_plugin name)
     endif()
 
     # The plugin
+    set(lv2_class)
+    if(ARG_LV2_CLASS)
+        set(lv2_class LV2_PLUGIN_CLASS ${ARG_LV2_CLASS})
+    endif()
+
     juce_add_plugin(${name}
         PRODUCT_NAME "${name}"
         COMPANY_NAME "${MYZEL_COMPANY_NAME}"
@@ -64,6 +70,7 @@ function(myzel_add_plugin name)
         IS_MIDI_EFFECT FALSE
         EDITOR_WANTS_KEYBOARD_FOCUS FALSE
         VST3_CATEGORIES ${ARG_VST3_CATEGORIES}
+        ${lv2_class}
         COPY_PLUGIN_AFTER_BUILD ${MYZEL_COPY_PLUGINS})
 
     target_sources(${name} PRIVATE ${dir}/src/plugin/PluginEntry.cpp)

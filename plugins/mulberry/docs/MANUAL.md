@@ -9,6 +9,8 @@ the old echoes ring out.
 
 ![Mulberry](screenshots/01-default.png)
 
+To install it, use the Myzel Audio installer for your system: [Installing](../../../README.md#installing).
+
 ## Quick start
 
 1. Insert Mulberry on a track (mono or stereo in; the output is stereo, or mono on a mono

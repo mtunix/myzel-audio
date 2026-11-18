@@ -1,0 +1,20 @@
+#!/bin/sh
+# Strips any quarantine flag from the installed bundle (installer/PLAN.md, macOS without a Developer ID)
+# and, for an AU, restarts the AU registry so a running Logic or GarageBand sees it after a rescan.
+here="$(dirname "$0")"
+{ read -r format; read -r bundle; } < "$here/component" || { echo "postinstall: cannot read $here/component" >&2; exit 1; }
+
+volume="${3:-/}"
+target="${volume%/}$bundle"
+if [ ! -e "$target" ]; then
+    echo "postinstall: $target is missing after the payload" >&2
+    exit 1
+fi
+
+# One file at a time: a file without the flag must not stop the rest.
+find "$target" -exec xattr -d com.apple.quarantine {} \; 2>/dev/null
+
+if [ "$format" = AU ]; then
+    killall -9 AudioComponentRegistrar >/dev/null 2>&1
+fi
+exit 0

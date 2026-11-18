@@ -1,0 +1,136 @@
+<?xml version="1.0" encoding="utf-8" standalone="no"?>
+<!-- Distribution of the suite pkg. build.sh fills the @...@ lines from installer/plugins.tsv and the stage. -->
+<installer-gui-script minSpecVersion="2">
+    <title>Myzel Audio @SUITE_VERSION@</title>
+    <options customize="always" require-scripts="true" hostArchitectures="arm64,x86_64"/>
+    <domains enable_anywhere="false" enable_currentUserHome="false" enable_localSystem="true"/>
+    <volume-check>
+        <allowed-os-versions>
+            <os-version min="11.0"/>
+        </allowed-os-versions>
+    </volume-check>
+    <welcome file="welcome.html" mime-type="text/html"/>
+    <license file="license.txt" mime-type="text/plain"/>
+    <conclusion file="conclusion.html" mime-type="text/html"/>
+    <script><![CDATA[
+// Installer JavaScript is an old JavaScriptCore: ES5 only.
+var myzelPlugins = {
+@PLUGINS_JS@
+};
+
+var myzelFormats = {
+@FORMATS_JS@
+};
+
+function myzelVolume()
+{
+    var mount = '/';
+    try {
+        if (my.target && my.target.mountpoint)
+            mount = String(my.target.mountpoint);
+    } catch (e) {}
+    return mount.charAt(mount.length - 1) == '/' ? mount.substring(0, mount.length - 1) : mount;
+}
+
+function myzelReceipt(id, format)
+{
+    try {
+        return my.target.receiptForIdentifier('com.myzelaudio.pkg.' + id + '.' + format);
+    } catch (e) {}
+    return null;
+}
+
+function myzelBundle(id, format)
+{
+    var f = myzelFormats[format];
+    try {
+        return system.files.bundleAtPath(myzelVolume() + f.dir + myzelPlugins[id].name + f.ext);
+    } catch (e) {}
+    return null;
+}
+
+// What one format looks like on disk: absent (null), version unknown (''), or a version string.
+// The receipt wins over the bundle's Info.plist, as in installer/PLAN.md (Detection).
+function myzelFormatVersion(id, format)
+{
+    if (!myzelBundle(id, format))
+        return null;
+    var receipt = myzelReceipt(id, format);
+    if (receipt && receipt.version)
+        return String(receipt.version);
+    var info = myzelBundle(id, format);
+    if (info && info.CFBundleShortVersionString)
+        return String(info.CFBundleShortVersionString);
+    return '';
+}
+
+// Ticked by default when not installed, older, or of unknown version; unticked when up to date or newer.
+function myzelDefault(id)
+{
+    var carried = myzelPlugins[id].version;
+    var found = false;
+    for (var format in myzelFormats) {
+        var v = myzelFormatVersion(id, format);
+        if (v === null)
+            continue;
+        found = true;
+        if (v === '' || system.compareVersions(v, carried) < 0)
+            return true;
+    }
+    return !found;
+}
+
+function myzelAnyDefault()
+{
+    for (var id in myzelPlugins)
+        if (myzelDefault(id))
+            return true;
+    return false;
+}
+
+// A receipt without its bundle (a hand-deleted plugin) also counts, so Remove can clear the receipt.
+function myzelInstalled(id)
+{
+    for (var format in myzelFormats)
+        if (myzelBundle(id, format) || myzelReceipt(id, format))
+            return true;
+    return false;
+}
+
+function myzelAnyInstalled()
+{
+    for (var id in myzelPlugins)
+        if (myzelInstalled(id))
+            return true;
+    return false;
+}
+
+function myzelRemoving(id)
+{
+    var choice = choices['remove.' + id];
+    return choice ? choice.selected == true : false;
+}
+
+function myzelInstallEnabled(id)
+{
+    return !myzelRemoving(id);
+}
+
+// Keeps the user's tick (the choice's own state) unless that plugin's Remove row is ticked.
+function myzelInstallSelected(id, format)
+{
+    return choices['install.' + id + '.' + format].selected == true && !myzelRemoving(id);
+}
+
+// A hidden Remove row stays unticked even when the Remove group is ticked as a whole.
+function myzelRemoveSelected(id)
+{
+    return choices['remove.' + id].selected == true && myzelInstalled(id);
+}
+    ]]></script>
+    <choices-outline>
+@OUTLINE@
+    </choices-outline>
+@CHOICES@
+@PKG_REFS@
+</installer-gui-script>

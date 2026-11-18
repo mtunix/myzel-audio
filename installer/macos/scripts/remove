@@ -1,0 +1,6 @@
+#!/bin/sh
+# Postinstall of a payload-free com.myzelaudio.pkg.<plugin>.remove package. build.sh places it beside a
+# copy of uninstall.sh and a "plugin" file holding the plugin id.
+here="$(dirname "$0")"
+plugin="$(cat "$here/plugin")" || { echo "remove: cannot read $here/plugin" >&2; exit 1; }
+exec /bin/bash "$here/uninstall.sh" "$plugin"

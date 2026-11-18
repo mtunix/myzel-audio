@@ -1,0 +1,90 @@
+name: macOS install report
+description: How the macOS installer (beta) went on your Mac, good or bad.
+title: "macOS install report: "
+labels: [installer, macos]
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Thanks for trying the macOS installer. It is unsigned and tested on CI runners only, so your
+        report is how we learn what real Macs do with it. Reports that everything worked help just as much.
+
+  - type: input
+    id: macos-version
+    attributes:
+      label: macOS version
+      description: Apple menu → About This Mac.
+      placeholder: macOS 15.3 Sequoia
+    validations:
+      required: true
+
+  - type: dropdown
+    id: chip
+    attributes:
+      label: Chip
+      options:
+        - Apple Silicon (M1, M2, M3, M4 or later)
+        - Intel
+    validations:
+      required: true
+
+  - type: input
+    id: installer-version
+    attributes:
+      label: Installer
+      description: The file name you downloaded.
+      placeholder: MyzelAudio-2026.11.0-macos-universal.pkg
+    validations:
+      required: true
+
+  - type: dropdown
+    id: opened-with
+    attributes:
+      label: How you got the installer to open
+      options:
+        - Double-click, then System Settings → Privacy & Security → Open Anyway
+        - Terminal, xattr -d com.apple.quarantine, then double-click
+        - Terminal, sudo installer -pkg … -target /
+        - It opened without any warning
+        - Something else (describe below)
+    validations:
+      required: true
+
+  - type: textarea
+    id: dialogs
+    attributes:
+      label: Dialogs that appeared
+      description: Every warning or prompt you saw, in order, with its wording if you can. Screenshots are welcome.
+      placeholder: |
+        1. "MyzelAudio-….pkg" Not Opened … → Done
+        2. System Settings → Privacy & Security → Open Anyway → password
+        3. Installer opened on the welcome page
+    validations:
+      required: true
+
+  - type: textarea
+    id: hosts
+    attributes:
+      label: Hosts and formats
+      description: Which hosts you tried, and which plugins and formats (AU, VST3, CLAP, Standalone) loaded in each.
+      placeholder: |
+        Logic Pro 11.2: AU, all plugins loaded after a rescan
+        Reaper 7.30: VST3 and CLAP loaded
+        Standalone apps: opened
+    validations:
+      required: true
+
+  - type: textarea
+    id: blocked
+    attributes:
+      label: Anything blocked or broken
+      description: A plugin a host refused or failed to validate, an app macOS would not open, an error from the installer, files left behind after removal.
+      placeholder: Nothing, or what happened and where.
+
+  - type: checkboxes
+    id: removal
+    attributes:
+      label: Removal (optional)
+      options:
+        - label: I removed a plugin with a *Remove* choice in the installer, and it worked
+        - label: I removed plugins with `uninstall.sh` in /Library/Application Support/Myzel Audio, and it worked

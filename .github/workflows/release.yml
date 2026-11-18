@@ -1,0 +1,469 @@
+name: Release
+
+# Builds the suite installers (installer/PLAN.md, Release pipeline). A release-<suite> tag makes a
+# draft GitHub Release; a manual run is a dry run that only uploads the installers as artefacts.
+on:
+  push:
+    tags: ['release-*']
+  workflow_dispatch:
+
+# A release run is never cancelled, so a second tag push waits instead of killing the first.
+concurrency:
+  group: release-${{ github.ref }}
+  cancel-in-progress: false
+
+permissions:
+  contents: read
+
+jobs:
+  # Everything per-plugin comes from installer/plugins.tsv.
+  plugins:
+    runs-on: ubuntu-24.04
+    defaults:
+      run:
+        shell: bash
+    outputs:
+      ids: ${{ steps.list.outputs.ids }}
+      suite: ${{ steps.list.outputs.suite }}
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Read installer/plugins.tsv
+        id: list
+        run: |
+          . installer/common.sh
+          ids="$(myzel_plugin_ids | jq -R . | jq -sc .)"
+          if [ "$ids" = "[]" ]; then
+            echo "::error::installer/plugins.tsv lists no plugins"
+            exit 1
+          fi
+          echo "ids=$ids" >> "$GITHUB_OUTPUT"
+          echo "suite=$(myzel_suite_version)" >> "$GITHUB_OUTPUT"
+          echo "Plugins: $ids, suite $(myzel_suite_version)"
+
+      - name: Check the tag matches installer/VERSION
+        if: startsWith(github.ref, 'refs/tags/')
+        env:
+          SUITE: ${{ steps.list.outputs.suite }}
+        run: |
+          if [ "$GITHUB_REF_NAME" != "release-$SUITE" ]; then
+            echo "::error::Tag $GITHUB_REF_NAME does not match installer/VERSION ($SUITE): expected release-$SUITE"
+            exit 1
+          fi
+
+      # Letter boundaries, not -w: <Name>_artefacts and <Name>Assets must fail, a word that merely contains an id must pass.
+      - name: Check the installers name no plugin
+        run: |
+          . installer/common.sh
+          paths=(installer tools/installer.sh tools/stage.sh .github/workflows/release.yml)
+          found=0
+          while IFS="$(printf '\t')" read -r id name _; do
+            if grep -rnIE --exclude=plugins.tsv --exclude=PLAN.md "(^|[^[:alpha:]])$name" "${paths[@]}" \
+              || grep -rniIE --exclude=plugins.tsv --exclude=PLAN.md "(^|[^[:alpha:]])$id([^[:alpha:]]|$)" "${paths[@]}" \
+              || find installer -iname "*$id*" | grep .; then
+              echo "::error::The installer scripts name $name; derive it from installer/plugins.tsv instead"
+              found=1
+            fi
+          done < <(myzel_plugins)
+          exit "$found"
+
+  build:
+    name: build (${{ matrix.target.os }}, ${{ matrix.plugin }})
+    needs: plugins
+    runs-on: ${{ matrix.target.runner }}
+    strategy:
+      fail-fast: false
+      matrix:
+        target:
+          - { os: linux, runner: ubuntu-24.04, cache: cpm- }
+          - { os: windows, runner: windows-latest, cache: cpm-win- }
+          - { os: macos, runner: macos-15, cache: cpm-mac- }
+        plugin: ${{ fromJSON(needs.plugins.outputs.ids) }}
+    defaults:
+      run:
+        shell: bash
+    env:
+      CPM_SOURCE_CACHE: ${{ github.workspace }}/.cache/CPM
+      PLUGIN: ${{ matrix.plugin }}
+    steps:
+      # Git for Windows checks out CRLF by default, and Git Bash then fails on the .sh scripts.
+      - name: Keep LF line endings
+        if: runner.os == 'Windows'
+        run: git config --global core.autocrlf false
+
+      - uses: actions/checkout@v4
+
+      - name: Install dependencies
+        if: runner.os == 'Linux'
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y ninja-build libasound2-dev libjack-jackd2-dev \
+            libfreetype-dev libfontconfig1-dev libx11-dev libxcomposite-dev libxcursor-dev \
+            libxext-dev libxi-dev libxinerama-dev libxrandr-dev libxrender-dev xvfb
+
+      - name: Cache CPM downloads
+        uses: actions/cache@v4
+        with:
+          path: .cache/CPM
+          key: ${{ matrix.target.cache }}${{ hashFiles('CMakeLists.txt') }}
+
+      # JUCE 9 supports macOS 10.11 and up; 11.0 is the first macOS on Apple Silicon.
+      - name: Configure
+        run: |
+          args=(-DCMAKE_BUILD_TYPE=Release -DMYZEL_ENABLE_LTO=ON -DMYZEL_BUILD_TOOLS=OFF "-DMYZEL_PLUGINS=$PLUGIN")
+          case "$RUNNER_OS" in
+            Linux) args+=(-G Ninja) ;;
+            macOS) args+=(-G Xcode "-DCMAKE_OSX_ARCHITECTURES=arm64;x86_64" -DCMAKE_OSX_DEPLOYMENT_TARGET=11.0) ;;
+          esac
+          cmake -S . -B build "${args[@]}"
+
+      - name: Build
+        run: cmake --build build --config Release --parallel
+
+      - name: Tests
+        run: ctest --test-dir build -C Release --output-on-failure -j 4
+
+      - name: Stage
+        run: bash tools/stage.sh "$PLUGIN" build stage
+
+      # Inner code first: a bundle's signature seals what it contains. Nothing touches the bundles after this.
+      - name: Sign ad-hoc
+        if: runner.os == 'macOS'
+        run: |
+          for bundle in stage/"$PLUGIN"/*/*; do
+            find "$bundle/Contents" -depth -mindepth 2 \( -name '*.framework' -o -name '*.bundle' \
+                -o -name '*.dylib' -o -name '*.app' -o -name '*.appex' \) |
+              while IFS= read -r nested; do
+                codesign --force --sign - --timestamp=none "$nested"
+              done
+            codesign --force --sign - --timestamp=none "$bundle"
+            codesign --verify --strict --deep --verbose=2 "$bundle"
+          done
+
+      - name: pluginval (strictness 10)
+        if: runner.os == 'Linux'
+        run: xvfb-run -a bash tools/pluginval.sh "$PLUGIN" stage 10
+
+      # Same pluginval release as tools/pluginval.sh, which downloads only the Linux build.
+      - name: Download pluginval
+        if: runner.os == 'macOS'
+        run: |
+          version="$(sed -n 's/^version="\(.*\)"$/\1/p' tools/pluginval.sh)"
+          dir="$RUNNER_TEMP/pluginval"
+          mkdir -p "$dir"
+          curl -fsSL -o "$dir/pluginval.zip" \
+            "https://github.com/Tracktion/pluginval/releases/download/$version/pluginval_macOS.zip"
+          unzip -q -o "$dir/pluginval.zip" -d "$dir"
+          echo "PLUGINVAL=$dir/pluginval.app/Contents/MacOS/pluginval" >> "$GITHUB_ENV"
+
+      - name: Download pluginval
+        if: runner.os == 'Windows'
+        shell: pwsh
+        run: |
+          $version = (Select-String -Path tools/pluginval.sh -Pattern '^version="(.*)"$').Matches[0].Groups[1].Value
+          $dir = Join-Path $env:RUNNER_TEMP pluginval
+          New-Item -ItemType Directory -Force -Path $dir | Out-Null
+          Invoke-WebRequest -Uri "https://github.com/Tracktion/pluginval/releases/download/$version/pluginval_Windows.zip" -OutFile "$dir\pluginval.zip"
+          Expand-Archive -Force -Path "$dir\pluginval.zip" -DestinationPath $dir
+          "PLUGINVAL=$dir\pluginval.exe" | Out-File -FilePath $env:GITHUB_ENV -Append -Encoding utf8
+
+      - name: pluginval (strictness 10)
+        if: runner.os == 'macOS'
+        run: |
+          "$PLUGINVAL" --strictness-level 10 --validate-in-process --timeout-ms 600000 \
+            --validate "$PWD"/stage/"$PLUGIN"/VST3/*.vst3
+
+      - name: pluginval (strictness 10)
+        if: runner.os == 'Windows'
+        shell: pwsh
+        run: |
+          $vst3 = (Resolve-Path "stage/$env:PLUGIN/VST3/*.vst3").Path
+          & $env:PLUGINVAL --strictness-level 10 --validate-in-process --timeout-ms 600000 --validate $vst3
+
+      # auval finds components only in a scanned folder; restarting the registrar makes it rescan.
+      - name: auval
+        if: runner.os == 'macOS'
+        run: |
+          code="$(sed -n 's/^[[:space:]]*CODE \([A-Za-z0-9]\{4\}\).*/\1/p' "plugins/$PLUGIN/CMakeLists.txt")"
+          manufacturer="$(sed -n 's/^set(MYZEL_MANUFACTURER_CODE \([A-Za-z0-9]\{4\}\)).*/\1/p' CMakeLists.txt)"
+          if [ -z "$code" ] || [ -z "$manufacturer" ]; then
+            echo "::error::No four-character CODE in plugins/$PLUGIN/CMakeLists.txt or MYZEL_MANUFACTURER_CODE in CMakeLists.txt"
+            exit 1
+          fi
+          mkdir -p ~/Library/Audio/Plug-Ins/Components
+          cp -R stage/"$PLUGIN"/AU/*.component ~/Library/Audio/Plug-Ins/Components/
+          killall -9 AudioComponentRegistrar || true
+          auval -v aufx "$code" "$manufacturer"
+
+      # upload-artifact drops exec bits and symlinks, so the stage travels as a tarball. No AppleDouble files.
+      - name: Pack the stage
+        env:
+          OS: ${{ matrix.target.os }}
+        run: COPYFILE_DISABLE=1 tar -C stage -cf "stage-$OS-$PLUGIN.tar" "$PLUGIN"
+
+      - name: Upload the stage
+        uses: actions/upload-artifact@v4
+        with:
+          name: stage-${{ matrix.target.os }}-${{ matrix.plugin }}
+          path: stage-${{ matrix.target.os }}-${{ matrix.plugin }}.tar
+          if-no-files-found: error
+
+  installer-linux:
+    needs: [plugins, build]
+    runs-on: ubuntu-24.04
+    defaults:
+      run:
+        shell: bash
+    env:
+      SUITE: ${{ needs.plugins.outputs.suite }}
+    steps:
+      - uses: actions/checkout@v4
+
+      # Runtime libraries only: the plugins load from their installed place, as on a user's machine.
+      - name: Install dependencies
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y xvfb libasound2t64 libfreetype6 libfontconfig1 libx11-6 libxext6 \
+            libxrandr2 libxinerama1 libxcursor1 libxcomposite1 libxrender1 libxi6
+
+      - name: Download the stages
+        uses: actions/download-artifact@v4
+        with:
+          pattern: stage-linux-*
+          path: stages
+          merge-multiple: true
+
+      - name: Unpack the stages
+        run: |
+          mkdir -p stage
+          for tarball in stages/*.tar; do
+            tar -C stage -xf "$tarball"
+          done
+
+      - name: Download pluginval
+        run: |
+          version="$(sed -n 's/^version="\(.*\)"$/\1/p' tools/pluginval.sh)"
+          dir="$RUNNER_TEMP/pluginval"
+          mkdir -p "$dir"
+          curl -fsSL -o "$dir/pluginval.zip" \
+            "https://github.com/Tracktion/pluginval/releases/download/$version/pluginval_Linux.zip"
+          unzip -q -o "$dir/pluginval.zip" -d "$dir"
+          chmod +x "$dir/pluginval"
+          echo "PLUGINVAL=$dir/pluginval" >> "$GITHUB_ENV"
+
+      - name: Build the installer
+        run: bash tools/installer.sh linux stage dist
+
+      - name: Install tests
+        env:
+          PLUGINVAL_STRICTNESS: 10
+        run: xvfb-run -a bash installer/linux/test.sh "$PWD/dist/MyzelAudio-$SUITE-linux-x86_64.run" "$PWD/stage"
+
+      - name: Upload the installer
+        uses: actions/upload-artifact@v4
+        with:
+          name: installer-linux
+          path: dist/MyzelAudio-${{ needs.plugins.outputs.suite }}-linux-x86_64.run
+          if-no-files-found: error
+
+  installer-windows:
+    needs: [plugins, build]
+    runs-on: windows-latest
+    defaults:
+      run:
+        shell: bash
+    env:
+      SUITE: ${{ needs.plugins.outputs.suite }}
+    steps:
+      # Git for Windows checks out CRLF by default, and Git Bash then fails on the .sh scripts.
+      - name: Keep LF line endings
+        run: git config --global core.autocrlf false
+
+      - uses: actions/checkout@v4
+
+      - name: Download the stages
+        uses: actions/download-artifact@v4
+        with:
+          pattern: stage-windows-*
+          path: stages
+          merge-multiple: true
+
+      - name: Unpack the stages
+        run: |
+          mkdir -p stage
+          for tarball in stages/*.tar; do
+            tar -C stage -xf "$tarball"
+          done
+
+      - name: Download pluginval
+        shell: pwsh
+        run: |
+          $version = (Select-String -Path tools/pluginval.sh -Pattern '^version="(.*)"$').Matches[0].Groups[1].Value
+          $dir = Join-Path $env:RUNNER_TEMP pluginval
+          New-Item -ItemType Directory -Force -Path $dir | Out-Null
+          Invoke-WebRequest -Uri "https://github.com/Tracktion/pluginval/releases/download/$version/pluginval_Windows.zip" -OutFile "$dir\pluginval.zip"
+          Expand-Archive -Force -Path "$dir\pluginval.zip" -DestinationPath $dir
+          "PLUGINVAL=$dir\pluginval.exe" | Out-File -FilePath $env:GITHUB_ENV -Append -Encoding utf8
+
+      # The runner image ships Inno Setup 6; the pinned Chocolatey package covers an image without it.
+      - name: Inno Setup
+        shell: pwsh
+        run: |
+          $dir = "${env:ProgramFiles(x86)}\Inno Setup 6"
+          if (-not (Test-Path "$dir\ISCC.exe")) {
+            choco install innosetup --version 6.7.1 --yes --no-progress
+            if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
+          }
+          if (-not (Test-Path "$dir\ISCC.exe")) { throw "ISCC.exe not found in $dir" }
+          $dir | Out-File -FilePath $env:GITHUB_PATH -Append -Encoding utf8
+          "ISCC=$dir\ISCC.exe" | Out-File -FilePath $env:GITHUB_ENV -Append -Encoding utf8
+
+      - name: Build the installer
+        run: bash tools/installer.sh windows stage dist
+
+      - name: Install tests
+        shell: pwsh
+        env:
+          PLUGINVAL_STRICTNESS: 10
+        run: |
+          $installer = (Resolve-Path "dist/MyzelAudio-$env:SUITE-windows-x64-setup.exe").Path
+          $stage = (Resolve-Path stage).Path
+          pwsh -NoProfile -File installer/windows/test.ps1 -Installer $installer -Stage $stage
+
+      - name: Upload the installer
+        uses: actions/upload-artifact@v4
+        with:
+          name: installer-windows
+          path: dist/MyzelAudio-${{ needs.plugins.outputs.suite }}-windows-x64-setup.exe
+          if-no-files-found: error
+
+  installer-macos:
+    needs: [plugins, build]
+    runs-on: macos-15
+    defaults:
+      run:
+        shell: bash
+    env:
+      SUITE: ${{ needs.plugins.outputs.suite }}
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Download the stages
+        uses: actions/download-artifact@v4
+        with:
+          pattern: stage-macos-*
+          path: stages
+          merge-multiple: true
+
+      - name: Unpack the stages
+        run: |
+          mkdir -p stage
+          for tarball in stages/*.tar; do
+            tar -C stage -xf "$tarball"
+          done
+
+      # The build jobs signed the bundles; a broken seal here means the stage changed on the way.
+      - name: Check the ad-hoc signatures
+        run: |
+          for bundle in stage/*/*/*; do
+            codesign --verify --strict --deep --verbose=2 "$bundle"
+          done
+
+      - name: Download pluginval
+        run: |
+          version="$(sed -n 's/^version="\(.*\)"$/\1/p' tools/pluginval.sh)"
+          dir="$RUNNER_TEMP/pluginval"
+          mkdir -p "$dir"
+          curl -fsSL -o "$dir/pluginval.zip" \
+            "https://github.com/Tracktion/pluginval/releases/download/$version/pluginval_macOS.zip"
+          unzip -q -o "$dir/pluginval.zip" -d "$dir"
+          echo "PLUGINVAL=$dir/pluginval.app/Contents/MacOS/pluginval" >> "$GITHUB_ENV"
+
+      - name: Build the installer
+        run: bash tools/installer.sh macos stage dist
+
+      - name: Install tests
+        env:
+          PLUGINVAL_STRICTNESS: 10
+        run: bash installer/macos/test.sh "$PWD/dist/MyzelAudio-$SUITE-macos-universal.pkg" "$PWD/stage"
+
+      - name: Upload the installer
+        uses: actions/upload-artifact@v4
+        with:
+          name: installer-macos
+          path: dist/MyzelAudio-${{ needs.plugins.outputs.suite }}-macos-universal.pkg
+          if-no-files-found: error
+
+  release:
+    if: github.event_name == 'push' && startsWith(github.ref, 'refs/tags/release-')
+    needs: [plugins, installer-linux, installer-windows, installer-macos]
+    runs-on: ubuntu-24.04
+    permissions:
+      contents: write
+      id-token: write
+      attestations: write
+    defaults:
+      run:
+        shell: bash
+    env:
+      SUITE: ${{ needs.plugins.outputs.suite }}
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Download the installers
+        uses: actions/download-artifact@v4
+        with:
+          pattern: installer-*
+          path: dist
+          merge-multiple: true
+
+      - name: SHA256SUMS
+        working-directory: dist
+        run: |
+          sha256sum MyzelAudio-* > SHA256SUMS
+          cat SHA256SUMS
+
+      - name: Attest build provenance
+        uses: actions/attest-build-provenance@v4
+        with:
+          subject-path: dist/*
+
+      - name: Draft the release
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          . installer/common.sh
+          repo_url="$GITHUB_SERVER_URL/$GITHUB_REPOSITORY"
+          {
+            echo "Myzel Audio $SUITE: one installer per OS with every released plugin."
+            echo
+            for id in $(myzel_plugin_ids); do
+              echo "- $(myzel_plugin_name "$id") $(myzel_plugin_source_version "$id"): $(myzel_plugin_blurb "$id")"
+            done
+            echo
+            echo "| OS | File |"
+            echo "|---|---|"
+            echo "| Windows 10/11 (x64) | \`MyzelAudio-$SUITE-windows-x64-setup.exe\` |"
+            echo "| macOS 11 or later (Apple Silicon and Intel), **beta** | \`MyzelAudio-$SUITE-macos-universal.pkg\` |"
+            echo "| Linux x86_64 (glibc 2.39, e.g. Ubuntu 24.04) | \`MyzelAudio-$SUITE-linux-x86_64.run\` |"
+            echo
+            echo "The installers are unsigned. Windows shows SmartScreen (*More info* → *Run anyway*); macOS asks"
+            echo "once through System Settings → Privacy & Security → *Open Anyway*. Step by step, and how to remove"
+            echo "plugins: [Install]($repo_url/blob/$GITHUB_REF_NAME/README.md#installing)."
+            echo
+            echo "**The macOS installer is beta:** it is tested on CI runners only. Please tell us how it went with a"
+            echo "[macOS install report]($repo_url/issues/new?template=macos-install-report.yml)."
+            echo
+            echo "Verify a download: \`sha256sum -c SHA256SUMS --ignore-missing\`, or"
+            echo "\`gh attestation verify <file> --repo $GITHUB_REPOSITORY\`."
+          } > "$RUNNER_TEMP/notes.md"
+          # A re-run replaces its own draft; a published release is never touched.
+          if draft="$(gh release view "$GITHUB_REF_NAME" --repo "$GITHUB_REPOSITORY" --json isDraft --jq .isDraft 2>/dev/null)"; then
+            if [ "$draft" != "true" ]; then
+              echo "::error::Release $GITHUB_REF_NAME is already published; bump installer/VERSION and tag again"
+              exit 1
+            fi
+            gh release delete "$GITHUB_REF_NAME" --repo "$GITHUB_REPOSITORY" --yes
+          fi
+          gh release create "$GITHUB_REF_NAME" dist/* --repo "$GITHUB_REPOSITORY" --verify-tag --draft \
+            --title "Myzel Audio $SUITE" --notes-file "$RUNNER_TEMP/notes.md"

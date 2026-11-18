@@ -1,0 +1,39 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8">
+<style>
+    :root { color-scheme: light dark; }
+    body { font: 13px -apple-system, "Helvetica Neue", sans-serif; line-height: 1.45; margin: 0 4px; }
+    h1 { font-size: 17px; margin: 0 0 8px; }
+    h2 { font-size: 13px; margin: 16px 0 4px; }
+    ul, ol { margin: 4px 0; padding-left: 20px; }
+    code { font: 12px Menlo, monospace; }
+</style>
+</head>
+<body>
+<h1>Myzel Audio @SUITE_VERSION@</h1>
+<p>Open-source audio plugins. This installer carries:</p>
+<ul>
+@PLUGIN_LIST_HTML@
+</ul>
+
+<h2>Choosing what to install</h2>
+<p>The next pages show one row per plugin. <b>Install or update</b> is ticked for plugins that are
+missing or older on this Mac and unticked for those already up to date; open a row to pick formats.
+<b>Remove</b> lists the plugins found on this Mac; ticking one deletes all its formats. Your presets
+and settings stay untouched either way.</p>
+
+<h2>If macOS would not open this installer</h2>
+<p>The installer is not signed with a paid Apple Developer ID, so macOS asks once before opening it.</p>
+<ol>
+    <li>Double-click the installer. When macOS says it was not opened, click <b>Done</b>.</li>
+    <li>Open <b>System Settings → Privacy &amp; Security</b>, scroll down and click <b>Open Anyway</b>.</li>
+    <li>Confirm with your password. The installer opens.</li>
+</ol>
+<p>Or, in Terminal: <code>xattr -d com.apple.quarantine ~/Downloads/MyzelAudio-*.pkg</code>, then open it.
+The plugins it installs need no further step.</p>
+
+<p>Licence: GNU Affero General Public License v3.</p>
+</body>
+</html>

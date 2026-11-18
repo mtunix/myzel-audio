@@ -6,6 +6,8 @@ clicks while you move it, and when you change sounds the old one rings out, like
 
 ![Cerulean](screenshots/01-default.png)
 
+To install it, use the Myzel Audio installer for your system: [Installing](../../../README.md#installing).
+
 ## Quick start
 
 1. Insert Cerulean on your guitar, synth or vocal track (mono or stereo; the output is always

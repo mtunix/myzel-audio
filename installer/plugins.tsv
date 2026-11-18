@@ -1,0 +1,4 @@
+# The plugins every installer ships, one per line: id<TAB>name<TAB>blurb. Adding a released plugin is one line here.
+cerulean	Cerulean	A creative reverb: ten algorithms, from rooms and plates to clouds
+mulberry	Mulberry	An echo: seven delay machines modelled from their medium
+umber	Umber	An analog-modelled saturator: five circuit-level models

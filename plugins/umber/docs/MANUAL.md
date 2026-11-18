@@ -6,6 +6,8 @@ so you hear the colour, not just "louder".
 
 ![Umber](screenshots/02-valve-slam-hot.png)
 
+To install it, use the Myzel Audio installer for your system: [Installing](../../../README.md#installing).
+
 ## Quick start
 
 1. Insert Umber. **Auto** is on, so the output stays as loud as the input.

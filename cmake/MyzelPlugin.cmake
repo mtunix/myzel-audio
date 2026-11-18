@@ -14,7 +14,8 @@
 #   <Name>Dsp         src/dsp (no GUI)
 #   <Name>Shared      processor + DSP + UI (src/plugin, src/ui, the common/ kit), for the plugin,
 #                     its tests and its tools
-#   <Name>            the plugin: VST3, LV2, CLAP and Standalone, vendor IDs from the root CMakeLists.txt
+#   <Name>            the plugin: VST3, LV2, CLAP and Standalone (plus AU on Apple), vendor IDs from the
+#                     root CMakeLists.txt
 # and adds tools/ and tests/ when MYZEL_BUILD_TOOLS / MYZEL_BUILD_TESTS ask for them.
 function(myzel_add_plugin name)
     cmake_parse_arguments (ARG "GENERIC_EDITOR" "CODE;LV2_CLASS" "VST3_CATEGORIES;CLAP_FEATURES;DSP_SOURCES;DSP_LIBRARIES;DSP_DEFINITIONS" ${ARGN})
@@ -56,13 +57,19 @@ function(myzel_add_plugin name)
         set(lv2_class LV2_PLUGIN_CLASS ${ARG_LV2_CLASS})
     endif()
 
+    # AU identity is PLUGIN_MANUFACTURER_CODE + PLUGIN_CODE; effects register as aufx (JUCE's default).
+    set(formats VST3 LV2 Standalone)
+    if(APPLE)
+        list(APPEND formats AU)
+    endif()
+
     juce_add_plugin(${name}
         PRODUCT_NAME "${name}"
         COMPANY_NAME "${MYZEL_COMPANY_NAME}"
         BUNDLE_ID "${MYZEL_ID_PREFIX}.${lower}"
         PLUGIN_MANUFACTURER_CODE ${MYZEL_MANUFACTURER_CODE}
         PLUGIN_CODE ${ARG_CODE}
-        FORMATS VST3 LV2 Standalone
+        FORMATS ${formats}
         LV2URI "${MYZEL_LV2_PREFIX}:${lower}"
         IS_SYNTH FALSE
         NEEDS_MIDI_INPUT FALSE

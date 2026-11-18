@@ -122,11 +122,27 @@ jobs:
         run: cmake --build build --config Release --parallel
       - name: Tests
         run: ctest --test-dir build -C Release --output-on-failure -j 4
+      # auval finds components only in a scanned folder; restarting the registrar makes it rescan.
+      - name: auval
+        env:
+          PLUGIN: ${{ matrix.plugin }}
+        run: |
+          code="$(sed -n 's/^[[:space:]]*CODE \([A-Za-z0-9]\{4\}\).*/\1/p' "plugins/$PLUGIN/CMakeLists.txt")"
+          manufacturer="$(sed -n 's/^set(MYZEL_MANUFACTURER_CODE \([A-Za-z0-9]\{4\}\)).*/\1/p' CMakeLists.txt)"
+          if [ -z "$code" ] || [ -z "$manufacturer" ]; then
+            echo "::error::No four-character CODE in plugins/$PLUGIN/CMakeLists.txt or MYZEL_MANUFACTURER_CODE in CMakeLists.txt"
+            exit 1
+          fi
+          mkdir -p ~/Library/Audio/Plug-Ins/Components
+          cp -R build/plugins/"$PLUGIN"/*_artefacts/Release/AU/*.component ~/Library/Audio/Plug-Ins/Components/
+          killall -9 AudioComponentRegistrar || true
+          auval -v aufx "$code" "$manufacturer"
       - name: Upload plugins
         uses: actions/upload-artifact@v4
         with:
           name: ${{ matrix.plugin }}-macos-universal-unsigned
           path: |
+            build/plugins/${{ matrix.plugin }}/*_artefacts/Release/AU
             build/plugins/${{ matrix.plugin }}/*_artefacts/Release/VST3
             build/plugins/${{ matrix.plugin }}/*_artefacts/Release/CLAP
             build/plugins/${{ matrix.plugin }}/*_artefacts/Release/Standalone

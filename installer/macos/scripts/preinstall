@@ -1,0 +1,18 @@
+#!/bin/sh
+# Removes the bundle this component installs before the payload lands, so a host that still has the
+# old binary loaded keeps its mapped copy. build.sh writes "component" (format, bundle path) beside it.
+# $3 is the target volume.
+here="$(dirname "$0")"
+{ read -r format; read -r bundle; } < "$here/component" || { echo "preinstall: cannot read $here/component" >&2; exit 1; }
+
+case "$bundle" in
+    /*.component | /*.vst3 | /*.clap | /*.app) ;;
+    *) echo "preinstall: unexpected bundle path '$bundle' ($format)" >&2; exit 1 ;;
+esac
+
+volume="${3:-/}"
+target="${volume%/}$bundle"
+if [ -e "$target" ] || [ -L "$target" ]; then
+    rm -rf "$target" || { echo "preinstall: cannot remove $target" >&2; exit 1; }
+fi
+exit 0

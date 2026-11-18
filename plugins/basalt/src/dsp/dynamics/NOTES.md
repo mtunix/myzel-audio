@@ -808,7 +808,7 @@ gated.
 |---|---|---|
 | eq. 4 against the paper's form, T −60/−30/−10, R 1.5…20, W 0/6/24 | within 10⁻⁹ dB; slope against the numerical derivative within 10⁻⁵ | *Gain computer: eq. 4* |
 | G⁻¹(G(x)) − x, R 1 … 1000, W 0 … 24 | worst 7.1·10⁻¹² dB | *the closed-form inverse* |
-| h(ρ) against this file's table | the solve within the table's rounding; the 256-point table within 0.034 % of the solve | *h(ρ) matches* |
+| h(ρ) against this file's table | the solve within the table's rounding; the 256-point table within 0.034 % of the solve | *h(rho) matches* |
 | Smooth decoupled release (unit cascade, Attack 0.1 … 300 ms, Release 5 ms … 5 s) | worst 0.21 % of the knob (or of the 1.01·τ_A floor) | *the cascade releases in the set time* |
 | Running maximum, random lengths 1 … 400 and fades, 200 000 samples | exact | *Running maximum* |
 | Feedback loop, static, carrier, R 1.5 … 50 and ∞ (cap 50), W 0/6/24, Range 40/10, T − 20 … T + 30 | worst 0.0001 dB (3 s per 1 dB step where the knee slows the loop) | *the loop settles on eq. 4* |

@@ -40,7 +40,7 @@ namespace
     }
 }
 
-TEST_CASE ("Vari-mu idle: exactly 0 at Ratio 1, Range 0, and under T − W/2 and T − 13 dB", "[varimu][idle]")
+TEST_CASE ("Vari-mu idle: exactly 0 at Ratio 1, Range 0, and under T - W/2 and T - 13 dB", "[varimu][idle]")
 {
     // NOTES.md, Gate table, Identity: the base curve is 0 there and the rise under 10⁻⁶ dB at every
     // Ratio, so the loop's snap makes the gain exactly 1.

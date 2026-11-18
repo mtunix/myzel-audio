@@ -32,7 +32,9 @@ a darker shimmer, and the high band's decay stays dark with the climb feeding it
   position; it takes the lag at which the input best matches what the previous grain is reading
   (coarse search on a ~12 kHz grid over a 6 ms window, refined at full rate). On tonal material
   consecutive grains then add in phase instead of beating; on diffuse material there is no clear
-  match and the choice is as random as plain jitter. Cost: ~10 k multiply-adds per grain start.
+  match and the choice is as random as plain jitter. Over silence (under -120 dBFS) a grain takes
+  the earliest lag: there the scores are rounding noise, which differs between libms. Cost: ~10 k
+  multiply-adds per grain start.
 - **Correlation-aware normalisation.** The grain sum is divided by `sqrt(sum_i w_i^2 + 2 sum_{i<j}
   w_i w_j rho_ij)`, with `rho` the measured correlation between consecutive grains (chained for
   grains further apart). That is unit power gain for coherent (tonal) and incoherent (diffuse)

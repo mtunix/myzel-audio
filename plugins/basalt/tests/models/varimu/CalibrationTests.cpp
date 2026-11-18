@@ -14,7 +14,7 @@ using namespace basalt;
 using namespace basalt::testing;
 using namespace basalt::testing::varimu;
 
-TEST_CASE ("Vari-mu: κ measured on the reference step at Attack 30 ms", "[.calibrate]")
+TEST_CASE ("Vari-mu: kappa measured on the reference step at Attack 30 ms", "[.calibrate]")
 {
     // At a node the table gives the node's own Φ_t, so running the knob at 30·Φ_t/Φ realises
     // τ = 30 ms/Φ: the engine is measured as it ships, without a test hook. τ is scaled by the

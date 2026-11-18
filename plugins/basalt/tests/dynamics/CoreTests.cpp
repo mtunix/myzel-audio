@@ -174,7 +174,7 @@ TEST_CASE ("Glides: the smooth glide's value and slope never step, and it lands 
     REQUIRE_FALSE (glide.moving());
 }
 
-TEST_CASE ("Ballistics: h(ρ) matches NOTES.md's table, and the table its own solve", "[dynamics][ballistics]")
+TEST_CASE ("Ballistics: h(rho) matches NOTES.md's table, and the table its own solve", "[dynamics][ballistics]")
 {
     // dynamics/NOTES.md, Feed-forward ballistics.
     const std::array<std::pair<double, double>, 10> notes { { { 1.01, 0.0100 }, { 1.1, 0.0952 }, { 1.25, 0.2235 }, { 1.5, 0.4287 },

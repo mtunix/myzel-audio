@@ -214,7 +214,7 @@ TEST_CASE ("Clean: the release against depth, reported", "[clean][ballistics]")
         }
 }
 
-TEST_CASE ("Clean: κ holds the attack across depths and ratios", "[clean][ballistics]")
+TEST_CASE ("Clean: kappa holds the attack across depths and ratios", "[clean][ballistics]")
 {
     // models/clean/NOTES.md, Ballistics: steps to D = 6, 10, 20, 10, 30 dB at R 2, 4, 4, 20, 20,
     // hard knee; after κ within ±2.5 % (expected), gated at ±10 %.

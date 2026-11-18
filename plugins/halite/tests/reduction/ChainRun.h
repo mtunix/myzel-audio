@@ -103,7 +103,9 @@ inline Samples pinkNoise (int n, double rms, unsigned seed)
         if (i >= 0)
             out[(size_t) i] = (float) y;
     }
-    return scaled (std::move (out), rms / std::max (rmsOf (out), 1.0e-30));
+    // Measured before the move: argument order is unspecified, and Clang moves first.
+    const auto gain = rms / std::max (rmsOf (out), 1.0e-30);
+    return scaled (std::move (out), gain);
 }
 
 inline Samples sine (double hz, int n, double rate, double amplitude, double phase = 0.0)

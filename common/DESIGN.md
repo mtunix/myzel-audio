@@ -180,5 +180,10 @@ The root `CMakeLists.txt` builds with `-ffp-contract=off` on Clang and GCC: Appl
 otherwise fuses `a * b + c`, which rounds differently from the Linux and Windows builds and breaks
 the bit-exact identity tests.
 
+Test case names are ASCII: ctest hands each name to Catch on the command line, and Windows
+re-encodes anything else, so the test matches nothing. Function arguments that read and move the
+same object are split into statements: Clang evaluates arguments left to right, GCC and MSVC
+right to left.
+
 `tools/ui_diff.py` renders a plugin's snapshots and compares them pixel by pixel with a recorded
 baseline: run it before and after any change to shared UI code, for **every** plugin.

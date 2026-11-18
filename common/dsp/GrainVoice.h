@@ -15,7 +15,9 @@ namespace myzel::dsp
       +-5 ms of its nominal position it picks the lag where the input best matches what the
       previous grain is reading. On tonal material consecutive grains then add in phase instead
       of beating against each other (the classic grain-rate flutter); on diffuse material there is
-      no clear match and the choice is effectively random, like plain jitter.
+      no clear match and the choice is effectively random, like plain jitter. Over silence (the
+      previous grain's window under -120 dBFS) a grain takes the earliest lag, as exact silence
+      does, so the choice never rests on rounding noise and every platform makes the same one.
     - The window is (1 - x^2)^2 (a smooth Hann-like bell, zero slope at the edges). The output is
       normalised by the expected power of the grain sum, sum w_i w_j rho_ij, using the measured
       correlation rho between consecutive grains: unit power gain for tones (coherent grains)
@@ -36,6 +38,7 @@ public:
     static constexpr float spreadSeconds = 0.004f;     // random part of the nominal start delay
     static constexpr float matchSeconds = 0.006f;      // window compared when aligning
     static constexpr float rhoSeconds = 0.020f;        // window for the correlation estimate
+    static constexpr float alignFloor = 1.0e-12f;      // mean square (-120 dBFS) below which a grain does not align
 
     void prepare (double sampleRate, uint32_t seed) noexcept
     {
@@ -160,32 +163,39 @@ private:
             const auto ref = (int) previous.delay;
             const auto lo = std::max ((int) std::ceil (lowest), (int) (start - search));
             const auto hi = (int) (start + search);
+            int bestLag = lo;
 
-            // Coarse search on a decimated grid, then refine at full rate.
-            float best = -1.0e30f;
-            int bestLag = (int) start;
-            for (int d = lo; d <= hi; d += decimation)
+            // Over silence every lag scores rounding dust, which each libm rounds differently: take
+            // the first lag, as exact silence does.
+            float refEnergy;
+            correlate (history, ref, ref, matchLength, decimation, refEnergy);
+            if (refEnergy * (float) decimation > alignFloor * (float) matchLength)
             {
-                float e;
-                const auto c = correlate (history, ref, d, matchLength, decimation, e);
-                const auto score = c / std::sqrt (e + 1.0e-12f);
-                if (score > best) { best = score; bestLag = d; }
-            }
-            best = -1.0e30f;
-            const auto coarse = bestLag;
-            for (int d = std::max (lo, coarse - decimation + 1); d <= std::min (hi, coarse + decimation - 1); ++d)
-            {
-                float e;
-                const auto c = correlate (history, ref, d, matchLength, 1, e);
-                const auto score = c / std::sqrt (e + 1.0e-12f);
-                if (score > best) { best = score; bestLag = d; }
-            }
+                // Coarse search on a decimated grid, then refine at full rate.
+                float best = -1.0e30f;
+                for (int d = lo; d <= hi; d += decimation)
+                {
+                    float e;
+                    const auto c = correlate (history, ref, d, matchLength, decimation, e);
+                    const auto score = c / std::sqrt (e + 1.0e-12f);
+                    if (score > best) { best = score; bestLag = d; }
+                }
+                best = -1.0e30f;
+                const auto coarse = bestLag;
+                for (int d = std::max (lo, coarse - decimation + 1); d <= std::min (hi, coarse + decimation - 1); ++d)
+                {
+                    float e;
+                    const auto c = correlate (history, ref, d, matchLength, 1, e);
+                    const auto score = c / std::sqrt (e + 1.0e-12f);
+                    if (score > best) { best = score; bestLag = d; }
+                }
 
-            // Correlation the two grains will actually have (longer window, at the chosen lag).
-            float eb, ea;
-            const auto c = correlate (history, ref, bestLag, rhoLength, 1, eb);
-            correlate (history, bestLag, ref, rhoLength, 1, ea);
-            rho = std::clamp (c / std::sqrt (ea * eb + 1.0e-24f), 0.0f, 0.95f);
+                // Correlation the two grains will actually have (longer window, at the chosen lag).
+                float eb, ea;
+                const auto c = correlate (history, ref, bestLag, rhoLength, 1, eb);
+                correlate (history, bestLag, ref, rhoLength, 1, ea);
+                rho = std::clamp (c / std::sqrt (ea * eb + 1.0e-24f), 0.0f, 0.95f);
+            }
 
             // Keep the fractional part of the previous grain's delay, so the two read heads sit
             // exactly the chosen whole number of samples apart.

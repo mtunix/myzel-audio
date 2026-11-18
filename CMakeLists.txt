@@ -101,6 +101,13 @@ target_link_libraries(MyzelJuceConfig INTERFACE
     juce::juce_recommended_config_flags
     juce::juce_recommended_warning_flags)
 
+# Clang fuses a * b + c into FMAs by default on arm64, which breaks the bit-exact identity tests and
+# rounds differently from GCC on x86-64 and MSVC; every target below (plugins, tests, tools) rounds
+# each operation.
+if(CMAKE_CXX_COMPILER_ID MATCHES "Clang|GNU")
+    add_compile_options(-ffp-contract=off)
+endif()
+
 if(MYZEL_ENABLE_LTO)
     target_link_libraries(MyzelJuceConfig INTERFACE juce::juce_recommended_lto_flags)
 endif()

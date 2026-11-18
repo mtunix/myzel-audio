@@ -2,13 +2,13 @@
 
 #include "common/dsp/Filters.h"
 #include "common/dsp/FloatCompare.h"
+#include "common/testing/PortableRandom.h"
 #include "dsp/detector/DetectorProbe.h"
 
 #include <algorithm>
 #include <array>
 #include <cmath>
 #include <numbers>
-#include <random>
 #include <vector>
 
 // Synthetic test signals for the detector (PLAN.md, Measurement: harmonic vowels, noise-burst
@@ -47,12 +47,11 @@ inline Samples bandNoise (double lowHz, double highHz, int n, double rate, unsig
         lp[s].setCoefficients (highHz, qs[s], rate);
     }
 
-    std::mt19937 rng (seed);
-    std::normal_distribution<double> gauss;
+    myzel::testing::PortableRandom rng (seed);
     Samples out ((size_t) n);
     for (int i = -4096; i < n; ++i)     // the filters settle before the first sample kept
     {
-        auto x = gauss (rng);
+        auto x = rng.gaussian();
         for (size_t s = 0; s < qs.size(); ++s)
             x = lp[s].processLowpass (hp[s].processHighpass (x));
         if (i >= 0)
@@ -80,8 +79,7 @@ struct Harmonics
 inline Samples harmonic (const Harmonics& h, int n, double rate)
 {
     const auto count = std::max (1, (int) std::floor (h.topHz / (h.f0 * std::exp2 (std::abs (h.vibratoCents) / 1200.0))));
-    std::mt19937 rng (h.seed);
-    std::uniform_real_distribution<double> phase0 (0.0, 2.0 * std::numbers::pi);
+    myzel::testing::PortableRandom rng (h.seed);
 
     std::vector<double> amplitude ((size_t) count), phase ((size_t) count);
     for (int k = 0; k < count; ++k)
@@ -93,7 +91,7 @@ inline Samples harmonic (const Harmonics& h, int n, double rate)
             db += h.peakDb / (1.0 + distance * distance);
         }
         amplitude[(size_t) k] = std::pow (10.0, db / 20.0);
-        phase[(size_t) k] = phase0 (rng);
+        phase[(size_t) k] = rng.uniform (0.0, 2.0 * std::numbers::pi);
     }
 
     Samples out ((size_t) n);

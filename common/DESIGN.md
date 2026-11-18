@@ -171,5 +171,14 @@ still on the generic editor has no snapshot tool, and CI skips the step for it).
 face is not a `PluginEditor` (it uses `EditorController`, `InlineDialog`, `KitLookAndFeel` and
 `SnapshotTool`), so its self-test checks presets, A/B, undo and the mix lock itself instead of
 calling `runEditorChecks`.
+`testing/PortableRandom.h` gives seeded uniform and Gaussian test noise that is the same on every
+platform. The std distributions differ between libstdc++, libc++ and MSVC; this one follows
+libstdc++ draw for draw, so a test signal measured on Linux is the one Windows and macOS see. A
+test signal whose measurement sits near a margin uses it (Halite's signals do).
+
+The root `CMakeLists.txt` builds with `-ffp-contract=off` on Clang and GCC: Apple's arm64 Clang
+otherwise fuses `a * b + c`, which rounds differently from the Linux and Windows builds and breaks
+the bit-exact identity tests.
+
 `tools/ui_diff.py` renders a plugin's snapshots and compares them pixel by pixel with a recorded
 baseline: run it before and after any change to shared UI code, for **every** plugin.

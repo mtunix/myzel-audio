@@ -153,7 +153,8 @@ private:
             auto c = b, f = a;
             process (d, c, f);
             const auto y = 0.5 * (c + f);
-            const auto rotation = std::polar (y, -w * n);
+            // y is signed: libc++ returns NaN from std::polar for a negative magnitude.
+            const auto rotation = y * std::polar (1.0, -w * n);
             sum += rotation;
             weighted += (double) n * rotation;
         }

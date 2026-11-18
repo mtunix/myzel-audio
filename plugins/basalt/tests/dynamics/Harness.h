@@ -3,6 +3,7 @@
 // Signals, a block runner and NOTES.md's measurement definition (dynamics/NOTES.md, What the
 // knobs mean) for the dynamics core's unit tests.
 
+#include "common/testing/PortableRandom.h"
 #include "dsp/dynamics/Feedback.h"
 #include "dsp/dynamics/KeyPath.h"
 #include "dsp/dynamics/Levels.h"
@@ -15,7 +16,6 @@
 #include <cstdint>
 #include <limits>
 #include <numbers>
-#include <random>
 #include <vector>
 
 namespace basalt::testing
@@ -50,13 +50,12 @@ inline void append (Signal& a, const Signal& b) { a.insert (a.end(), b.begin(), 
 /** Pink noise (Kellett's refined filter on white), unit-ish level; scale it afterwards. */
 inline Signal pinkNoise (int n, std::uint32_t seed)
 {
-    std::mt19937 rng (seed);
-    std::normal_distribution<double> white (0.0, 1.0);
+    myzel::testing::PortableRandom rng (seed);
     Signal s ((size_t) n);
     double b0 = 0, b1 = 0, b2 = 0, b3 = 0, b4 = 0, b5 = 0, b6 = 0;
     for (auto& v : s)
     {
-        const auto w = white (rng);
+        const auto w = rng.gaussian (0.0, 1.0);
         b0 = 0.99886 * b0 + w * 0.0555179;
         b1 = 0.99332 * b1 + w * 0.0750759;
         b2 = 0.96900 * b2 + w * 0.1538520;

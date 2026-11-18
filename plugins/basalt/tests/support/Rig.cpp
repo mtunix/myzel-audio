@@ -3,6 +3,7 @@
 #include "support/Reference.h"
 
 #include "common/dsp/FloatCompare.h"
+#include "common/testing/PortableRandom.h"
 #include "plugin/PluginProcessor.h"
 
 #include <cstdio>
@@ -360,11 +361,10 @@ Rendered render (Device& device, const Settings& s, const Input& in, const Rende
 
 std::vector<int> variableBlocks (unsigned seed, int count)
 {
-    std::mt19937 rng (seed);
-    std::uniform_real_distribution<double> octaves (0.0, 12.0);
+    myzel::testing::PortableRandom rng (seed);
     std::vector<int> sizes;
     for (int i = 0; i < count; ++i)
-        sizes.push_back (std::clamp ((int) std::exp2 (octaves (rng)), 1, 4096));
+        sizes.push_back (std::clamp ((int) std::exp2 (rng.uniform (0.0, 12.0)), 1, 4096));
     return sizes;
 }
 

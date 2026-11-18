@@ -3,12 +3,13 @@
 // Test signals for the gates (PLAN.md, Measurement and quality gates; dynamics/NOTES.md,
 // Conventions and Ballistics). Shared by tests/GateTests.cpp and tools/measure.
 
+#include "common/testing/PortableRandom.h"
+
 #include <algorithm>
 #include <cmath>
 #include <complex>
 #include <cstdint>
 #include <numbers>
-#include <random>
 #include <vector>
 
 namespace basalt::measure
@@ -61,22 +62,20 @@ inline Samples scaled (Samples x, double gain)
 /** Uniform noise in [−amplitude, amplitude]. */
 inline Samples whiteNoise (int n, double amplitude, unsigned seed)
 {
-    std::mt19937 rng (seed);
-    std::uniform_real_distribution<double> dist (-amplitude, amplitude);
+    myzel::testing::PortableRandom rng (seed);
     Samples x ((size_t) std::max (n, 0));
     for (auto& v : x)
-        v = (float) dist (rng);
+        v = (float) rng.uniform (-amplitude, amplitude);
     return x;
 }
 
 /** Gaussian noise of standard deviation `sigma`. */
 inline Samples gaussianNoise (int n, double sigma, unsigned seed)
 {
-    std::mt19937 rng (seed);
-    std::normal_distribution<double> dist (0.0, sigma);
+    myzel::testing::PortableRandom rng (seed);
     Samples x ((size_t) std::max (n, 0));
     for (auto& v : x)
-        v = (float) dist (rng);
+        v = (float) rng.gaussian (0.0, sigma);
     return x;
 }
 
@@ -122,13 +121,12 @@ inline Samples pink (int n, double rate, unsigned seed, double rmsDb, double low
     while (size < (size_t) std::max (n, 2))
         size <<= 1;
 
-    std::mt19937 rng (seed);
-    std::uniform_real_distribution<double> phase (0.0, 2.0 * std::numbers::pi);
+    myzel::testing::PortableRandom rng (seed);
     std::vector<std::complex<double>> spectrum (size);
     for (size_t k = 1; k < size / 2; ++k)
     {
         const auto hz = (double) k * rate / (double) size;
-        const auto p = phase (rng);     // drawn for every bin, so the band edges do not reshuffle the phases
+        const auto p = rng.uniform (0.0, 2.0 * std::numbers::pi);     // drawn for every bin, so the band edges do not reshuffle the phases
         if (hz >= lowHz && hz <= std::min (highHz, 0.5 * rate))
         {
             spectrum[k] = std::polar (1.0 / std::sqrt (hz), p);

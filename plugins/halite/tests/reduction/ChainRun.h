@@ -1,5 +1,6 @@
 #pragma once
 
+#include "common/testing/PortableRandom.h"
 #include "detector/Signals.h"
 #include "dsp/chain/HaliteChain.h"
 
@@ -85,13 +86,12 @@ inline Samples delayed (const Samples& x, int delay)
 /** Pink noise (−3 dB per octave above 20 Hz, Kellet's refined filter) at the given RMS. */
 inline Samples pinkNoise (int n, double rms, unsigned seed)
 {
-    std::mt19937 rng (seed);
-    std::normal_distribution<double> gauss;
+    myzel::testing::PortableRandom rng (seed);
     double b0 = 0, b1 = 0, b2 = 0, b3 = 0, b4 = 0, b5 = 0, b6 = 0;
     Samples out ((size_t) n);
     for (int i = -4096; i < n; ++i)
     {
-        const auto w = gauss (rng);
+        const auto w = rng.gaussian();
         b0 = 0.99886 * b0 + w * 0.0555179;
         b1 = 0.99332 * b1 + w * 0.0750759;
         b2 = 0.96900 * b2 + w * 0.1538520;

@@ -2,10 +2,11 @@
 
 #include "plugin/PluginProcessor.h"
 
+#include "common/testing/PortableRandom.h"
+
 #include <catch2/catch_test_macros.hpp>
 
 #include <cstring>
-#include <random>
 #include <vector>
 
 namespace basalt::testing
@@ -41,12 +42,11 @@ inline juce::AudioProcessor::BusesLayout layout (juce::AudioChannelSet in, juce:
 
 inline juce::AudioBuffer<float> noise (int channels, int samples, unsigned seed)
 {
-    std::mt19937 rng (seed);
-    std::uniform_real_distribution<float> dist (-1.0f, 1.0f);
+    myzel::testing::PortableRandom rng (seed);
     juce::AudioBuffer<float> b (channels, samples);
     for (int ch = 0; ch < channels; ++ch)
         for (int i = 0; i < samples; ++i)
-            b.setSample (ch, i, dist (rng));
+            b.setSample (ch, i, rng.uniformFloat (-1.0f, 1.0f));
     return b;
 }
 

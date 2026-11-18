@@ -9,13 +9,14 @@
 
 #include "VariMuHarness.h"
 
+#include "common/testing/PortableRandom.h"
+
 #include <catch2/catch_test_macros.hpp>
 
 #include <cstdio>
 #include <cstdlib>
 #include <filesystem>
 #include <fstream>
-#include <random>
 
 using namespace basalt;
 using namespace basalt::dynamics;
@@ -49,15 +50,14 @@ namespace
     {
         const auto n = samplesFor (renderS, rate);
         Signal l ((size_t) n, 0.0), r ((size_t) n, 0.0);
-        std::mt19937 rng (31u);
-        std::normal_distribution<double> white (0.0, 1.0);
+        myzel::testing::PortableRandom rng (31u);
         for (int i = 0; i < n; ++i)
         {
             const auto t = i / rate;
             const auto beat = std::fmod (t, 0.5), half = std::fmod (t + 0.25, 0.5), eighth = std::fmod (t, 0.25);
             const auto kick = 0.9 * std::exp (-beat / 0.12) * std::sin (2.0 * std::numbers::pi * (50.0 * beat + 60.0 * 0.03 * (1.0 - std::exp (-beat / 0.03))));
-            const auto snare = 0.5 * std::exp (-half / 0.07) * white (rng);
-            const auto hat = 0.15 * std::exp (-eighth / 0.015) * white (rng);
+            const auto snare = 0.5 * std::exp (-half / 0.07) * rng.gaussian (0.0, 1.0);
+            const auto hat = 0.15 * std::exp (-eighth / 0.015) * rng.gaussian (0.0, 1.0);
             l[(size_t) i] = kick + snare + hat;
             r[(size_t) i] = kick + 0.8 * snare + 1.2 * hat;
         }

@@ -163,7 +163,7 @@ inline double groupDelay (const std::vector<float>& x, size_t from, size_t to, d
     std::complex<double> a {}, b {};
     for (size_t i = from; i < to; ++i)
     {
-        const auto e = std::polar ((double) x[i], -w * (double) (i - from));
+        const auto e = (double) x[i] * std::polar (1.0, -w * (double) (i - from));   // libc++: no negative magnitude
         a += e;
         b += (double) (i - from) * e;
     }

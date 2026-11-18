@@ -44,11 +44,11 @@ def files(path, seen=None):
 
 
 def digest_of(paths):
-    """sha256 of the bytes of the files, in order."""
+    """sha256 of the files' bytes, in order, with CRLF read as LF (a Windows checkout's line endings)."""
     h = hashlib.sha256()
     for f in paths:
         with open(f, "rb") as fh:
-            h.update(fh.read())
+            h.update(fh.read().replace(b"\r\n", b"\n"))
     return h.hexdigest()[:16]
 
 

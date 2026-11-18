@@ -11,3 +11,5 @@ compile_commands.json
 # Local only
 /CLAUDE.md
 /plugins/*/PLAN.md
+
+__pycache__/

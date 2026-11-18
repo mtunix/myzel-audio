@@ -13,6 +13,10 @@ and singing corpora, and its golden renders (plugins/halite/tests/golden) are pr
 of those excerpts; both keep their licence, CC BY 4.0, and the ATTRIBUTION.md in each folder
 names the sources.
 
+Basalt's test excerpts (plugins/basalt/tests/corpus) are cut from the AlbumDB multitrack album, the
+Guitar-TECHS electric guitar recordings and the VCTK speech corpus; they keep their licence, CC BY
+4.0, and the ATTRIBUTION.md in that folder names the sources.
+
 Fonts
 
 The editors embed fonts under the SIL Open Font License 1.1, which comes with each of them:

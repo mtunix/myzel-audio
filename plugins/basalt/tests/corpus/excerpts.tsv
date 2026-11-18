@@ -1,0 +1,13 @@
+file	category	source	archive	member	sha256	start	length	channels
+albumdb-extraordinary-kick	kick	AlbumDB	albumdb-raw	stems_raw/01 Extraordinary/drums_kick.wav	db3178e096630ca2a7237642195d9b8005ca2a29d9323dc1b9219d87443f9923	52.300	5.000	1
+albumdb-extraordinary-snare	snare	AlbumDB	albumdb-raw	stems_raw/01 Extraordinary/drums_snare.wav	4b51424be6f23e5b08e2b43c52cb918f4ea1012769d091eefd6e19ecaa615677	52.300	5.000	1
+albumdb-extraordinary-overheads	overheads	AlbumDB	albumdb-raw	stems_raw/01 Extraordinary/drums_overheads.wav	5549f83c99e94d805a5dab03523ad053b6fa7f054539a1ddbd7914195df8752a	52.300	5.000	1,2
+albumdb-extraordinary-bass	bass	AlbumDB	albumdb-raw	stems_raw/01 Extraordinary/bass.wav	2246a90fc7c8895af939a50ec5220746f58d5aab1bdb030d3c66dfaabe19e644	52.300	5.000	1
+albumdb-extraordinary-vocal	vocal	AlbumDB	albumdb-raw	stems_raw/01 Extraordinary/vox_lead.wav	81d0b79c954da5c5c6bc487b150e9bf49defe7c17adb7b9a0b08eaadba126420	52.300	5.000	1
+albumdb-karma-piano	piano	AlbumDB	albumdb-raw	stems_raw/03 Karma/keys_piano.wav	b3bc2ea58457cc45ff29a24e75a5eb851fadbf6ff8149eb82c688f7e98ba8a10	82.700	5.000	1,2
+albumdb-karma-acoustic-guitar	acoustic-guitar	AlbumDB	albumdb-raw	stems_raw/03 Karma/guitar_acoustic_main.wav	f195c8ecea230d8ec88f6e32b86ef806130ff6b4ddad165c1d4e47d96b2e593b	0.000	5.000	1
+albumdb-it-aint-easy-mix	mix-open	AlbumDB	albumdb-masters	masters_stereo/10 - It Ain't Easy (To Mend A Heart).wav	0ce6e0c5bb0ccb11390567a56977b784aa16aec718a35864bb239d4b164b96e7	30.000	5.000	1,2
+albumdb-diva-mix	mix-dense	AlbumDB	albumdb-masters	masters_stereo/05 - Diva.wav	732ac263ad240980c413508340ff37d8f007ae22bef11f9a76ba36a1b8ccc7a7	133.600	5.000	1,2
+guitar-techs-p3-05-di	electric-guitar-di	Guitar-TECHS	guitar-techs-p3	P3_music/audio/directinput/directinput_05.wav	71a6831d1c6280b305ad78f5cbeae58673191b7ac05a164b33ac9b5e4e8ace1e	17.700	5.000	1
+guitar-techs-p3-05-amp	electric-guitar-amp	Guitar-TECHS	guitar-techs-p3	P3_music/audio/micamp/micamp_05.wav	1f67541d71f64758dbf334e7ccbb48807dc66ba584827ee76b326c485cd1e77d	17.700	5.000	1
+vctk-p228-009	speech	VCTK	vctk	wav48_silence_trimmed/p228/p228_009_mic2.flac	f89b3be6da1e0cf43d6b037d2eb951777b2f7614b12940e3ccfff33d81592995	0.000	5.000	1

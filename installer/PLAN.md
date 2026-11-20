@@ -26,7 +26,7 @@ plain tarball.
 | Install scope | Windows and macOS system-wide (admin prompt). Linux: per-user (default) or system-wide, chosen on the first page or with `--system` | Windows hosts scan `Common Files` reliably; macOS pkg installs are system-wide by convention; Linux users want both |
 | Formats | Windows: VST3, CLAP, Standalone. macOS: **AU**, VST3, CLAP, Standalone. Linux: VST3, CLAP, LV2, Standalone | AU is needed for Logic, GarageBand and MainStage; LV2 stays Linux-only (only Ardour and Reaper load it elsewhere) |
 | Which plugins | Cerulean, Mulberry, Umber. **Nothing in the installers names a plugin**: everything is generated from `installer/plugins.tsv` | Viridian, Halite and Inkcap join with one line each when they are released (*Extensibility*) |
-| Versions | Each plugin keeps its own `project()` version; the installer has a suite version (CalVer `2026.11.0`) in `installer/VERSION` | Plugins release at different paces; the suite version names the download |
+| Versions | Semantic versions (major.minor.patch) throughout: each plugin keeps its own `project()` version, the download has its own in `installer/VERSION`; all `0.1.0` for the first release (*Release pipeline*, Versions) | Plugins release at different paces; the number says how much changed, which a date does not |
 | Removal | **Per plugin on every OS**, in the installer itself (a *Remove* group) and from the OS's uninstall path; unticking an install row never removes | Asked for; removal stays an explicit act so a mis-click can't break a session |
 | Linux baseline | Ubuntu 24.04 (glibc 2.39) | Starting point; the `.run` checks glibc first and says what it needs. An older base is a later step (*Open*) |
 | Signing | None paid. macOS ad-hoc signature (free, required on Apple Silicon); Windows unsigned; SHA-256 sums and GitHub build provenance for every file | No Developer ID, no code-signing certificate (*Unsigned distribution*) |
@@ -273,6 +273,12 @@ plugins, without changing the scripts.
 `workflow_dispatch` (a dry run that uploads the installers as workflow artefacts but makes no
 release). The tag is pushed by the user; nothing here pushes.
 
+**Versions.** A release that changes a plugin bumps its `project()` version: patch for fixes that
+keep sessions and presets sounding the same, minor for new features that still open every older
+session the same, major when an older session or preset may not. The suite version takes the
+largest bump among the plugins in the release, and at least a minor when it adds a plugin. Both
+stay `0.x` through the beta; the public release is `1.0.0`.
+
 ```
 plugins (reads plugins.tsv → matrix)
   └─ build (os × plugin)                    LTO on, tests, stage the formats, sign (mac ad-hoc),
@@ -361,7 +367,7 @@ names a pluginval binary, they also validate the installed VST3.
 ```
 installer/
   PLAN.md
-  VERSION                 suite version, e.g. 2026.11.0
+  VERSION                 suite version, e.g. 0.1.0
   plugins.tsv             id, display name, blurb: the plugins that ship
   common.sh               shared helpers for the build scripts
   <os>/build.sh           builds that OS's installer (the build contract); <os>/test.sh (Windows: test.ps1) runs tests 1–6

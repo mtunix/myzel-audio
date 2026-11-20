@@ -33,7 +33,7 @@ body:
     attributes:
       label: Installer
       description: The file name you downloaded.
-      placeholder: MyzelAudio-2026.11.0-macos-universal.pkg
+      placeholder: MyzelAudio-0.1.0-macos-universal.pkg
     validations:
       required: true
 

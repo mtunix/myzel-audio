@@ -110,9 +110,11 @@ function Get-Status
     Invoke-Setup "/LIST=`"$file`""
     Check (Test-Path -LiteralPath $file) '/LIST wrote no file.'
     $status = @{}
-    foreach ($line in Get-Content -LiteralPath $file -Encoding utf8)
+    foreach ($raw in Get-Content -LiteralPath $file -Encoding utf8)
     {
-        if ($line -match '^\s*(#|$)' -or $line.StartsWith([string][char]0xFEFF)) { continue }
+        # TrimStart compares ordinally; a culture StartsWith treats the BOM as ignorable and matches every line.
+        $line = $raw.TrimStart([char]0xFEFF)
+        if ($line -match '^\s*(#|$)') { continue }
         $f = $line -split "`t"
         $status[$f[0]] = [pscustomobject]@{ Status = $f[2]; Installed = $f[3]; Formats = $f[4]; Text = $f[6] }
     }

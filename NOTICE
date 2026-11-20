@@ -25,7 +25,8 @@ plugin, and JetBrains Mono, Copyright 2020 The JetBrains Mono Project Authors
 (plugins/inkcap/src/ui/assets/fonts/OFL.txt), in Inkcap. Halite carries its own copies of both
 (plugins/halite/src/ui/assets/fonts/OFL.txt, Inter 4.1 and JetBrains Mono 2.304). The fonts
 are embedded unmodified, with their own copyright and licence metadata; they are not sold on
-their own.
+their own. The installers and the release tarballs carry these licences in LICENSES.txt, beside
+this notice and the AGPL.
 
 Names
 

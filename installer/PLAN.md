@@ -144,6 +144,11 @@ run downgrades without asking (the suppressed question answers *Yes*). Linux als
 | CLAP | `C:\Program Files\Common Files\CLAP\<Name>.clap` | `/Library/Audio/Plug-Ins/CLAP/<Name>.clap` | `~/.clap/<Name>.clap` | `/usr/lib/clap/<Name>.clap` (the CLAP spec names no `/usr/local` path) |
 | LV2 | — | — | `~/.lv2/<Name>.lv2` | `/usr/local/lib/lv2/<Name>.lv2` |
 | Standalone | `C:\Program Files\Myzel Audio\<Name>.exe` + Start menu entry | `/Applications/Myzel Audio/<Name>.app` | `~/.local/bin/<Name>` + `~/.local/share/applications` entry and icon | `/usr/local/bin/<Name>` + `/usr/local/share/applications` entry and icon |
+| `LICENSES.txt` | `C:\Program Files\Myzel Audio` | `/Library/Application Support/Myzel Audio` | `~/.local/share/myzel-audio` | `/usr/local/share/myzel-audio` |
+
+`LICENSES.txt` (`myzel_write_licenses` in `installer/common.sh`) is `LICENSE`, `NOTICE` and the OFL of
+every font the shipped plugins embed: the fonts' licence asks to go with each copy. It stays while
+any plugin is installed and goes with the last one.
 
 Linux system-wide runs the privileged part through `pkexec` in a desktop session, else `sudo`.
 
@@ -414,7 +419,7 @@ AU build); real pkexec and sudo on Linux.
 
 ## Settled (2026-11-14)
 
-- First installers ship Cerulean, Mulberry, Umber; the installers stay generic (*Extensibility*).
+- First installers ship Cerulean, Mulberry, Umber and Halite (Halite added 2026-11-20); the installers stay generic (*Extensibility*).
 - AU builds on macOS (*AU builds*).
 - Linux builds on Ubuntu 24.04 for now.
 - Linux offers per-user and system-wide installs.

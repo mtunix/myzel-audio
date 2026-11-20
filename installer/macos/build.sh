@@ -238,6 +238,7 @@ fi
 
 mkdir -p "$work/roots/support"
 cp "$work/uninstall.sh" "$work/roots/support/uninstall.sh"
+myzel_write_licenses "$work/roots/support/LICENSES.txt" $ids
 for id in $ids; do
     scripts="$work/scripts/$id-remove"
     mkdir -p "$scripts"

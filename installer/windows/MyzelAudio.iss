@@ -65,6 +65,7 @@ Name: "standalone"; Description: "Standalone app, with a Start menu entry"; Grou
 [Files]
 ; The maintenance copy that the per-plugin Settings -> Apps entries run with /REMOVE.
 Source: "{srcexe}"; DestDir: "{app}"; DestName: "MyzelAudioSetup.exe"; Flags: external ignoreversion; Check: NotRunningMaintenanceCopy
+Source: "{#GenDir}\LICENSES.txt"; DestDir: "{app}"; Flags: ignoreversion
 
 #include AddBackslash(GenDir) + "plugins.iss"
 

@@ -230,8 +230,9 @@ test_scope()
     expect_receipt "$A" "$vA" "VST3 CLAP"
     expect_receipt "$B" "$vB" "VST3 CLAP"
     expect_only "$d_vst3/$nA.vst3" "$d_clap/$nA.clap" "$d_vst3/$nB.vst3" "$d_clap/$nB.clap" \
-        "$d_data/installed/$A" "$d_data/installed/$B" "$d_data/setup.sh"
+        "$d_data/installed/$A" "$d_data/installed/$B" "$d_data/setup.sh" "$d_data/LICENSES.txt"
     [ -x "$d_data/setup.sh" ] || fail "the kept setup.sh is not executable"
+    grep -qF "SIL Open Font License" "$d_data/LICENSES.txt" || fail "LICENSES.txt has no font licence"
     if [ "$scope" = system ] && [ -n "$(find "$root" -mindepth 1 ! -perm -o=r)" ]; then
         fail "system-wide files that other users cannot read"
     fi
@@ -263,8 +264,12 @@ test_scope()
     pass "2 detection: up to date, update, newer (skipped, then --downgrade), unknown version, moduleinfo.json"
 
     # 3. Re-run with the third plugin ticked: the text checklist ticks it by default (unknown version).
+    # Plugins after the third are ticked by default too (not installed): untick them.
+    n=${#ids[@]}
+    input="$(scope_choice)"$'\n'
+    for ((i = 4; i <= n; i++)); do input+="$i"$'\n'; done
     before="$(snapshot "$A")$(snapshot "$B")"
-    must bash -c 'printf "%s\n\n\ny\n" "$1" | "$2"' _ "$(scope_choice)" "$setup"
+    must bash -c 'printf "%s\n\ny\n" "$1" | "$2"' _ "$input" "$setup"
     [ "$before" = "$(snapshot "$A")$(snapshot "$B")" ] || fail "re-run touched $A or $B"
     expect_receipt "$C" "$vC" "VST3 CLAP LV2 Standalone"
     [ -x "$d_bin/$nC" ] || fail "no Standalone $d_bin/$nC"
@@ -275,7 +280,7 @@ test_scope()
     expect_only "$d_vst3/$nA.vst3" "$d_clap/$nA.clap" "$d_vst3/$nB.vst3" "$d_clap/$nB.clap" \
         "$d_vst3/$nC.vst3" "$d_clap/$nC.clap" "$d_lv2/$nC.lv2" "$d_bin/$nC" \
         "$d_apps/myzel-audio-$C.desktop" "$d_icons/myzel-audio-$C.svg" \
-        "$d_data/installed/$A" "$d_data/installed/$B" "$d_data/installed/$C" "$d_data/setup.sh"
+        "$d_data/installed/$A" "$d_data/installed/$B" "$d_data/installed/$C" "$d_data/setup.sh" "$d_data/LICENSES.txt"
     pass "3 re-run (text checklist): $C added in every format, $A and $B untouched"
 
     # 4. pluginval against the installed VST3s (every plugin per-user, the first one system-wide).
@@ -291,7 +296,6 @@ test_scope()
     fi
 
     # 5. Remove one plugin through the installer's checklist, one through the kept copy.
-    n=${#ids[@]}
     toggles="$((n + 1))"
     for ((i = 4; i <= n; i++)); do toggles="$toggles $i"; done
     before="$(snapshot "$B")$(snapshot "$C")"
@@ -375,7 +379,7 @@ EOF
         PATH="$fake:$PATH" MYZEL_UI="$b" FAKE_LOG="$tmp/fake.log" FAKE_RADIO=user FAKE_PICK="i:$A" FAKE_FORMATS=VST3 \
             must "$setup"
         expect_receipt "$A" "$vA" "VST3"
-        expect_only "$d_vst3/$nA.vst3" "$d_data/installed/$A" "$d_data/setup.sh"
+        expect_only "$d_vst3/$nA.vst3" "$d_data/installed/$A" "$d_data/setup.sh" "$d_data/LICENSES.txt"
         case "$b" in
             zenity) for opt in "--list --radiolist" "--list --checklist" "--hide-column=5 --print-column=5" "--question" "--info"; do
                     grep -qF -- "$opt" "$tmp/fake.log" || fail "zenity was never called with $opt"

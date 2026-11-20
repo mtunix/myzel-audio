@@ -261,9 +261,10 @@ try
     Check ((($vst3New | Sort-Object) -join '|') -eq ((@("$($a.Name).vst3", "$($b.Name).vst3") | Sort-Object) -join '|')) "VST3 folder gained: $($vst3New -join ', ')."
     $clapNew = @(Names (Join-Path $CommonFiles 'CLAP') | Where-Object { $clapBefore -notcontains $_ })
     Check ((($clapNew | Sort-Object) -join '|') -eq ((@("$($a.Name).clap", "$($b.Name).clap") | Sort-Object) -join '|')) "CLAP folder gained: $($clapNew -join ', ')."
-    $appFiles = @(Names $AppDir | Where-Object { $_ -notmatch '^unins\d{3}\.(exe|dat|msg)$' -and $_ -ne 'MyzelAudioSetup.exe' })
+    $appFiles = @(Names $AppDir | Where-Object { $_ -notmatch '^unins\d{3}\.(exe|dat|msg)$' -and $_ -ne 'MyzelAudioSetup.exe' -and $_ -ne 'LICENSES.txt' })
     Check ($appFiles.Count -eq 0) "$AppDir holds unexpected files: $($appFiles -join ', ')."
     Check (Test-Path -LiteralPath (Join-Path $AppDir 'MyzelAudioSetup.exe')) 'The maintenance copy MyzelAudioSetup.exe is missing.'
+    Check (Test-Path -LiteralPath (Join-Path $AppDir 'LICENSES.txt')) 'LICENSES.txt is missing.'
     Check (-not (Test-Path -LiteralPath $StartMenu)) "$StartMenu exists although Standalone was not ticked."
     Check (((Get-Receipts) -join '|') -eq ((@($a.Name, $b.Name) | Sort-Object) -join '|')) "Receipts: $((Get-Receipts) -join ', ')."
     Check (((Get-AppsEntries) -join '|') -eq ((@("MyzelAudio_$($a.Id)", "MyzelAudio_$($b.Id)") | Sort-Object) -join '|')) "Apps entries: $((Get-AppsEntries) -join ', ')."

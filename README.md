@@ -15,7 +15,8 @@ and AU on macOS. One installer per system, unsigned (see [Installing](#installin
 Download the installer for your system from the
 [latest release](https://github.com/mtunix/myzel-audio/releases/latest). It lists every plugin
 with what is already installed: tick what to install or update, tick what to remove. Your
-presets and settings are never touched.
+presets and settings are never touched. Next to its uninstaller each installer leaves
+`LICENSES.txt`: the licence, the notice and the licences of the fonts the plugins embed.
 
 The installers are not signed: we have no paid Apple or Microsoft certificate. Each file comes
 with a SHA-256 sum in `SHA256SUMS` and a build attestation, so you can check it was built by this

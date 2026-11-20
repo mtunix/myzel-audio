@@ -173,6 +173,8 @@ done
     echo "end;"
 } > "$gen/plugins.iss"
 
+myzel_write_licenses "$gen/LICENSES.txt" $(myzel_plugin_ids)
+
 target="$out/MyzelAudio-$suite-windows-x64-setup.exe"
 rm -f "$target"
 run_iscc /Q "/O$(winpath "$out")" "/DSuiteVersion=$suite" "/DStageDir=$(winpath "$stage")" \

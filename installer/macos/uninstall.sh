@@ -165,6 +165,7 @@ if [ "$all" = 1 ]; then
         forget_receipt "$receipt"
     done
     remove_path "$support_dir/uninstall.sh"
+    remove_path "$support_dir/LICENSES.txt"
     if [ -d "$support_dir" ] && rmdir "$support_dir" 2>/dev/null; then
         echo "Removed $support_dir"
     fi

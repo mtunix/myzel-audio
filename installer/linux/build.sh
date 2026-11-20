@@ -93,6 +93,8 @@ for id in $(myzel_plugin_ids); do
     echo "  $name $version: ${formats//,/, }"
 done
 
+myzel_write_licenses "$payload/LICENSES.txt" $(myzel_plugin_ids)
+
 glibc="$(required_glibc "$payload/stage")"
 [ -n "$glibc" ] || { echo "Could not read the glibc version the staged binaries need (objdump or readelf)." >&2; exit 1; }
 printf '%s\n' "$glibc" > "$payload/glibc"

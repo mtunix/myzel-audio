@@ -714,6 +714,10 @@ keep_self()
     cp -- "$self" "$tmp"
     chmod 755 "$tmp"
     mv -f -- "$tmp" "$data/setup.sh"
+    if [ -f "$here/LICENSES.txt" ]; then
+        cp -- "$here/LICENSES.txt" "$data/LICENSES.txt"
+        chmod 644 "$data/LICENSES.txt"
+    fi
 }
 
 install_plugin()
@@ -793,7 +797,7 @@ finalize_scope()
         done
     fi
     if [ "$any" = 0 ] && [ -d "$data" ]; then
-        rm -f -- "$data/setup.sh"
+        rm -f -- "$data/setup.sh" "$data/LICENSES.txt"
         rmdir -- "$rdir" 2> /dev/null || true
         rmdir -- "$data" 2> /dev/null || true
     fi

@@ -36,6 +36,8 @@ cp -r "$artefacts/LV2/$name.lv2" "$stage/"
 cp "$artefacts/CLAP/$name.clap" "$stage/"
 cp "$artefacts/Standalone/$name" "$stage/"
 cp "$root/LICENSE" "$root/NOTICE" "$plugin_dir/README.md" "$stage/"
+. "$root/installer/common.sh"
+myzel_write_licenses "$stage/LICENSES.txt" "$plugin"
 mkdir -p "$stage/docs"
 cp "$plugin_dir/docs/MANUAL.md" "$stage/docs/" 2>/dev/null || true
 

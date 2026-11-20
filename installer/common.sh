@@ -55,6 +55,29 @@ myzel_stage_formats()
     return 0
 }
 
+# Writes LICENSES.txt: LICENSE, NOTICE and the OFL of every font the given plugins embed (each copy once).
+myzel_write_licenses()
+{
+    local out="$1" id ofl seen="" sum
+    shift
+    {
+        cat "$MYZEL_ROOT/LICENSE"
+        printf '\n\n'
+        cat "$MYZEL_ROOT/NOTICE"
+        # The empty id stands for common/, whose fonts every plugin embeds.
+        for id in "" "$@"; do
+            if [ -z "$id" ]; then ofl="$MYZEL_ROOT/common/ui/assets/fonts/OFL.txt"
+            else ofl="$MYZEL_ROOT/plugins/$id/src/ui/assets/fonts/OFL.txt"; fi
+            [ -f "$ofl" ] || continue
+            sum="$(cksum < "$ofl" | cut -d' ' -f1)"
+            case " $seen " in *" $sum "*) continue ;; esac
+            seen="$seen $sum"
+            printf '\n\nFonts embedded in the plugins (%s)\n\n' "${ofl#"$MYZEL_ROOT"/}"
+            cat "$ofl"
+        done
+    } > "$out"
+}
+
 myzel_host_os()
 {
     case "$(uname -s)" in

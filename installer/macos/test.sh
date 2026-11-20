@@ -447,7 +447,7 @@ else
     fail "receipts are: $(our_receipts | tr '\n' ' '); expected: $(printf '%s\n' "$expected" | sort | tr '\n' ' ')"
 fi
 snapshot > "$work/after-fresh.txt"
-allowed="$(printf '%s\n' "$support_dir" "$uninstaller" "$apps_dir")"
+allowed="$(printf '%s\n' "$support_dir" "$uninstaller" "$support_dir/LICENSES.txt" "$apps_dir")"
 for format in $fmt_a; do allowed="$allowed$(printf '\n%s' "$(bundle_of "$a" "$format")")"; done
 for format in $fmt_b; do allowed="$allowed$(printf '\n%s' "$(bundle_of "$b" "$format")")"; done
 unexpected=""
